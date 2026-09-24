@@ -2,24 +2,11 @@
 
 > The SQL implementation details on this page describe the original PostgreSQL API. For the portable SQLite, PostgreSQL, MongoDB and Firestore setup, start with [database adapters](15-databases.md) and [framework integration](16-frameworks.md). The current local sample defaults to SQLite; legacy SQL example commands use the `:legacy` suffix.
 
-Add SafeStripe to a server application that already has users and orders. You will need Node.js 22+, PostgreSQL, and a Stripe sandbox. SafeStripe runs on the server. Never import it into a browser component or put a secret key in a public environment variable.
+Add SafeStripe to a server application that already has users and orders. This guide uses Node.js 22.19 or later, PostgreSQL, and a Stripe sandbox. Keep the server entry point and secret keys out of browser components. The separate React payment component is available from `@safestripe/core/react`.
 
 ## Install
 
-Before registry publication, build the package from the source checkout:
-
-```sh
-npm ci
-npm pack
-```
-
-In the application that will use SafeStripe, install the generated tarball and PostgreSQL driver. Replace the path with the actual location on your computer:
-
-```sh
-npm install /absolute/path/to/SafeStripe/safestripe-core-0.1.0.tgz pg
-```
-
-After publication, install using the maintainer's published package name. Examples here use the current name, `@safestripe/core`:
+Install SafeStripe and the PostgreSQL driver in your application:
 
 ```sh
 npm install @safestripe/core pg

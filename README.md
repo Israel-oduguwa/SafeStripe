@@ -1,53 +1,31 @@
 # SafeStripe
 
-Stripe payments and billing for Node.js, Express and Next.js, with durable retries, verified webhooks and a ready-made React payment form.
+Stripe payments and billing for Node.js, Express and Next.js, with durable retries, verified webhooks and a React payment form.
 
-A payment request can time out after Stripe has accepted it. A webhook can arrive twice. A worker can stop between updating an order and notifying another service. SafeStripe stores enough history to recover from these situations without treating every retry as a new business action.
+A payment request can time out after Stripe accepts it. Webhooks can arrive more than once, and workers can stop partway through a job. SafeStripe keeps operation and event history in your database so a retry can continue the original action.
 
-**Status:** 0.2.0 release candidate. Available from this repository and a local package archive; not yet published to npm. MIT licensed and independent of Stripe.
+Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stripe.
 
 [Get started](docs/11-getting-started.md) · [Local payment tutorial](docs/03-quickstart.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Payment UI](docs/17-payment-ui.md)
 
-## Start without Docker
-
-The included sample uses a local SQLite file. You need Node.js 22.19 or later. You do not need a database server.
-
-```bash
-npm ci --ignore-scripts
-npm test
-cp .env.example .env
-```
-
-Follow the [local tutorial](docs/03-quickstart.md) to add sandbox credentials, a customer and a price, then forward webhooks with the Stripe CLI. Start Express with `npm run dev:express`; it also starts the worker. For the Next.js payment form, run `npm run dev:next` and `npm run worker` in separate terminals.
-
-The sample refuses production mode. It uses a local demo token so you can learn the flow before connecting your application's real authentication and order policy.
-
-## Install in your application
-
-Once published, the installation will be:
+## Install
 
 ```bash
 npm install @safestripe/core
 ```
 
-Until then, run `npm pack` in this repository and install its archive from your application:
+The Stripe SDK installs automatically. You do not need a separate `stripe` installation or a build step. Install your framework and the database driver your app uses:
 
-```bash
-npm install /absolute/path/to/safestripe-core-0.2.0.tgz
-```
-
-The Stripe SDK installs automatically. Add only the driver your app uses:
-
-| Storage | Installation after publication | Use |
+| Storage | Install | Use |
 | --- | --- | --- |
 | SQLite | `npm install @safestripe/core` | Local sandbox, built into Node |
 | PostgreSQL | `npm install @safestripe/core pg` | Shared SQL database |
 | MongoDB | `npm install @safestripe/core mongodb` | Atlas or a replica set |
 | Firebase Cloud Firestore | `npm install @safestripe/core @google-cloud/firestore` | Server-side Firestore transactions |
 
-The main package is ESM. React/Next.js apps import the browser component from `@safestripe/core/react`; all other entry points belong on the server. A plain Express app can use hosted Checkout without React.
+For Express, also install `express`. React and Next.js applications supply their own React installation. The package uses ES modules. Import the browser component from `@safestripe/core/react`; keep the other entry points on the server. An Express app can use hosted Checkout without React.
 
-## Create Checkout
+## Create a checkout session
 
 After configuring your storage and application authorization policy, initialize the server once:
 
@@ -114,18 +92,32 @@ It includes Stripe's secure Payment Element, styling, loading state and confirma
 
 The [problem guide](docs/13-what-safestripe-solves.md) explains each failure scenario. The [recipes](docs/18-recipes.md) show the common calls.
 
-## Deploy with clear boundaries
+## Deployment
 
 Use shared PostgreSQL, MongoDB or Firestore for deployment. Next.js routes on Vercel use the Node runtime and an external durable database; a continuous worker belongs on a host that supports long-running processes. SQLite is not a serverless persistence strategy.
 
 Your app remains responsible for authentication, tenant/resource authorization, approved prices, entitlement policy, refund approvals, tax/accounting decisions and monitored infrastructure. Outbox delivery is at least once, so recipients must deduplicate. The default API gate is per process, not an account-wide rate limiter.
 
-No enterprise throughput, zero-error guarantee, independent security audit or compliance certification is claimed. Read [deployment](docs/14-deployment-and-publishing.md), [larger-system architecture](docs/19-enterprise.md) and the [verification record](VERIFICATION.md) before enabling live payments.
+The [verification record](VERIFICATION.md) lists the checks performed and the remaining service tests. The package has no published throughput benchmark or independent security audit. Read [deployment](docs/14-deployment-and-publishing.md) and [larger-system architecture](docs/19-enterprise.md) when planning your production integration.
+
+## Try the examples
+
+Clone the repository to run its examples. The local starter uses SQLite, so you do not need Docker or a database server.
+
+```bash
+npm ci
+npm test
+cp .env.example .env
+```
+
+Follow the [local tutorial](docs/03-quickstart.md) to add sandbox credentials, a customer and a price, then forward webhooks with the Stripe CLI. Start Express with `npm run dev:express`; it starts the worker too. For the Next.js payment form, run `npm run dev:next` and `npm run worker` in separate terminals.
+
+These are repository commands, not installation requirements for package users. The examples use local demo authentication and reject production mode. Connect your own authentication and order policy before deploying an application.
 
 ## Documentation and maintenance
 
 Open [the offline handbook](docs/handbook.html) for search, framework/database tabs, highlighted snippets and copy controls. Markdown versions work directly on GitHub.
 
-The [maintainer guide](maintainer/README.md) covers your own test setup, release checks, package archives and eventual npm publishing. [Contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [release notes](CHANGELOG.md) and [third-party notices](THIRD_PARTY_NOTICES.md) are included.
+For package contributors, the [maintainer guide](maintainer/README.md) covers test setup and releases. See also [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [release notes](CHANGELOG.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Existing 0.1 PostgreSQL users should read [the upgrade guide](docs/20-upgrading.md). The portable store uses separate records; switching to an empty store does not preserve old payment history.

@@ -2,7 +2,7 @@
 
 A larger payment system needs the same basic guarantees as a small one, under more concurrency and more partial failures. SafeStripe provides reusable controls for the billing boundary. Your organization still needs capacity measurements, operational ownership, access control and a recovery plan.
 
-This release has no claim of Google- or OpenAI-scale deployment and no published throughput benchmark. Use the design below as a starting architecture, then prove it against your own peak load and failure budget.
+This release has no published throughput benchmark. Test the design against your expected peak load and recovery requirements before choosing worker counts or database capacity.
 
 ## A practical deployment shape
 

@@ -2,7 +2,7 @@
 
 ## 0.2.0
 
-Release candidate; npm publication remains pending.
+Initial npm release.
 
 - Added portable transactional storage for SQLite, PostgreSQL, MongoDB and Cloud Firestore, with shared operation/job behavior.
 - Added account discovery through `createSafeStripe`, custom Checkout Sessions and the `SafeCheckout` React component.
@@ -15,7 +15,7 @@ Requires Node.js 22.19+. The SQLite adapter is a sandbox option; its underlying 
 
 ## 0.1.0
 
-First release candidate. Registry publication is pending.
+Unpublished development release.
 
 - Added durable Stripe commands with immutable request fingerprints, retry leases, and a review state for ambiguous outcomes outside the retry window.
 - Added signed webhook admission, PostgreSQL inbox and outbox queues, transactional business effects, and audited replay tools.

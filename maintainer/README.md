@@ -23,7 +23,7 @@ The secret API key creates Stripe objects. The publishable key loads the browser
 
 Run `npm run release:check`. CI also exercises the SQL store against real PostgreSQL and runs the document adapters against isolated services on GitHub's runners. See [VERIFICATION.md](../VERIFICATION.md) for what was actually checked. A green local run does not establish throughput at enterprise scale.
 
-Run `npm pack --dry-run` and inspect the file list. Run `npm pack` to produce the installable archive. To test it in a separate app, run `npm install /absolute/path/to/safestripe-core-0.2.0.tgz`. This is the reliable installation route until the package has been published to npm.
+Run `npm pack --dry-run` and inspect the file list. Run `npm pack` to produce the installable archive. Before publishing, test that archive in a separate app with `npm install /absolute/path/to/safestripe-core-0.2.0.tgz`. After publishing, repeat the consumer check using the exact version from the registry.
 
 The repository URL and npm scope are separate. Verify ownership of the `@safestripe` npm organization, enable npm account protection, and configure trusted publishing or a narrowly scoped automation token before publishing. `npm publish --access public` publishes a public artifact; do not run it until you have reviewed the package, license, release notes and passing CI. No npm release is performed by these instructions.
 

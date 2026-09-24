@@ -58,7 +58,7 @@
     "SECURITY.md",
     "CHANGELOG.md",
     "VERIFICATION.md",
-    "maintainer",
+    "maintainer/README.md",
     "examples/local",
     "examples/shared",
     "examples/express",
@@ -155,7 +155,10 @@
     "idempotency",
     "express",
     "nextjs",
-    "postgresql"
+    "postgresql",
+    "mongodb",
+    "firestore",
+    "sqlite"
   ],
   "bin": {
     "safestripe": "./dist/cli.js"

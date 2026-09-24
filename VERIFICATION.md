@@ -1,14 +1,14 @@
 # Verification record
 
-Reviewed 24 September 2026. Package: `@safestripe/core` 0.2.0 release candidate. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
+Reviewed 24 September 2026. Package: `@safestripe/core` 0.2.0. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
 
 ## Local results
 
 | Check | Observed result |
 | --- | --- |
 | Full release pipeline | Passed: formatting, strict types, tests, library build, Next.js build, documentation, license generation and clean package installation |
-| Automated suite at that run | 75 tests: 72 passed, zero failures, three expected skips |
-| Local starter fulfillment test added afterward | Passed separately: authentication, durable binding, commercial-term mismatch rejection, duplicate events, single receipt intent and changed-flow conflict |
+| Automated suite at that run | 76 tests: 73 passed, zero failures, three expected skips |
+| Local starter fulfillment | Passed in the suite: authentication, durable binding, commercial-term mismatch rejection, duplicate events, single receipt intent and changed-flow conflict |
 | SQLite and embedded PostgreSQL conformance | Passed: competing claims, fingerprints, recovery cutoff, expired leases, transaction rollback, effects/outbox, signed admission, replay and concurrent record updates |
 | SQLite restart | Stored billing data survived close/reopen |
 | Account discovery | Mocked SDK lookup resolved scope without an explicit account ID; real account credentials were not used |
@@ -35,7 +35,9 @@ The three local suite skips are the test requiring independent PostgreSQL connec
 | Real PostgreSQL 17 suite | 76 tests: 74 passed, zero failures, two skips for document services checked in their own job |
 | Four-adapter conformance on a runner with MongoDB 8 and Firestore emulator | All 35 passed, zero failures or skips |
 
-The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project. Subsequent small packaging/UI hardening changes are covered by the same CI workflow on their own commits; consult the repository's latest run for exact-head status.
+The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project. Subsequent packaging and UI changes use the same CI workflow; consult the repository's latest run for the result on each commit.
+
+The separate Express/Firestore demo passed 20 consumer tests on Node.js 22 and 24 in [run 36004359058](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36004359058). It installs the release archive and tests signatures, duplicate events, checkout replays, order authorization and payment-term checks. Its automated fixtures use SQLite and simulated Stripe responses; the running demo uses Firestore. Real Stripe and Firebase configuration remains necessary for the browser payment test.
 
 ## What has not been established
 
@@ -43,11 +45,11 @@ No real Stripe credentials were supplied or used. Actual sandbox checkout, issue
 
 There is no enterprise throughput benchmark, failover certification, independent security audit or compliance certification. Transaction conformance proves specific invariants under tested conditions. It does not establish capacity across all database tiers or hosting platforms.
 
-The documentation's generated structure and DOM interactions were checked. Browser policy previously prevented a rendered review of the local HTML; a screenshot-based visual review is not included. The React payment component compiles and imports, but its real Stripe-hosted fields still need sandbox browser and accessibility testing.
+The documentation's generated structure and DOM interactions were checked; a rendered visual review of the handbook is not included. The React payment component compiles and imports, but its real Stripe-hosted fields still need sandbox browser and accessibility testing.
 
 The sample authorization policy is local-only and refuses production. A deployed application needs real authentication, tenant/resource policies, approved commercial terms, monitored workers, a deduplicating outbox recipient, retention/backups and reconciliation. Read [deployment](docs/14-deployment-and-publishing.md).
 
-No npm publication or financial transaction was performed. The repository is hosted on GitHub; registry publication is a separate release step.
+These checks did not perform a financial transaction. Registry publication is a separate release step.
 
 ## Reproduce
 

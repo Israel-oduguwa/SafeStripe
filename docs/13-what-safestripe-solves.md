@@ -152,7 +152,7 @@ A telemetry callback can fail without changing a successful financial result. Th
 
 Use SafeStripe when payment workflows need durable coordination with PostgreSQL and you can run a worker. A SaaS billing service, marketplace back office, or order system can use the same primitives while enforcing different business rules.
 
-You may need only Stripe's hosted products and a smaller integration for a simple payment link or a site with no local fulfillment state. You may need a different storage adapter or event platform if PostgreSQL cannot be part of the architecture. Organization-context events, thin events, complete Connect onboarding, disputes evidence submission, and full accounting are outside this release's wrapper surface.
+For a simple payment link or a site without local fulfillment state, Stripe's hosted products may be enough. SafeStripe's portable adapters support SQLite, PostgreSQL, MongoDB and Firestore; another database needs a compatible transactional adapter. Organization-context events, thin events, complete Connect onboarding, dispute evidence submission, and full accounting are outside this release's wrapper surface.
 
 The important review question is specific: does each control cover the failure your product can experience? The [architecture](02-distributed-architecture.md), [library reference](09-library-reference.md), and [verification record](../VERIFICATION.md) provide the details needed to answer it.
 

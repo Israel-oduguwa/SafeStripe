@@ -4,7 +4,7 @@ Start with a Node.js application, a Stripe sandbox, and a place to store billing
 
 ## Install the package
 
-Once the package is published to npm, use the command for your database. Until then, replace `@safestripe/core` with the path to the release `.tgz` archive. A GitHub push alone does not publish an npm package.
+Choose the command for your database. npm installs SafeStripe's built JavaScript, TypeScript declarations and Stripe dependencies together.
 
 :::tabs database
 :::tab SQLite
