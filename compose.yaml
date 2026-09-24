@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: safestripe
+      POSTGRES_PASSWORD: safestripe
+      POSTGRES_DB: safestripe
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["safestripe-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safestripe"]
+      interval: 5s
+      retries: 10
+volumes:
+  safestripe-data:

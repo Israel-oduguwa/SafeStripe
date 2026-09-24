@@ -1,0 +1,11 @@
+SafeStripe
+Copyright (c) 2026 SafeStripe contributors
+Licensed under the MIT License. See LICENSE.
+
+SafeStripe is an independent integration library. It is not an official Stripe
+product and is not endorsed by Stripe. Product names and trademarks belong
+to their respective owners. This license does not grant
+trademark rights.
+
+Dependencies retain their own licenses and copyright notices. See
+THIRD_PARTY_NOTICES.md for the dependency snapshot in this release.

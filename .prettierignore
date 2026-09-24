@@ -1,0 +1,6 @@
+node_modules/
+dist/
+examples/nextjs/.next/
+examples/nextjs/next-env.d.ts
+package-lock.json
+artifacts/
