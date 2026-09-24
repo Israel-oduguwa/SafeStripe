@@ -1,10 +1,10 @@
 {
   "name": "@safestripe/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Durable Stripe operations and webhook processing for Node.js, Express and Next.js",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.19.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,6 +24,26 @@
     "./migrations": {
       "types": "./dist/migrate.d.ts",
       "import": "./dist/migrate.js"
+    },
+    "./storage/sqlite": {
+      "types": "./dist/storage/sqlite.d.ts",
+      "import": "./dist/storage/sqlite.js"
+    },
+    "./storage/postgres": {
+      "types": "./dist/storage/postgres.d.ts",
+      "import": "./dist/storage/postgres.js"
+    },
+    "./storage/mongodb": {
+      "types": "./dist/storage/mongodb.d.ts",
+      "import": "./dist/storage/mongodb.js"
+    },
+    "./storage/firestore": {
+      "types": "./dist/storage/firestore.d.ts",
+      "import": "./dist/storage/firestore.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
     }
   },
   "files": [
@@ -37,55 +57,86 @@
     "THIRD_PARTY_NOTICES.md",
     "SECURITY.md",
     "CHANGELOG.md",
-    "VERIFICATION.md"
+    "VERIFICATION.md",
+    "maintainer",
+    "examples/local",
+    "examples/shared",
+    "examples/express",
+    "examples/nextjs/app",
+    "examples/nextjs/next.config.ts",
+    "examples/firestore"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node scripts/sync-migrations.mjs && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test --test-concurrency=1 tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "db:migrate": "node --env-file=.env --import tsx scripts/migrate.ts",
     "demo": "node --import tsx scripts/demo.ts",
-    "dev:express": "node --env-file=.env --import tsx examples/express/server.ts",
+    "dev:express": "node --env-file=.env --import tsx examples/local/server.ts",
     "dev:next": "node --env-file=.env node_modules/next/dist/bin/next dev examples/nextjs --hostname 127.0.0.1 --webpack",
     "build:next": "next build examples/nextjs --webpack",
-    "worker": "node --env-file=.env --import tsx examples/worker.ts",
+    "worker": "node --env-file=.env --import tsx examples/local/worker.ts",
     "test:stripe": "node --env-file=.env --import tsx scripts/stripe-smoke.ts",
     "docs:build": "node scripts/build-docs.mjs",
-    "docs:check": "node scripts/check-docs.mjs && node scripts/check-snippets.mjs",
+    "docs:check": "node scripts/check-docs.mjs && node scripts/check-snippets.mjs && node scripts/check-docs-ui.mjs",
     "prepack": "npm run build",
     "test:package": "node scripts/test-package.mjs",
     "licenses": "node scripts/licenses.mjs",
     "release:check": "npm run format:check && npm run check && npm run build:next && npm run docs:build && npm run docs:check && npm run licenses && npm run test:package",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\""
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
+    "dev:express:legacy": "node --env-file=.env --import tsx examples/express/server.ts",
+    "worker:legacy": "node --env-file=.env --import tsx examples/worker.ts"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "6.12.0",
+    "@stripe/stripe-js": "9.17.0",
     "@types/express": "^5.0.3",
     "pg": "^8.16.3",
     "stripe": "22.6.2",
     "zod": "^4.1.12"
   },
   "peerDependencies": {
-    "express": ">=5 <6"
+    "@google-cloud/firestore": ">=9 <10",
+    "express": ">=5 <6",
+    "mongodb": ">=7 <8",
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
   },
   "peerDependenciesMeta": {
     "express": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "@google-cloud/firestore": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     }
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
+    "@google-cloud/firestore": "9.2.0",
     "@types/node": "^22.19.0",
     "@types/pg": "^8.15.6",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "express": "5.2.1",
+    "linkedom": "0.18.13",
     "marked": "18.0.14",
+    "mongodb": "7.6.0",
     "next": "16.3.6",
     "prettier": "3.9.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "shiki": "4.4.3",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },

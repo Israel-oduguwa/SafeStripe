@@ -1,140 +1,130 @@
-# Run a sandbox payment
+# Make your first payment
 
-## 1. Verify locally without credentials
+This tutorial runs the included sample on your computer. It uses SQLite, a small database file. You do not install Docker or a database server.
 
-Open a terminal inside `SafeStripe`. Use Node.js 22 or newer:
+The sample sells one server-configured product to one sandbox customer. Its local sign-in token makes the first test reproducible. It refuses production mode; a deployed app needs your real authentication and order policy.
 
-```sh
-npm ci
-npm run check
-npm run demo
-npm run build:next
-```
+## 1. Prepare the sample
 
-`check` performs strict type checking, the offline failure tests, and a library build. The demo uses PGlite, an embedded PostgreSQL engine, and the Stripe SDK's signature test helper. It exercises durable admission and effects without touching a Stripe account. The Next.js build checks the runnable route integration; the example's production runtime remains intentionally blocked until you replace demo authentication.
+Open a terminal in the repository folder. Install dependencies, run the offline checks, and create your private settings file:
 
-The test output should show no failures. The demo should show two completed webhook jobs, one pending receipt outbox job, and one fulfillment effect. “Pending receipt” means nothing was sent. Use this distinction in a recording: intent, delivery, and acknowledgment are separate facts.
-
-## 2. Start PostgreSQL
-
-For the runnable Stripe examples, use PostgreSQL 17. With Docker installed:
-
-```sh
-docker compose up -d
+```bash
+npm ci --ignore-scripts
+npm test
 cp .env.example .env
-npm run db:migrate -- --demo
 ```
 
-The Compose credentials are local development fixtures; the port binds to loopback. Use managed credentials, TLS, backups, restricted database roles, and a separate migration job in deployment. The migration script checks prior migration hashes and holds a database advisory lock. Do not edit an applied migration; create another numbered migration.
+`npm test` uses synthetic Stripe events and local test data. It does not contact Stripe. Passing this step proves local behavior, not a real payment.
 
-Without Docker, supply a local or dedicated development PostgreSQL connection string in `DATABASE_URL`. The offline tests do not require Docker or an external database.
+Create a sandbox customer and a product with a **one-time price** in the Stripe Dashboard. Copy the `cus_…` and `price_…` IDs into `.env`. Use a price greater than zero for this tutorial; its fulfillment check deliberately requires `payment_status=paid`.
 
-## 3. Prepare a Stripe sandbox
+Generate a local sign-in token:
 
-Create or select a dedicated sandbox in your authorized Stripe account. Separate sandboxes isolate configuration and test data more effectively than sharing one development environment. Use a distinct CI sandbox if you later automate API tests. See [Stripe sandboxes](https://docs.stripe.com/sandboxes).
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
 
-In that sandbox:
+Paste the result into `DEMO_TOKEN`. This is a password for the sample, not a Stripe credential.
 
-1. Create a fictional Customer and record its `cus_...` ID.
-2. Create a Product with a one-time Price, or a recurring Price for the subscription example. Record its `price_...` ID.
-3. Obtain the Stripe account ID belonging to this environment. It becomes `STRIPE_ACCOUNT_ID`.
-4. Create a restricted test key with only the permissions required by the endpoints you use. Customer/Price reads and Checkout creation are needed for checkout; the worker also reads relevant sessions, line items, subscriptions, and invoices. Validate permissions in the sandbox rather than broadening all access after a failure.
-5. Configure a webhook destination with API version `2026-08-26.dahlia`, snapshot payloads, and the event types listed in `examples/shared/runtime.ts`. A local Stripe CLI forwarding secret is separate from a registered endpoint secret.
+```dotenv
+BILLING_DATABASE=sqlite
+SQLITE_PATH=./.data/billing.sqlite
+STRIPE_SECRET_KEY=your_sandbox_secret_key
+STRIPE_WEBHOOK_SECRET=filled_in_the_next_step
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_sandbox_publishable_key
+APP_ORIGIN=http://localhost:3000
+DEMO_TOKEN=your_generated_local_token
+DEMO_CUSTOMER_ID=your_sandbox_customer_id
+DEMO_PRICE_ID=your_sandbox_price_id
+DEMO_ORDER_ID=demo-order-001
+```
 
-Fill `.env` locally. Leave it untracked. Set `DEMO_PRICE_MODE=payment` for a one-time Price or `subscription` for a recurring Price. Choose a stable `DEMO_ORDER_ID` for one purchase. Generate a random token of at least 32 characters for `DEMO_TOKEN`. Use `APP_ORIGIN=http://localhost:3000`.
+Leave `STRIPE_ACCOUNT_ID` empty for automatic discovery. Keep all credentials out of screenshots, recordings and Git commits.
 
-Never prefix a server secret with `NEXT_PUBLIC_`. The examples read environment variables only on the server. In production, inject secrets from the hosting platform's vault; the local environment file is a development convenience.
+## 2. Forward Stripe events to your computer
 
-## 4. Start Express or Next.js
+Install the [Stripe CLI](https://docs.stripe.com/cli), then open a separate terminal:
 
-In separate terminals, start **one** web example and the worker:
+```bash
+stripe login
+stripe listen   --events checkout.session.completed,checkout.session.async_payment_succeeded   --forward-to localhost:3000/api/webhooks/stripe
+```
 
-```sh
-# Option 1
+Copy the printed `whsec_…` secret into `.env` as `STRIPE_WEBHOOK_SECRET`. Keep the listener running. The API key lets your app talk to Stripe; the listener lets Stripe's events reach your local app.
+
+Make sure the sandbox's snapshot events use the API version listed in the documentation footer: `2026-08-26.dahlia`. The receiver rejects another event shape/version so schema changes cannot silently enter fulfillment. See [Stripe's local webhook testing guide](https://docs.stripe.com/webhooks#test-webhook).
+
+## 3. Start your framework
+
+:::tabs framework
+:::tab Express.js
+```bash
 npm run dev:express
+```
 
-# Option 2, instead of Express
+The Express starter runs the web server and webhook worker in one process. Keep it open. Its source is [the local Express example](../examples/local/server.ts).
+
+In another terminal, use your demo token to create hosted Checkout:
+
+```bash
+curl http://localhost:3000/api/checkout   -H "Authorization: Bearer YOUR_DEMO_TOKEN"   -H "Content-Type: application/json"   -d '{"uiMode":"hosted"}'
+```
+
+Open the `url` from the response in your browser. The token can appear in shell history; this is a disposable local token. Do not put your Stripe secret key in this command.
+:::tab Next.js
+```bash
 npm run dev:next
+```
 
-# Separate terminal; required for both options
+In a second terminal, start the worker against the same local SQLite file:
+
+```bash
 npm run worker
 ```
 
-Both examples expose `POST /api/checkout` and `POST /api/webhooks/stripe`. They use the same core library and durable tables. The checkout endpoint accepts no price, amount, customer, account, tenant, or order overrides. Its fixed sandbox identity is deliberately small enough to audit.
+Open `http://localhost:3000`. Enter your `DEMO_TOKEN` and press **Open secure checkout**. The page uses `SafeCheckout` to render the Stripe payment form. Its server route selects the price; the browser only requests a Checkout UI mode.
 
-Using the Stripe CLI, authenticate to the intended sandbox and forward the required events:
+Use the Node.js runtime. The database and secret key stay in Route Handlers; the publishable key goes to the client component.
+:::endtabs
 
-```sh
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
+## 4. Complete a test payment
+
+For a successful sandbox card payment, use Stripe's test card `4242 4242 4242 4242`, a future expiry and any valid three-digit CVC. Never use a real card for this tutorial. See [Stripe test payment methods](https://docs.stripe.com/testing) for authentication, declines and asynchronous methods.
+
+The expected sequence is: Checkout opens, payment completes, the CLI forwards the signed event, the receiver saves it, and the worker marks the stored order `fulfilled` after checking the current Session, customer, reference, line item and quantity.
+
+Read the order status:
+
+```bash
+curl http://localhost:3000/api/order   -H "Authorization: Bearer YOUR_DEMO_TOKEN"
 ```
 
-Use the listener's signing secret in `.env`, then restart the web process and worker. Check a forwarded event's `api_version`; it must match the pinned version. If your listener or account emits another version, configure a matching snapshot destination or follow Stripe's current CLI version controls. Do not disable the receiver's version check to make a test appear successful. See [local webhook testing](https://docs.stripe.com/webhooks#test-locally-without-a-registered-url).
+The final response should be `{"state":"fulfilled"}`. `pending` means the webhook or worker has not finished. The success page alone is not proof that fulfillment happened. The sample records a receipt intent in the outbox; it does not send an email.
 
-Call the demo checkout using a local script, without embedding the token in a shell command:
+## 5. Test the behaviors that matter
 
-```sh
-node --env-file=.env --input-type=module -e '
-const response = await fetch(`${process.env.APP_ORIGIN}/api/checkout`, {
-  method: "POST",
-  headers: { authorization: `Bearer ${process.env.DEMO_TOKEN}` }
-});
-console.log(response.status, await response.json());
-'
-```
+| Test | What to do | Expected result |
+| --- | --- | --- |
+| Same request twice | Repeat the Checkout request with the same order ID and UI mode | The same Session ID is returned |
+| Changed request | Switch hosted/custom without changing the order ID | `PAYLOAD_CONFLICT`; choose a new order for a new flow |
+| Restart | Stop and restart the app without removing `.data` | Operation history and order state remain |
+| Invalid webhook | POST unsigned JSON to the webhook endpoint | A rejection; no order update |
+| Worker interruption | Stop the Next.js worker, complete payment, restart it | Pending work is picked up from storage |
+| Wrong token | Send an incorrect demo token | `403` |
+| Another payment | Set a new `DEMO_ORDER_ID`, restart and pay again | A distinct Session and order |
 
-Open the returned sandbox Checkout URL and complete it using a Stripe test payment method from the [testing guide](https://docs.stripe.com/testing). Do not put real card data in sandbox recordings. Repeating the same API request should return the same session identity while the operation remains bound.
+The automated tests also exercise duplicate webhook delivery, competing workers, transaction rollback and stale ownership. Use the advanced [testing runbook](08-testing-and-runbooks.md) for failure injection.
 
-The success page does not fulfill the order. Wait for the worker and inspect the application record:
+## If something does not work
 
-```sql
-SELECT order_id, session_id, state FROM sf_demo_orders;
-SELECT queue, id, type, state, attempts, error_code FROM sf_jobs ORDER BY created_at;
-SELECT effect_key FROM sf_effects;
-```
+**The form cannot load:** check the publishable key, sandbox mode, returned `clientSecret`, and browser network access to Stripe.js. A hosted Session cannot initialize the custom form.
 
-For one-time payments the expected order state is `fulfilled`; for subscription Checkout it is `checkout_complete`. Subscription access is intentionally left to your product's entitlement policy. The worker stores current subscription and invoice projections and queues billing-review intents. It does not send recovery emails or implement a universal access policy.
+**The webhook returns an error:** check the CLI signing secret, accepted event types, snapshot API version and raw-body middleware order. Restart the app after changing `.env`.
 
-`stripe trigger` generates unrelated fixture objects. Those may be accepted into the inbox but cannot fulfill your demo order because they lack its resource mapping. For a true end-to-end exercise, complete the Checkout Session created by this application.
+**The order stays pending:** check that the worker is running and uses the same file or database as the web server. An event created by `stripe trigger` normally belongs to a fixture Session, not your stored order. Pay through this application's Checkout for the end-to-end test.
 
-## 5. Run the sandbox API smoke test
+**Account discovery fails:** check the key and account-read permission. For a restricted key, set the trusted `STRIPE_ACCOUNT_ID` explicitly.
 
-After migrations and key configuration:
+**SQLite prints an experimental warning:** this is Node.js reporting the status of its built-in SQLite API. It is expected on Node 22. SQLite here is a development option, not your Vercel database.
 
-```sh
-STRIPE_SMOKE_CONFIRM=sandbox npm run test:stripe
-```
-
-This opt-in command creates one synthetic customer, replays the durable create operation, verifies the same ID, and deletes the temporary customer. It refuses live keys. Grant the necessary customer permissions to the restricted key. This is a narrow API contract check, not a full payment test or proof of settlement behavior.
-
-## 6. Test with PostgreSQL
-
-Point the test suite at a **dedicated disposable database**:
-
-```sh
-TEST_DATABASE_URL=postgresql://safestripe:safestripe@localhost:5432/safestripe_test npm test
-```
-
-The suite truncates SafeStripe tables between tests. Never use a database containing important records. When this variable is absent, tests use isolated PGlite instances. The CI workflow runs both variants, then builds Next.js and audits production dependencies.
-
-## Add it to your application
-
-Follow [Installation and integration](12-integration.md) to install the npm tarball, run packaged migrations, and configure your own application. The source examples use local imports so they can exercise changes before release. Consumer applications use the package exports.
-
-Create one SDK client and a bounded pool per long-lived process. A tenant-scoped `SafeStripe` facade supplies a trusted account scope and a mandatory authorizer. In a shared-account SaaS, tenants still need separate application Customer mappings. Connected-account headers do not replace tenant authorization.
-
-Make operation IDs stable across retries and unique across deliberate new purchases. For invoice workflows, use separate stable step IDs such as `invoice:case-1:create`, `invoice:case-1:item-1`, and `invoice:case-1:finalize`.
-
-## Troubleshooting
-
-| Symptom | Check |
-| --- | --- |
-| `RAW_BODY_REQUIRED` | Express raw middleware must precede JSON middleware |
-| `INVALID_WEBHOOK` | Secret, original body, clock, account, mode, API version and payload family |
-| Webhook 200 but order pending | Worker running, session mapping, retry/dead-letter state |
-| `PAYLOAD_CONFLICT` | You changed an immutable order or reused an operation ID for another action |
-| `BUSY` | A live operation owns the lease, or the local concurrency gate is full |
-| `REVIEW_REQUIRED` | Inspect remote outcome and business records before any new financial command |
-| Next.js refuses production execution | Replace the demo runtime with real authentication/authorization; do not remove the guard alone |
-| SDK permission error | Restricted key lacks a required resource permission; inspect request logs |
-
-Close a local demo with Ctrl-C. Keep its database if you want to inspect records. `docker compose down` stops services; adding `-v` destroys the demo data and is not required for normal shutdown.
+When the local payment works, move to [your own Express or Next.js application](16-frameworks.md).

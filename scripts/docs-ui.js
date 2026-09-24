@@ -60,3 +60,71 @@ document.addEventListener('keydown', (event) => {
 document.querySelector('#print').addEventListener('click', () => window.print());
 window.addEventListener('hashchange', showPage);
 showPage();
+
+function activateTab(group, choice, focus = false) {
+  const buttons = [...group.querySelectorAll('[role="tab"]')];
+  const selected = buttons.find((button) => button.dataset.choice === choice) ?? buttons[0];
+  for (const button of buttons) {
+    const active = button === selected;
+    button.setAttribute('aria-selected', String(active));
+    button.tabIndex = active ? 0 : -1;
+    document.getElementById(button.getAttribute('aria-controls')).hidden = !active;
+  }
+  if (focus) selected.focus();
+}
+const tabGroups = [...document.querySelectorAll('[data-tabs]')];
+for (const group of tabGroups) {
+  let saved;
+  try {
+    saved = localStorage.getItem('safestripe-docs-' + group.dataset.tabs);
+  } catch {
+    /* Offline/privacy mode. */
+  }
+  activateTab(group, saved);
+  for (const button of group.querySelectorAll('[role="tab"]')) {
+    button.addEventListener('click', () => {
+      for (const other of tabGroups.filter((item) => item.dataset.tabs === group.dataset.tabs))
+        activateTab(other, button.dataset.choice);
+      try {
+        localStorage.setItem('safestripe-docs-' + group.dataset.tabs, button.dataset.choice);
+      } catch {
+        /* Optional preference only. */
+      }
+    });
+    button.addEventListener('keydown', (event) => {
+      const buttons = [...group.querySelectorAll('[role="tab"]')];
+      const index = buttons.indexOf(button);
+      const next = {
+        ArrowRight: (index + 1) % buttons.length,
+        ArrowLeft: (index - 1 + buttons.length) % buttons.length,
+        Home: 0,
+        End: buttons.length - 1,
+      }[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      buttons[next].click();
+      buttons[next].focus();
+    });
+  }
+}
+for (const button of document.querySelectorAll('.copy-code'))
+  button.addEventListener('click', async () => {
+    const block = button.closest('.code-block');
+    const status = block.querySelector('.copy-status');
+    try {
+      await navigator.clipboard.writeText(block.querySelector('code').textContent);
+      button.textContent = 'Copied';
+      status.textContent = 'Code copied to clipboard';
+      setTimeout(() => {
+        button.textContent = 'Copy';
+        status.textContent = '';
+      }, 2000);
+    } catch {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(block.querySelector('code'));
+      selection.removeAllRanges();
+      selection.addRange(range);
+      status.textContent = 'Code selected. Press Command+C or Control+C to copy.';
+    }
+  });

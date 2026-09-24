@@ -1,63 +1,52 @@
 # Verification record
 
-Reviewed: 24 September 2026. Package: `@safestripe/core` 0.1.0 release candidate. Local runtime: Node.js 22.19.0 on macOS x86_64. Stripe SDK: 22.6.2. API contract: `2026-08-26.dahlia`.
+Reviewed 24 September 2026. Package: `@safestripe/core` 0.2.0 release candidate. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
 
-## Results
+## Local results
 
-| Check | Result |
+| Check | Observed result |
 | --- | --- |
-| Source formatting | Passed using pinned Prettier 3.9.9 |
-| Strict TypeScript check | Passed for library, examples, scripts, and tests |
-| Library build | Passed; ESM JavaScript, declarations, and source maps generated |
-| Embedded PostgreSQL suite | 53 passed, zero failures; one test skipped because it requires independent PostgreSQL connections |
-| PostgreSQL 18.4 suite | All 54 passed; zero failures or skips |
-| Contended business effects | 64 different events across eight concurrent drainers produced one fulfillment effect and one receipt intent |
-| Locked-job cleanup | An exhausted job held by another transaction did not block claiming an unrelated ready job |
-| Worker lifecycle | Abort stopped new claims, drained in-flight calls, and woke idle polling promptly |
-| Diagnostic isolation | Observer failures did not change payment results; diagnostic events omitted raw errors and payloads |
-| Actual Stripe SDK with local HTTP fixture | API version, account header, idempotency key, request encoding, and retrieval replay passed |
-| Express HTTP integration | Verified an actual request over the original signed payload |
-| Next.js 16.3.6 build | Passed for Checkout/webhook routes and home/success/cancel pages |
-| Offline demo | Duplicate delivery and two distinct events produced one business effect and one pending receipt intent |
-| Migration protocol | Repeatability, checksums, competing runners, and unknown future migration rejection passed |
-| Installed package | Packed tarball installed into a separate consumer with no repository development dependencies |
-| Consumer imports and types | Core, Express, Next.js, and migration exports loaded; strict consumer compilation passed |
-| Installed migration command | Applied or verified the packaged schema on PostgreSQL; a second invocation reported it up to date |
-| Runtime dependency audit | npm reported zero known vulnerabilities for the checked dependency set |
-| Dependency notices | Generated notices for 26 actual runtime dependencies; development-only and extraneous modules excluded |
-| Documentation build | 15 guides, approximately 21,300 words, with offline navigation, search, section links, and print styles |
-| Documentation checks | Local links, page anchors, duplicate IDs, embedded script syntax, and CSP hash passed |
-| Documented integration snippets | Six TypeScript snippets compiled; the complete customer tutorial passed JavaScript syntax checking |
-| Staged-secret hook | Previously verified to accept clean content and reject a synthetic credential without printing it |
+| Full release pipeline | Passed: formatting, strict types, tests, library build, Next.js build, documentation, license generation and clean package installation |
+| Automated suite at that run | 75 tests: 72 passed, zero failures, three expected skips |
+| Local starter fulfillment test added afterward | Passed separately: authentication, durable binding, commercial-term mismatch rejection, duplicate events, single receipt intent and changed-flow conflict |
+| SQLite and embedded PostgreSQL conformance | Passed: competing claims, fingerprints, recovery cutoff, expired leases, transaction rollback, effects/outbox, signed admission, replay and concurrent record updates |
+| SQLite restart | Stored billing data survived close/reopen |
+| Account discovery | Mocked SDK lookup resolved scope without an explicit account ID; real account credentials were not used |
+| Custom Checkout contract | Uses custom Sessions and the server-configured return URL; no browser-selected payment-method override |
+| Next.js example | Production build passed, including React form and checkout/order/webhook routes |
+| Clean package consumer | Installed the archive; core, framework, migration, SQLite and React exports loaded; strict server-side consumer types passed |
+| Automatic dependencies | Stripe resolved after installation; MongoDB and Firestore SDKs were absent unless separately installed |
+| Dependency audit | npm reported zero known vulnerabilities in the checked runtime dependency set |
+| License notices | Generated notices for 36 installed runtime dependencies/peers |
+| Documentation | 21 guides; 21 typed snippets plus a JavaScript tutorial checked; links, anchors, CSP and script syntax passed |
+| Documentation interactions | DOM checks passed for synchronized tabs, keyboard switching, copy, syntax-color markup, search and navigation |
 
-The full `release:check` pipeline passed. Afterward, final documentation navigation and dependency-notice filtering received their relevant formatting, generation, and documentation checks. The final package was regenerated from that source.
+The three local suite skips are the test requiring independent PostgreSQL connections and the MongoDB/Firestore service suites. Local testing does not install Docker, a MongoDB server or a Firebase emulator.
 
-## What these checks establish
+## Remote checks
 
-The tests exercise specific failure and recovery behavior, including duplicate commands, conflicting payloads, stale leases, rollback, review cutoffs, signature and scope checks, outbox retries, and current-state projections. Real PostgreSQL tests use separate connections; the embedded engine provides fast local testing but cannot replace those connection-level checks.
+The original 0.1 commit passed GitHub CI on Node.js 22 and 24 with PostgreSQL 17. The current 0.2 workflow adds a MongoDB 8 replica set and the Firestore emulator on GitHub's isolated runners. Results for the updated commit must be confirmed before treating those adapters as integration-verified. The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project.
 
-The package installation test runs outside the source checkout. It checks that consumers receive the compiled exports, declarations, migration files, CLI, and license files. Consumer installation does not execute package lifecycle scripts.
+## What has not been established
 
-CI is configured for Node.js 22 and 24 with PostgreSQL 17. Those remote CI jobs have not been executed in this workspace; the observed local runtime and database versions are listed above.
+No real Stripe credentials were supplied or used. Actual sandbox checkout, issuer authentication, asynchronous payment methods, Dashboard workflows and live payments have not been exercised against an account. The SDK HTTP fixture verifies request behavior, not the full Stripe service.
 
-## Checks still needed for a deployment
+There is no enterprise throughput benchmark, failover certification, independent security audit or compliance certification. Transaction conformance proves specific invariants under tested conditions. It does not establish capacity across all database tiers or hosting platforms.
 
-No Stripe credentials were supplied. Actual sandbox API requests, Dashboard exercises, issuer-authentication scenarios, and live payments were not executed. The optional sandbox smoke test and operations workbook cover that next stage.
+The documentation's generated structure and DOM interactions were checked. Browser policy previously prevented a rendered review of the local HTML; a screenshot-based visual review is not included. The React payment component compiles and imports, but its real Stripe-hosted fields still need sandbox browser and accessibility testing.
 
-The local HTTP fixture uses the official SDK but does not reproduce the whole Stripe service. The concurrency scenario checks a particular invariant; it is not a throughput benchmark, failover exercise, or proof of capacity for a large production workload. No independent security audit or compliance certification is claimed.
+The sample authorization policy is local-only and refuses production. A deployed application needs real authentication, tenant/resource policies, approved commercial terms, monitored workers, a deduplicating outbox recipient, retention/backups and reconciliation. Read [deployment](docs/14-deployment-and-publishing.md).
 
-The browser policy prevented a rendered review of the local HTML documentation. Its generation, structure, navigation source, links, and script integrity were checked directly. A rendered visual review is not included in these results.
-
-The example identity policy is sandbox-only. A deployed application needs real authentication, tenant and resource authorization, approved commercial terms, monitored infrastructure, retention rules, and reconciliation. Follow [Deployment and publishing](docs/14-deployment-and-publishing.md).
-
-At the time of these local checks, no npm package or repository had been published. No customer was contacted and no financial action was taken in a Stripe account. The temporary verification database is not a project dependency and was stopped after testing.
+No npm publication or financial transaction was performed. The repository is hosted on GitHub; registry publication is a separate release step.
 
 ## Reproduce
 
-```sh
-npm ci
+```bash
+npm ci --ignore-scripts
 npm run release:check
 npm run demo
 ```
 
-For the database suite, set `TEST_DATABASE_URL` to a disposable PostgreSQL database. Those tests truncate SafeStripe tables. Set `PACKAGE_DATABASE_URL` when running `npm run test:package` to test migrations from the installed archive. See the [publishing guide](docs/14-deployment-and-publishing.md) for the complete commands and release sequence.
+Use a disposable database for integration tests: `TEST_DATABASE_URL` runs the PostgreSQL suite; these tests truncate SafeStripe tables. `PACKAGE_DATABASE_URL` enables migration checks from the installed archive. `MONGODB_TEST_URI` must point to an isolated replica set; tests create and remove a temporary database. `FIRESTORE_EMULATOR_HOST` enables the emulator suite; it creates and removes temporary collections.
+
+For the first real sandbox payment, use the separate [maintainer test guide](maintainer/README.md) or the [consumer quickstart](docs/03-quickstart.md). Keep keys in the local environment, not chat or source code.

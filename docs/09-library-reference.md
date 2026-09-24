@@ -1,5 +1,27 @@
 # Library contracts and extension guide
 
+## Portable API added in 0.2
+
+| Export | Purpose |
+| --- | --- |
+| `createSafeStripe(options)` | Configure the SDK, resolve account scope and connect a portable store |
+| `billing.storage` | Operations, jobs and application billing transactions |
+| `billing.webhooks(options)` | Receiver bound to the same account and storage |
+| `billing.worker(handlers)` | Worker whose handlers receive `BillingTransaction` |
+| `sqliteStorage({ filename })` | Local Node SQLite file; `/storage/sqlite` |
+| `postgresStorage({ db, migrate? })` | Portable SQL records; `/storage/postgres` |
+| `mongoStorage({ client, database, collection? })` | MongoDB transactions; `/storage/mongodb` |
+| `firestoreStorage({ db, collection? })` | Cloud Firestore transactions; `/storage/firestore` |
+| `SafeCheckout` | React payment form; `/react` |
+
+`SetupOptions` requires `secretKey`, `storage`, `appOrigin` and `authorize`. Optional fields include `accountId`, `connectedAccountId`, `allowLocalhost`, `gate` and `observer`. Account discovery makes one server API call per initialization. Cache the result/promise in your application.
+
+Portable storage options are `leaseSeconds` (default 120; shared with operation and job leases), `retryWindowSeconds` (default 82,800, maximum 82,800) and `maxAttempts` (default 8). The combined store requires a lease of at least 30 seconds. Its JSON payload limit is 512,000 bytes. `BillingTransaction` offers `get`, `set`, `effectOnce`, `enqueue`, `scope` and a database-derived `now` timestamp. It does not expose arbitrary native database queries.
+
+`createCheckout` accepts optional `uiMode: 'hosted' | 'custom'`; hosted is the default. A custom Session supplies the `client_secret` required by `SafeCheckout`. The frontend component accepts `publishableKey`, `clientSecret`, `children`, `appearance`, `className`, `style`, `buttonLabel` and optional display-only `onComplete`.
+
+See [database setup](15-databases.md), [framework routes](16-frameworks.md), [payment UI](17-payment-ui.md) and [recipes](18-recipes.md). The reference below retains the original SQL classes for compatibility; they use separate tables and are not automatically migrated into portable storage.
+
 ## Core construction
 
 Use `createStripeClient(key, livemode)` for the pinned SDK settings. Construct `PostgresOperations` and `PostgresJobs` with a `pg.Pool` or an implementation of the exported `Database` interface. Construct `SafeStripe` with the SDK, scope, operation store, trusted origin and mandatory authorizer.

@@ -1,91 +1,103 @@
-# Getting started
+# Install and configure
 
-Run a small payment-processing demo without connecting to Stripe. Then choose a framework and complete a sandbox payment.
+Start with a Node.js application, a Stripe sandbox, and a place to store billing records. You can use a local file while learning. You do not need Docker.
 
-## What you need
+## Install the package
 
-- A computer with Node.js 22 or later installed. Node.js runs JavaScript outside a browser; npm, its package manager, comes with it.
-- The `SafeStripe` folder from this project, extracted from the source archive or cloned from its repository.
-- A terminal. On macOS, open Terminal. On Windows, use PowerShell or a terminal in your editor.
+Once the package is published to npm, use the command for your database. Until then, replace `@safestripe/core` with the path to the release `.tgz` archive. A GitHub push alone does not publish an npm package.
 
-You do not need Docker, a database account, a Stripe key, or a card for this first exercise.
-
-## 1. Open the project folder
-
-In your editor, open `SafeStripe`, then open the editor's terminal. Its working folder should contain `package.json`. You can also type `cd ` in your terminal and drag the folder into it on macOS, then press Enter.
-
-Check that Node.js and npm are available:
-
-```sh
-node --version
-npm --version
+:::tabs database
+:::tab SQLite
+```bash
+npm install @safestripe/core
 ```
-
-The first command should show `v22` or a later major version. If the command is not found, install Node.js using the instructions on the [Node.js download page](https://nodejs.org/en/download), then reopen the terminal.
-
-A command block is something you type in a terminal. A JavaScript or TypeScript block is code you save in a file. The guides name the file when they ask you to create one.
-
-## 2. Install dependencies
-
-From the project folder, run:
-
-```sh
-npm ci
+SQLite is built into supported Node.js versions. No database service or extra database driver is required.
+:::tab PostgreSQL
+```bash
+npm install @safestripe/core pg
 ```
-
-This downloads the versions listed in `package-lock.json`. It can take a few minutes on the first run. Use `npm ci` when working on the source checkout; use `npm install` when adding SafeStripe to another application.
-
-## 3. Run the demo
-
-```sh
-npm run demo
+Use a PostgreSQL connection string from your existing database or a hosted provider. `pg` is currently included by SafeStripe too; listing it explicitly is appropriate when your application imports it directly.
+:::tab MongoDB
+```bash
+npm install @safestripe/core mongodb
 ```
+Use MongoDB Atlas or a replica set. A standalone MongoDB server does not provide the transactions this adapter needs.
+:::tab Firebase
+```bash
+npm install @safestripe/core @google-cloud/firestore
+```
+This adapter uses **Cloud Firestore**, through its server SDK. Firebase Realtime Database is a different product and is not supported by this adapter.
+:::endtabs
 
-The program creates a temporary database, makes signed test events, and processes them. The expected result is:
+Do **not** install the `stripe` package separately just to use SafeStripe. It is a pinned runtime dependency and npm installs it automatically. The Stripe browser helpers used by `SafeCheckout` are included as well. Your React or Next.js app supplies React. Express apps install Express as their web framework.
 
-| Record | Expected result | Meaning |
+## Understand your credentials
+
+| Setting | Where it belongs | When you need it |
 | --- | --- | --- |
-| Completed webhook jobs | 2 | Two different events were handled |
-| Fulfillment effects | 1 | The order was fulfilled once |
-| Pending receipt intents | 1 | One request to send a receipt was stored |
+| `STRIPE_SECRET_KEY` (`sk_test_…` or `rk_test_…`) | Server environment only | Creating and retrieving Stripe records |
+| Publishable key (`pk_test_…`) | Browser configuration | Embedded Stripe payment fields; hosted Checkout does not need it |
+| `STRIPE_WEBHOOK_SECRET` (`whsec_…`) | Server environment only | Verifying Stripe webhook messages |
+| `STRIPE_ACCOUNT_ID` (`acct_…`) | Server configuration, optional | Explicit scope when account discovery is unavailable |
+| Database credentials | Server environment only | A hosted database; SQLite does not need them |
 
-It also sends a duplicate delivery of one event. The inbox accepts that event only once.
+A signing secret belongs to one webhook destination. The Stripe CLI prints the secret for local forwarding; a deployed destination has its own secret. Do not interchange them.
 
-Nothing is charged or sent. The receipt is a database record waiting for a delivery service. This distinction matters in a real application: saving an intention to send an email and actually sending it are separate steps.
+`createSafeStripe()` normally discovers your account ID from your secret key at startup. You do not have to copy it manually. Internally, the account ID still matters: it keeps records from different accounts and environments separate. A restricted key might lack permission to retrieve the account. In that case, supply `accountId` from your trusted deployment configuration.
 
-The demo exits when it finishes. Its embedded database is temporary. You can rerun it without cleanup.
+For Stripe Connect, configure a distinct `connectedAccountId` from an authorized server-side account mapping. Never trust a browser-provided account ID. Organization keys and thin events are outside the current receiver's contract.
 
-## 4. Run the checks
+## Configure your environment
 
-```sh
-npm run check
+An `.env` file is a local text file containing settings. Add it to `.gitignore`. On a hosting platform, enter the same values in its environment settings or secret manager.
+
+```dotenv
+STRIPE_SECRET_KEY=your_sandbox_secret_key
+STRIPE_WEBHOOK_SECRET=your_local_signing_secret
+APP_ORIGIN=http://localhost:3000
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_sandbox_publishable_key
 ```
 
-This checks the TypeScript code, runs the automated tests, and creates the compiled library in `dist`. The summary should show zero failed tests. Tests include duplicate requests, changed inputs, lost worker leases, transaction rollback, signature verification, and request encoding.
+Only the publishable key gets the `NEXT_PUBLIC_` prefix. A variable with that prefix can be included in browser JavaScript. Never use it for a secret API key, signing secret, database password or service-account credential.
 
-If a command fails, read the first error above the summary. A download error usually points to connectivity or registry access. A Node.js version error means your terminal is using a different Node installation. A busy port or permission error can affect the local HTTP fixture tests; these tests start temporary servers on loopback addresses.
+## Create the server client once
 
-## 5. Take a test payment
+The following is an application integration pattern. `billingPolicy` is your application's authorization function: it must check the signed-in tenant, resource ownership, approved prices and the requested action. The [local quickstart](03-quickstart.md) includes a complete, deliberately restricted learning policy.
 
-Continue with [Run a sandbox payment](03-quickstart.md). That guide adds PostgreSQL, a Stripe sandbox, a fictional customer, and a test price. You will start either Express or Next.js, create a Checkout Session, and verify the resulting order.
+```ts
+import { createSafeStripe } from '@safestripe/core';
+import { sqliteStorage } from '@safestripe/core/storage/sqlite';
+import { billingPolicy } from './billing-policy.js';
 
-Choose Express if you already use an Express API or want a small standalone server. Choose Next.js if your application already uses its App Router. Both routes use the same payment library and worker.
+const storage = await sqliteStorage({ filename: './.data/billing.sqlite' });
 
-## Understand the payment flow
+export const billing = await createSafeStripe({
+  secretKey: process.env.STRIPE_SECRET_KEY!,
+  storage,
+  appOrigin: 'http://localhost:3000',
+  allowLocalhost: true,
+  authorize: billingPolicy,
+});
+```
 
-1. Your application decides which customer and price belong to an order.
-2. SafeStripe records the operation and asks Stripe to create a Checkout Session.
-3. The customer completes the hosted Checkout page.
-4. Stripe sends a signed event to your webhook endpoint.
-5. The endpoint verifies the message and saves it before responding.
-6. A worker verifies the payment and updates the order in a database transaction.
+Keep this instance in server code and reuse it. The factory resolves the account once and sets the reviewed Stripe API version. A deployed application uses an HTTPS `appOrigin` and shared storage. The factory rejects a live key with SQLite.
 
-The browser's success page is a receipt for navigation. The worker is responsible for fulfillment. Customers may close a tab, and delayed payment methods may finish after the browser has left.
+## Three identities you will use
 
-## If you only need the Stripe Dashboard
+Every wrapped write takes an actor with three fields:
 
-Start with [Stripe objects and state](01-objects-and-state.md), then complete the [operations workbook](05-operations-workbook.md). Those exercises use Stripe's Dashboard and explain how to verify outcomes. You do not need to install this library to practice invoice or refund workflows.
+```ts
+const actor = {
+  tenantId: signedInUser.organizationId,
+  actorId: signedInUser.id,
+  operationId: `checkout:${order.id}`,
+};
+```
 
-## Next steps
+`tenantId` is the business or customer workspace. `actorId` identifies the person or service allowed to act. `operationId` identifies one intended business action. Derive them on the server.
 
-To add the library to an existing application, read [Installation and integration](12-integration.md). To understand why the database and worker are needed, read [What SafeStripe solves](13-what-safestripe-solves.md).
+Keep the operation ID unchanged when retrying the same action. Use a new one for a new purchase or a changed business instruction. SafeStripe rejects different inputs under an existing identity instead of silently creating a second payment.
+
+## Before continuing
+
+You should now know where your keys belong, which database you will use, and which part of your app decides who may pay. Next, [run a sandbox payment](03-quickstart.md) or [choose a storage adapter](15-databases.md).

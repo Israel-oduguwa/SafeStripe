@@ -18,7 +18,8 @@
     "tests/**/*.ts",
     "scripts/**/*.ts",
     "examples/**/*.ts",
-    "examples/**/*.tsx"
+    "examples/**/*.tsx",
+    "src/**/*.tsx"
   ],
   "exclude": ["node_modules", "dist", "examples/nextjs/.next"]
 }

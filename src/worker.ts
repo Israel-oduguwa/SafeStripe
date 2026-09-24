@@ -1,17 +1,18 @@
 import type Stripe from 'stripe';
 import type { Sql } from './database.js';
-import { PostgresJobs, outboxDeliveryKey } from './jobs.js';
+import { outboxDeliveryKey } from './jobs.js';
+import type { JobStore } from './storage/contracts.js';
 import { integerOption } from './primitives.js';
 import { observe, diagnostic, type Observer } from './telemetry.js';
 
 export type WorkResult = 'idle' | 'done' | 'failed';
-export type EventHandler = (event: Stripe.Event, tx: Sql) => Promise<void>;
-export class WebhookWorker {
-  private readonly handlers: Readonly<Record<string, EventHandler>>;
+export type EventHandler<T = Sql> = (event: Stripe.Event, tx: T) => Promise<void>;
+export class WebhookWorker<T = Sql> {
+  private readonly handlers: Readonly<Record<string, EventHandler<T>>>;
   constructor(
-    private readonly jobs: PostgresJobs,
+    private readonly jobs: JobStore<T>,
     private readonly scope: string,
-    handlers: Record<string, EventHandler>,
+    handlers: Record<string, EventHandler<T>>,
     private readonly options: { observer?: Observer } = {},
   ) {
     this.handlers = Object.freeze({ ...handlers });
@@ -48,8 +49,8 @@ export class WebhookWorker {
 }
 
 /** Delivery is at least once. The remote recipient MUST deduplicate the supplied key. */
-export async function dispatchOutboxOnce(
-  jobs: PostgresJobs,
+export async function dispatchOutboxOnce<T>(
+  jobs: JobStore<T>,
   scope: string,
   deliver: (message: { type: string; payload: unknown; idempotencyKey: string }) => Promise<void>,
   options: { observer?: Observer } = {},

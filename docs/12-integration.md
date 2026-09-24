@@ -1,5 +1,7 @@
 # Installation and integration
 
+> The SQL implementation details on this page describe the original PostgreSQL API. For the portable SQLite, PostgreSQL, MongoDB and Firestore setup, start with [database adapters](15-databases.md) and [framework integration](16-frameworks.md). The current local sample defaults to SQLite; legacy SQL example commands use the `:legacy` suffix.
+
 Add SafeStripe to a server application that already has users and orders. You will need Node.js 22+, PostgreSQL, and a Stripe sandbox. SafeStripe runs on the server. Never import it into a browser component or put a secret key in a public environment variable.
 
 ## Install

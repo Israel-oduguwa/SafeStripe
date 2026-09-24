@@ -1,5 +1,7 @@
 # Distributed architecture and invariants
 
+> The SQL implementation details on this page describe the original PostgreSQL API. For the portable SQLite, PostgreSQL, MongoDB and Firestore setup, start with [database adapters](15-databases.md) and [framework integration](16-frameworks.md). The current local sample defaults to SQLite; legacy SQL example commands use the `:legacy` suffix.
+
 ## The two independent systems
 
 Stripe and your database do not participate in one atomic transaction. An API call can succeed at Stripe and time out before your service sees a response. Your database can commit and your HTTP response can disappear. A worker can stop after delivering an email but before recording delivery.

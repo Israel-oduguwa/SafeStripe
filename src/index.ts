@@ -9,3 +9,6 @@ export * from './reconciliation.js';
 export * from './webhooks.js';
 export * from './worker.js';
 export * from './telemetry.js';
+export * from './setup.js';
+export * from './storage/contracts.js';
+export * from './storage/store.js';

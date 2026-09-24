@@ -1,5 +1,7 @@
 # Security, performance, and large-scale operation
 
+> The SQL implementation details on this page describe the original PostgreSQL API. For the portable SQLite, PostgreSQL, MongoDB and Firestore setup, start with [database adapters](15-databases.md) and [framework integration](16-frameworks.md). The current local sample defaults to SQLite; legacy SQL example commands use the `:legacy` suffix.
+
 ## Threat model
 
 Name what you are protecting: customer payment authorization, tenant billing privacy, entitlement correctness, financial integrity, operational credentials, and the ability to investigate a failure. Separate an unauthenticated attacker, a malicious tenant, a compromised application service, a mistaken operator, and a delayed legitimate event. They require different controls.

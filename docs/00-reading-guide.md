@@ -1,48 +1,44 @@
-# SafeStripe documentation
+# Build payments with SafeStripe
 
-SafeStripe helps a Node.js application keep its payment records consistent with Stripe. It stores the identity of each operation, accepts verified events into a database, and gives workers a way to finish work safely after a failure.
+SafeStripe helps your Node.js application remember what it asked Stripe to do, verify incoming payment events, and finish background work without repeating the same business action.
 
-If you are new to payment development, start with the local demo. You can run it without a Stripe account and see why duplicate events need special handling. Then use a Stripe sandbox to take your first test payment.
+Use it with Express or Next.js. Start locally with SQLite, then choose PostgreSQL, MongoDB or Firebase Cloud Firestore when you deploy. The Stripe SDK is included in the package installation.
 
-## Get started
+## Start with one working payment
 
-| Guide | What you will learn |
+If this is your first integration, follow these pages in order:
+
+1. [Install and configure](11-getting-started.md). Understand the three credentials and choose a database.
+2. [Make your first payment](03-quickstart.md). Run the sample locally without Docker.
+3. [Connect Express or Next.js](16-frameworks.md). Add the endpoints to your own application.
+4. [Add a payment form](17-payment-ui.md). Use hosted Checkout or the ready-made React component.
+5. [Deploy your integration](14-deployment-and-publishing.md). Keep web requests short and run a durable worker.
+
+Already have a Stripe integration? Read [what SafeStripe solves](13-what-safestripe-solves.md), [database adapters](15-databases.md), and [upgrading an existing integration](20-upgrading.md).
+
+## How a payment reaches your application
+
+A customer presses **Pay**. Your server checks their identity and selects the price from your own catalog. SafeStripe saves a stable operation identity before asking Stripe to create Checkout. The customer pays using Stripe's payment fields. Stripe then sends a signed webhook to your server. A worker verifies the current payment and updates your order inside a database transaction.
+
+The success page is a receipt for the browser journey. The verified webhook and stored order decide whether to deliver the product.
+
+## Choose your path
+
+| You want to… | Read |
 | --- | --- |
-| [Getting started](11-getting-started.md) | Install the tools, run the demo, and understand the output |
-| [Run a sandbox payment](03-quickstart.md) | Configure Stripe, start Express or Next.js, and verify the order |
-| [Install in your application](12-integration.md) | Install the package, migrate the database, connect authorization, and run a worker |
-| [What SafeStripe solves](13-what-safestripe-solves.md) | Understand each control through a failure and recovery example |
+| Try payments without installing a database server | [Local quickstart](03-quickstart.md) |
+| Use PostgreSQL, MongoDB, Firebase or SQLite | [Storage setup](15-databases.md) |
+| Add Express routes or Next.js Route Handlers | [Framework integration](16-frameworks.md) |
+| Style a payment form without wiring every Stripe component | [Payment UI](17-payment-ui.md) |
+| Create customers, refunds, subscriptions and invoices | [Recipes](18-recipes.md) |
+| Design a larger production system | [Enterprise architecture](19-enterprise.md) |
+| Learn Dashboard workflows and financial operations | [Operations workbook](05-operations-workbook.md) |
+| Maintain or publish this package | [Maintainer guide](../maintainer/README.md) |
 
-The local examples use a fixed test customer and order so you can follow the complete flow. When you add SafeStripe to an existing product, your own login and order system supply those records.
+## What is included
 
-## Build and operate a payment system
+Durable operation records, request fingerprints, account and tenant scoping, signed webhook receivers, persistent jobs, bounded retries, dead-job recovery, transactional effects, an outbox, Express and Next.js adapters, and a React Checkout component.
 
-| Guide | Use it when |
-| --- | --- |
-| [Stripe objects and state](01-objects-and-state.md) | You need to distinguish a payment, invoice, subscription, refund, and balance entry |
-| [Architecture](02-distributed-architecture.md) | You are designing retries, transactions, event processing, and recovery |
-| [Billing and finance](04-billing-and-finance.md) | You are handling subscriptions, prorations, money, Connect, or tax |
-| [Security and scale](07-security-and-scale.md) | You are reviewing access, capacity, monitoring, and data retention |
-| [Testing and runbooks](08-testing-and-runbooks.md) | You need to test a failure or investigate an incident |
-| [Library reference](09-library-reference.md) | You need a method, option, error code, or extension contract |
-| [Deployment and publishing](14-deployment-and-publishing.md) | You are deploying a service or releasing the npm package |
+Your application supplies authentication, resource ownership, approved prices, business rules and worker hosting. SafeStripe makes these boundaries explicit. It does not claim to make every payment integration secure automatically, and this release has no published large-scale throughput benchmark.
 
-## Practice Stripe operations
-
-The [operations workbook](05-operations-workbook.md) contains exercises for customers, payments, invoices, subscriptions, refunds, disputes, and reconciliation. Each exercise describes the starting state, permitted changes, and evidence needed to verify the result.
-
-Use [recording and evaluation](06-evaluation-and-recording.md) to turn an exercise into a screen recording, a task prompt, and a scored review. You can complete this path without writing application code. Access to an authorized Stripe sandbox is required for the Dashboard exercises.
-
-## A few terms before you begin
-
-**Stripe** processes payments and provides billing services. **SafeStripe** is the library in this repository. It coordinates Stripe requests with your application's database.
-
-A **sandbox** is a Stripe environment for testing. A **webhook** is a message Stripe sends to your server after something changes. A **worker** is a separate process that handles stored work. An **operation ID** is your application's permanent name for one intended action, such as `refund:case-184`.
-
-The guides explain other terms when they first matter. You do not need to understand distributed systems to run the first demo.
-
-## Versions and support
-
-This edition targets Node.js 22+, Express 5, Next.js App Router, and PostgreSQL. It pins Stripe SDK 22.6.2 and API version `2026-08-26.dahlia`. See [sources and compatibility](10-sources-and-corrections.md) for the official references and [verification](../VERIFICATION.md) for test results.
-
-Code blocks marked as integration sketches depend on your application's existing services. Complete runnable examples live in the source checkout. Commands that move real money are not part of the getting-started path.
+The package is ESM and server-side code requires Node.js 22.19 or later. Only `@safestripe/core/react` belongs in a client component. The SQLite adapter uses Node's built-in SQLite API, which emits an experimental warning on Node 22.

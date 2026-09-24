@@ -19,6 +19,12 @@ try {
     'dist/adapters/express.js',
     'dist/adapters/next.js',
     'dist/cli.js',
+    'dist/storage/sqlite.js',
+    'dist/storage/postgres.js',
+    'dist/storage/mongodb.js',
+    'dist/storage/firestore.js',
+    'dist/react/index.js',
+    'migrations/002_portable_storage.sql',
     'migrations/001_initial.sql',
     'LICENSE',
     'NOTICE',
@@ -60,6 +66,19 @@ assert.equal(typeof express.expressWebhook, 'function');
 assert.equal(typeof next.nextWebhook, 'function');
 assert.equal(typeof migrations.migrate, 'function');
 assert.equal(typeof core.runWorkerLoop, 'function');
+const { sqliteStorage } = await import('${meta.name}/storage/sqlite');
+const storage = await sqliteStorage({filename:':memory:'});
+await storage.transaction('consumer', tx => tx.set('orders','one',{persisted:true}));
+assert.deepEqual(await storage.read('consumer','orders','one'),{persisted:true});
+await storage.close();
+const { SafeCheckout } = await import('${meta.name}/react');
+assert.equal(typeof SafeCheckout,'function');
+const { createRequire } = await import('node:module');
+const require = createRequire(import.meta.url);
+assert.ok(require.resolve('stripe'));
+assert.throws(() => require.resolve('mongodb'), {code:'MODULE_NOT_FOUND'});
+assert.throws(() => require.resolve('@google-cloud/firestore'), {code:'MODULE_NOT_FOUND'});
+
 `,
   );
   run(process.execPath, ['smoke.mjs'], consumer);
@@ -69,6 +88,9 @@ assert.equal(typeof core.runWorkerLoop, 'function');
 import { expressWebhook } from '${meta.name}/express';
 import { nextWebhook } from '${meta.name}/next';
 import { migrate } from '${meta.name}/migrations';
+import { sqliteStorage } from '${meta.name}/storage/sqlite';
+import { postgresStorage } from '${meta.name}/storage/postgres';
+void [sqliteStorage,postgresStorage];
 const policy: Authorizer = async input => input.actor.tenantId.length > 0;
 const gate = new ConcurrencyGate();
 void [SafeStripe, policy, gate, migrate, expressWebhook, nextWebhook, runWorkerLoop];

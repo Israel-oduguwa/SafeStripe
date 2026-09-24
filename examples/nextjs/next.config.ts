@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
 const config: NextConfig = {
+  serverExternalPackages: ['@google-cloud/firestore', 'mongodb', 'pg', 'stripe'],
   turbopack: { root: path.resolve(process.cwd()) },
   webpack(config) {
     // NodeNext uses .js specifiers in TypeScript source. Resolve source when bundling the example.

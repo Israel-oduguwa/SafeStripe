@@ -2,11 +2,11 @@ import Stripe from 'stripe';
 import { z } from 'zod';
 import { SafeStripeError } from './errors.js';
 import { API_VERSION, integerOption, scopeKey, type Scope } from './primitives.js';
-import { PostgresJobs } from './jobs.js';
+import type { JobIngress } from './storage/contracts.js';
 
 export interface WebhookOptions {
   stripe: Stripe;
-  jobs: PostgresJobs;
+  jobs: JobIngress;
   scope: Scope;
   signingSecrets: readonly string[];
   eventTypes: readonly string[];

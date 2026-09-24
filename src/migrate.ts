@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { migrationSources } from './migration-sources.js';
 import { createHash } from 'node:crypto';
 import type { Database } from './database.js';
 import { transaction } from './database.js';
@@ -19,16 +19,11 @@ export async function migrate(db: Database, options: MigrationOptions = {}): Pro
     1,
     3_600_000,
   );
-  const directory = new URL('../migrations/', import.meta.url);
-  const migrations = await Promise.all(
-    (await readdir(directory))
-      .filter((name) => /^\d+_[a-z0-9_]+\.sql$/.test(name))
-      .sort()
-      .map(async (name) => {
-        const sql = await readFile(new URL(name, directory), 'utf8');
-        return { name, sql, checksum: createHash('sha256').update(sql).digest('hex') };
-      }),
-  );
+  const migrations = migrationSources.map(({ name, sql }) => ({
+    name,
+    sql,
+    checksum: createHash('sha256').update(sql).digest('hex'),
+  }));
   if (!migrations.length)
     throw new Error('No SafeStripe migrations found in the installed package');
   return transaction(db, async (tx) => {
@@ -41,7 +36,7 @@ export async function migrate(db: Database, options: MigrationOptions = {}): Pro
       'CREATE TABLE IF NOT EXISTS sf_migrations(name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT clock_timestamp())',
     );
     const applied = await tx.query('SELECT name,checksum FROM sf_migrations ORDER BY name');
-    const known = new Map(migrations.map((m) => [m.name, m.checksum]));
+    const known = new Map<string, string>(migrations.map((m) => [m.name, m.checksum]));
     for (const row of applied.rows) {
       if (known.get(String(row.name)) !== row.checksum)
         throw new Error(`Unknown or modified applied migration: ${String(row.name)}`);

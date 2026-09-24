@@ -17,7 +17,8 @@ import {
   type Resource,
   type Scope,
 } from './primitives.js';
-import { PostgresOperations, type Operation } from './operations.js';
+import type { Operation } from './operations.js';
+import type { OperationStore } from './storage/contracts.js';
 import { observe, diagnostic, type Observer } from './telemetry.js';
 import { ConcurrencyGate, type ExecutionGate } from './limiter.js';
 
@@ -29,14 +30,14 @@ export function createStripeClient(key: string, livemode: boolean): Stripe {
     timeout: 10_000,
     maxNetworkRetries: 2,
     telemetry: false,
-    appInfo: { name: 'SafeStripe', version: '0.1.0' },
+    appInfo: { name: 'SafeStripe', version: '0.2.0' },
   });
 }
 
 export interface SafeStripeOptions {
   stripe: Stripe;
   scope: Scope;
-  operations: PostgresOperations;
+  operations: OperationStore;
   authorize: Authorizer;
   /** Trusted deployment configuration, never a request Host header. */
   appOrigin: string;
@@ -56,7 +57,7 @@ export class SafeStripe {
   private readonly origin: string;
   private readonly gate: ExecutionGate;
   private readonly observer?: Observer;
-  private readonly operations: PostgresOperations;
+  private readonly operations: OperationStore;
   private readonly authorize: Authorizer;
 
   constructor(options: SafeStripeOptions) {
@@ -182,6 +183,7 @@ export class SafeStripe {
     input: {
       customerId: string;
       mode: 'payment' | 'subscription';
+      uiMode?: 'hosted' | 'custom';
       items: { priceId: string; quantity: number }[];
       reference: string;
     },
@@ -191,6 +193,7 @@ export class SafeStripe {
         .object({
           customerId: customer,
           mode: z.enum(['payment', 'subscription']),
+          uiMode: z.enum(['hosted', 'custom']).optional(),
           items: z
             .array(z.object({ priceId: price, quantity }).strict())
             .min(1)
@@ -206,8 +209,15 @@ export class SafeStripe {
       line_items: data.items.map((x) => ({ price: x.priceId, quantity: x.quantity })),
       client_reference_id: data.reference,
       integration_identifier: 'safestripe_qvmtxkpa',
-      success_url: `${this.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${this.origin}/cancel`,
+      ...(data.uiMode === 'custom'
+        ? {
+            ui_mode: 'custom' as const,
+            return_url: `${this.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+          }
+        : {
+            success_url: `${this.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${this.origin}/cancel`,
+          }),
     };
     return this.write(
       actor,

@@ -43,6 +43,35 @@ try {
     await writeFile(file, base + context + '\n' + block.code + '\nexport {};');
     files.push(file);
   }
+  for (const [page, context] of [
+    [
+      '15-databases',
+      `import type {ConfiguredBilling,BillingStorage} from '@safestripe/core'; declare const billing:ConfiguredBilling; declare const storage:BillingStorage;`,
+    ],
+    [
+      '18-recipes',
+      `import type * as Core from '@safestripe/core';
+      declare const billing:Core.ConfiguredBilling; declare const actor:Core.Actor;
+      declare const user:{id:string;email:string;name:string};
+      declare const customerId:string,priceId:string,recurringPriceId:string,subscriptionId:string,itemId:string,newPriceId:string,eventId:string;
+      declare const refundRequest:{id:string;paymentIntentId:string;amountMinor:number};
+      declare const invoiceRequest:{id:string}; declare const signup:{id:string};
+      declare const cancellation:{id:string}; declare const operator:{id:string};
+      declare const quote:{id:string;prorationDate:number;change:Core.SubscriptionChange};
+      declare const shutdown:AbortController;
+      declare const notifications:{deliver(message:{type:string;payload:unknown;idempotencyKey:string}):Promise<void>};`,
+    ],
+  ]) {
+    const markdown = await readFile(path.join(root, 'docs', page + '.md'), 'utf8');
+    const snippets = [...markdown.matchAll(/```ts\n([\s\S]*?)```/g)];
+    for (const [index, match] of snippets.entries()) {
+      const code = match[1];
+      const prelude = page === '15-databases' && code.startsWith('import ') ? '' : context;
+      const file = path.join(directory, `${page}-${index}.ts`);
+      await writeFile(file, prelude + '\n' + code + '\nexport {};');
+      files.push(file);
+    }
+  }
   const customer = blocks.find(
     (block) => block.language === 'js' && block.code.includes('Learning customer'),
   );

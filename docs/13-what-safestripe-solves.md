@@ -12,7 +12,7 @@ SafeStripe gives these situations a durable identity, a recovery path, and recor
 
 Without a stable operation identity, the retry can create another session. Hashing the cart does not solve the whole problem: the customer might intentionally buy the same product again tomorrow.
 
-SafeStripe uses an operation ID supplied by your application, such as `checkout:order-184`. It derives a Stripe idempotency key from the account scope, tenant, operation ID, and action. It separately stores a fingerprint of the normalized input. PostgreSQL binds that identity to one set of terms.
+SafeStripe uses an operation ID supplied by your application, such as `checkout:order-184`. It derives a Stripe idempotency key from the account scope, tenant, operation ID, and action. It separately stores a fingerprint of the normalized input. The configured operation store binds that identity to one set of terms.
 
 | Next request | SafeStripe behavior |
 | --- | --- |
@@ -155,3 +155,15 @@ Use SafeStripe when payment workflows need durable coordination with PostgreSQL 
 You may need only Stripe's hosted products and a smaller integration for a simple payment link or a site with no local fulfillment state. You may need a different storage adapter or event platform if PostgreSQL cannot be part of the architecture. Organization-context events, thin events, complete Connect onboarding, disputes evidence submission, and full accounting are outside this release's wrapper surface.
 
 The important review question is specific: does each control cover the failure your product can experience? The [architecture](02-distributed-architecture.md), [library reference](09-library-reference.md), and [verification record](../VERIFICATION.md) provide the details needed to answer it.
+
+## 14. Starting without a database server
+
+The portable SQLite adapter keeps the same operation and job API while storing data in one local file. A new developer can run a signed-webhook and fulfillment test without Docker. Shared PostgreSQL, MongoDB and Firestore adapters provide the same transaction-facing methods for deployment. Moving live history between stores is a deliberate migration; changing an environment variable does not copy that history.
+
+## 15. Reducing payment-form wiring
+
+`SafeCheckout` composes Stripe's custom Checkout provider, Payment Element and confirmation controls. An application supplies a server-created Session secret and may wrap an order summary inside the component. Prices, authorization and fulfillment stay on the server. It reduces repeated UI plumbing without pretending that an arbitrary HTML form becomes a secure card collector.
+
+## 16. Keeping setup understandable
+
+The SDK installs with the package. Account discovery removes a routine manual configuration step. Database drivers are selected explicitly, and only the React subpath belongs in a browser bundle. The separate consumer and maintainer guides keep package publishing instructions out of application setup.

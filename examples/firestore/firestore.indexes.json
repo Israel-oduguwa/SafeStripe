@@ -1,0 +1,16 @@
+{
+  "indexes": [{
+    "collectionGroup": "safestripe_records",
+    "queryScope": "COLLECTION",
+    "fields": [
+      { "fieldPath": "scope", "order": "ASCENDING" },
+      { "fieldPath": "queue", "order": "ASCENDING" },
+      { "fieldPath": "dueAt", "order": "ASCENDING" }
+    ]
+  }],
+  "fieldOverrides": [{
+    "collectionGroup": "safestripe_records",
+    "fieldPath": "value",
+    "indexes": []
+  }]
+}

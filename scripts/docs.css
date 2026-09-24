@@ -510,3 +510,143 @@ summary {
     margin-top: 20px;
   }
 }
+
+/* Static VS Code grammar highlighting; no editor download or network request. */
+.code-block {
+  margin: 24px 0;
+  border: 1px solid #303746;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1e1e1e;
+  box-shadow: 0 8px 22px #18232f0b;
+}
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 42px;
+  padding: 8px 16px;
+  color: #b8c1d1;
+  background: #252831;
+  border-bottom: 1px solid #343946;
+  font-size: 12px;
+}
+.code-toolbar > span:first-child {
+  display: flex;
+  gap: 6px;
+}
+.code-toolbar i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #626879;
+}
+.code-toolbar i:first-child {
+  background: #ec6a5f;
+}
+.code-toolbar i:nth-child(2) {
+  background: #f4bf50;
+}
+.code-toolbar i:nth-child(3) {
+  background: #61c454;
+}
+.code-language {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.copy-code {
+  border: 1px solid #505667;
+  border-radius: 5px;
+  color: #e4e8f0;
+  background: #303541;
+  padding: 2px 9px;
+  font-size: 12px;
+}
+.code-block pre.shiki {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 22px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.8;
+  tab-size: 2;
+}
+.code-block code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  white-space: pre;
+}
+.copy-status {
+  display: block;
+  color: #c8cdd7;
+  font-size: 12px;
+  padding: 0 16px;
+}
+.copy-status:not(:empty) {
+  padding-bottom: 10px;
+}
+.snippet-tabs {
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fafbfe;
+}
+.tab-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  background: #f1f3f9;
+  border-bottom: 1px solid var(--border);
+}
+.tab-buttons button {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #586675;
+  font-size: 13px;
+  font-weight: 600;
+}
+.tab-buttons button[aria-selected='true'] {
+  background: #fff;
+  color: #5142be;
+  box-shadow: 0 1px 5px #212e4815;
+}
+[role='tabpanel'] {
+  padding: 4px 20px 12px;
+}
+[role='tabpanel'] .code-block {
+  margin: 16px 0;
+}
+article > h1 {
+  letter-spacing: -0.035em;
+}
+@media (max-width: 700px) {
+  [role='tabpanel'] {
+    padding: 4px 10px 10px;
+  }
+  .code-block pre.shiki {
+    padding: 16px;
+    font-size: 12px;
+  }
+}
+@media print {
+  [role='tabpanel'][hidden] {
+    display: block !important;
+  }
+  .copy-code,
+  .copy-status {
+    display: none;
+  }
+  .code-block {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}

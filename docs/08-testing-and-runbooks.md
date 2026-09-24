@@ -1,5 +1,7 @@
 # Testing, incident response, and release review
 
+> The SQL implementation details on this page describe the original PostgreSQL API. For the portable SQLite, PostgreSQL, MongoDB and Firestore setup, start with [database adapters](15-databases.md) and [framework integration](16-frameworks.md). The current local sample defaults to SQLite; legacy SQL example commands use the `:legacy` suffix.
+
 ## Test layers establish different facts
 
 | Layer | What it establishes | What it cannot establish |

@@ -34,3 +34,44 @@ jobs:
         env:
           TEST_DATABASE_URL: postgresql://safestripe:safestripe@localhost:5432/safestripe_test
       - run: npm audit --omit=dev --audit-level=high
+  document-adapters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci --ignore-scripts
+      - name: Start isolated MongoDB replica set on the CI runner
+        run: |
+          docker run -d --name safestripe-mongo -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 40); do
+            if docker exec safestripe-mongo mongosh --quiet --eval 'db.adminCommand({ping:1})'; then break; fi
+            sleep 2
+          done
+          docker exec safestripe-mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
+          for i in $(seq 1 40); do
+            if docker exec safestripe-mongo mongosh --quiet --eval 'if(!db.hello().isWritablePrimary) quit(1)'; then break; fi
+            sleep 2
+          done
+      - name: Install Firestore emulator tooling only on the CI runner
+        run: npm install --prefix "$RUNNER_TEMP/firebase-tools" firebase-tools@15.31.0 --no-audit --no-fund
+      - name: Run document adapter conformance
+        run: >-
+          "$RUNNER_TEMP/firebase-tools/node_modules/.bin/firebase" emulators:exec
+          --only firestore --project safestripe-test --config examples/firestore/firebase.json
+          "node --import tsx --test tests/storage.test.ts"
+        env:
+          MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0&directConnection=true
+      - name: Preserve emulator diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: document-adapter-diagnostics
+          path: '*-debug.log'

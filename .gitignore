@@ -13,3 +13,8 @@ recordings/
 *.log
 .npmrc
 examples/nextjs/next-env.d.ts
+
+.data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

@@ -29,7 +29,7 @@ beforeEach(async () => {
 });
 
 test('installed migration protocol is repeatable and records immutable checksums', async () => {
-  assert.deepEqual(await migrate(h.db), ['001_initial.sql']);
+  assert.deepEqual(await migrate(h.db), ['001_initial.sql', '002_portable_storage.sql']);
   assert.deepEqual(await migrate(h.db), []);
   const result = await h.db.query('SELECT checksum FROM sf_migrations');
   assert.match(String(result.rows[0]!.checksum), /^[a-f0-9]{64}$/);
@@ -41,12 +41,12 @@ test('an older package refuses a database with unknown future migrations', async
   await migrate(h.db);
   await h.db.query("INSERT INTO sf_migrations(name,checksum) VALUES('999_future.sql','abc')");
   await assert.rejects(migrate(h.db), /Unknown or modified/);
-  assert.equal((await h.db.query('SELECT count(*)::int AS n FROM sf_migrations')).rows[0]!.n, 2);
+  assert.equal((await h.db.query('SELECT count(*)::int AS n FROM sf_migrations')).rows[0]!.n, 3);
 });
 
 test('two migration runners serialize and apply a file only once', async () => {
   const results = await Promise.all([migrate(h.db), migrate(h.db)]);
-  assert.equal(results.flat().length, 1);
+  assert.equal(results.flat().length, 2);
 });
 
 test('observer failures cannot turn a completed payment into a retry', async () => {
