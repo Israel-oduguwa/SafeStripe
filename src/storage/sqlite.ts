@@ -11,6 +11,8 @@ class SQLiteDriver implements StorageDriver {
   private readonly db: DatabaseSync;
   private tail: Promise<void> = Promise.resolve();
   constructor(filename: string) {
+    if (typeof filename !== 'string' || !filename.trim())
+      throw new Error('A SQLite filename is required');
     if (filename !== ':memory:') mkdirSync(dirname(resolve(filename)), { recursive: true });
     this.db = new DatabaseSync(filename);
     this.db.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;');

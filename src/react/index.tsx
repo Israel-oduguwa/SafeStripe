@@ -66,7 +66,11 @@ function PaymentForm(props: SafeCheckoutProps) {
           else {
             setComplete(true);
             setMessage('Payment submitted. We are confirming your order.');
-            props.onComplete?.(result.session);
+            try {
+              props.onComplete?.(result.session);
+            } catch {
+              /* Consumer UI callbacks must not change the confirmed payment state. */
+            }
           }
         } catch {
           setMessage(

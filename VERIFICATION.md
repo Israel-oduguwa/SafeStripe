@@ -25,7 +25,17 @@ The three local suite skips are the test requiring independent PostgreSQL connec
 
 ## Remote checks
 
-The original 0.1 commit passed GitHub CI on Node.js 22 and 24 with PostgreSQL 17. The current 0.2 workflow adds a MongoDB 8 replica set and the Firestore emulator on GitHub's isolated runners. Results for the updated commit must be confirmed before treating those adapters as integration-verified. The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project.
+[GitHub Actions run 35990082440](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/35990082440) passed all three jobs for commit `e91329c`:
+
+| CI job | Result |
+| --- | --- |
+| Node.js 22 release checks | Passed, including Next.js build, package installation and audit |
+| Node.js 24 release checks | Passed, including Next.js build, package installation and audit |
+| Offline suite including local starter | 76 tests: 73 passed, zero failures, three expected skips |
+| Real PostgreSQL 17 suite | 76 tests: 74 passed, zero failures, two skips for document services checked in their own job |
+| Four-adapter conformance on a runner with MongoDB 8 and Firestore emulator | All 35 passed, zero failures or skips |
+
+The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project. Subsequent small packaging/UI hardening changes are covered by the same CI workflow on their own commits; consult the repository's latest run for exact-head status.
 
 ## What has not been established
 

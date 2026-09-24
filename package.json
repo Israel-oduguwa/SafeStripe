@@ -64,7 +64,8 @@
     "examples/express",
     "examples/nextjs/app",
     "examples/nextjs/next.config.ts",
-    "examples/firestore"
+    "examples/firestore",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "build": "node scripts/sync-migrations.mjs && tsc -p tsconfig.build.json",
