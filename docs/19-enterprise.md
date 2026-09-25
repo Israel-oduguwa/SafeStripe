@@ -49,7 +49,7 @@ Native SQL helpers (`effectOnce`, `refreshProjection`, SQL reconciliation) belon
 ## Control concurrency before adding replicas
 
 ```ts
-import { ConcurrencyGate, createSafeStripe } from '@safestripe/core';
+import { ConcurrencyGate, createSafeStripe } from '@israeloduguwa/safestripe';
 
 const billing = await createSafeStripe({
   secretKey: process.env.STRIPE_SECRET_KEY!,

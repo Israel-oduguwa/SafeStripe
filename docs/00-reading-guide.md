@@ -41,4 +41,4 @@ Durable operation records, request fingerprints, account and tenant scoping, sig
 
 Your application supplies authentication, resource ownership, approved prices, business rules and worker hosting. SafeStripe makes these boundaries explicit. It does not claim to make every payment integration secure automatically, and this release has no published large-scale throughput benchmark.
 
-The package is ESM and server-side code requires Node.js 22.19 or later. Only `@safestripe/core/react` belongs in a client component. The SQLite adapter uses Node's built-in SQLite API, which emits an experimental warning on Node 22.
+The package is ESM and server-side code requires Node.js 22.19 or later. Only `@israeloduguwa/safestripe/react` belongs in a client component. The SQLite adapter uses Node's built-in SQLite API, which emits an experimental warning on Node 22.

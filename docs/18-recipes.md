@@ -124,7 +124,7 @@ This schedules cancellation; it does not immediately revoke access, issue a refu
 A transaction records a message; an outbox worker performs the external action after that transaction commits.
 
 ```ts
-import { dispatchOutboxOnce, runWorkerLoop } from '@safestripe/core';
+import { dispatchOutboxOnce, runWorkerLoop } from '@israeloduguwa/safestripe';
 
 await runWorkerLoop(
   () => dispatchOutboxOnce(

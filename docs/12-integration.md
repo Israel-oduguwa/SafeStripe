@@ -2,14 +2,14 @@
 
 > The SQL implementation details on this page describe the original PostgreSQL API. For the portable SQLite, PostgreSQL, MongoDB and Firestore setup, start with [database adapters](15-databases.md) and [framework integration](16-frameworks.md). The current local sample defaults to SQLite; legacy SQL example commands use the `:legacy` suffix.
 
-Add SafeStripe to a server application that already has users and orders. This guide uses Node.js 22.19 or later, PostgreSQL, and a Stripe sandbox. Keep the server entry point and secret keys out of browser components. The separate React payment component is available from `@safestripe/core/react`.
+Add SafeStripe to a server application that already has users and orders. This guide uses Node.js 22.19 or later, PostgreSQL, and a Stripe sandbox. Keep the server entry point and secret keys out of browser components. The separate React payment component is available from `@israeloduguwa/safestripe/react`.
 
 ## Install
 
 Install SafeStripe and the PostgreSQL driver in your application:
 
 ```sh
-npm install @safestripe/core pg
+npm install @israeloduguwa/safestripe pg
 ```
 
 TypeScript applications that import `pg` should also install its declarations:
@@ -18,7 +18,7 @@ TypeScript applications that import `pg` should also install its declarations:
 npm install --save-dev @types/pg
 ```
 
-The package uses ES modules. For a plain JavaScript app, use `.mjs` files or set `"type": "module"` in your `package.json`. A CommonJS app can load it with `await import('@safestripe/core')` inside an async function. Next.js handles the imports in server modules.
+The package uses ES modules. For a plain JavaScript app, use `.mjs` files or set `"type": "module"` in your `package.json`. A CommonJS app can load it with `await import('@israeloduguwa/safestripe')` inside an async function. Next.js handles the imports in server modules.
 
 ## Configure the database
 
@@ -36,7 +36,7 @@ Fill the Stripe values from your sandbox. Keep the file out of Git. In deploymen
 Load your local environment file and run the installed migration command:
 
 ```sh
-node --env-file=.env node_modules/@safestripe/core/dist/cli.js migrate
+node --env-file=.env node_modules/@israeloduguwa/safestripe/dist/cli.js migrate
 ```
 
 When your environment is already loaded, the package also exposes `safestripe migrate` through npm scripts or `npx --no-install safestripe migrate`. Use a database role allowed to create tables. Application processes should use a separate role with only the permissions they need.
@@ -47,7 +47,7 @@ You can also run migrations from a deployment script:
 
 ```js
 import { Pool } from 'pg';
-import { migrate } from '@safestripe/core/migrations';
+import { migrate } from '@israeloduguwa/safestripe/migrations';
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
 try {
@@ -67,7 +67,7 @@ Save this as `customer.mjs` in your application. It is a local script with a fix
 import { Pool } from 'pg';
 import {
   SafeStripe, PostgresOperations, createStripeClient
-} from '@safestripe/core';
+} from '@israeloduguwa/safestripe';
 
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -163,7 +163,7 @@ Persist the Checkout Session ID against the order before presenting its URL. If 
 Create one receiver for one trusted scope. Its signing secret belongs to that endpoint or local CLI listener:
 
 ```ts
-import { PostgresJobs, WebhookReceiver } from '@safestripe/core';
+import { PostgresJobs, WebhookReceiver } from '@israeloduguwa/safestripe';
 
 const jobs = new PostgresJobs(db);
 const receiver = new WebhookReceiver({
@@ -194,7 +194,7 @@ Mount the raw-body route before JSON parsing:
 
 ```ts
 import express from 'express';
-import { expressWebhook } from '@safestripe/core/express';
+import { expressWebhook } from '@israeloduguwa/safestripe/express';
 
 const app = express();
 app.post('/api/webhooks/stripe',
@@ -215,7 +215,7 @@ A webhook signature covers the original bytes. Parsing JSON and recreating it be
 Create `app/api/webhooks/stripe/route.ts`:
 
 ```ts
-import { nextWebhook } from '@safestripe/core/next';
+import { nextWebhook } from '@israeloduguwa/safestripe/next';
 import { getBillingRuntime } from '@/lib/billing';
 
 export const runtime = 'nodejs';
@@ -238,7 +238,7 @@ A worker takes a handler map. Every local write made through the supplied `tx` c
 ```ts
 import {
   WebhookWorker, runWorkerLoop, effectOnce
-} from '@safestripe/core';
+} from '@israeloduguwa/safestripe';
 
 const worker = new WebhookWorker(jobs, safe.scopeId, {
   'checkout.session.completed': handleCheckout,
@@ -268,7 +268,7 @@ The complete example in `examples/shared/handlers.ts` implements those checks fo
 Pass an `observer` when constructing `SafeStripe` or `WebhookWorker`, and to `runWorkerLoop` for poll failures:
 
 ```ts
-import type { Observer } from '@safestripe/core';
+import type { Observer } from '@israeloduguwa/safestripe';
 
 const observer: Observer = event => {
   metrics.record(event.category, event.action, event.outcome, event.durationMs);

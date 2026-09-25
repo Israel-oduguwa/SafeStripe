@@ -11,7 +11,7 @@ const blocks = [...source.matchAll(/```(ts|js)\n([\s\S]*?)```/g)].map((match) =>
   code: match[2],
 }));
 const base = `import type Stripe from 'stripe';
-import type * as Core from '@safestripe/core';
+import type * as Core from '@israeloduguwa/safestripe';
 declare const db: import('pg').Pool;
 declare const stripe: Stripe;
 declare const scope: Core.Scope;
@@ -23,7 +23,7 @@ const fixtures = [
   ],
   [
     'const safe = new SafeStripe',
-    `import { SafeStripe, PostgresOperations } from '@safestripe/core'; declare const billingPolicy: { authorize: Core.Authorizer }; declare const actor: Core.Actor; declare const order: { id: string; stripeCustomerId: string; stripePriceId: string; quantity: number };`,
+    `import { SafeStripe, PostgresOperations } from '@israeloduguwa/safestripe'; declare const billingPolicy: { authorize: Core.Authorizer }; declare const actor: Core.Actor; declare const order: { id: string; stripeCustomerId: string; stripePriceId: string; quantity: number };`,
   ],
   ['const receiver = new WebhookReceiver', ''],
   ['const app = express()', 'declare const receiver: Core.WebhookReceiver;'],
@@ -46,11 +46,11 @@ try {
   for (const [page, context] of [
     [
       '15-databases',
-      `import type {ConfiguredBilling,BillingStorage} from '@safestripe/core'; declare const billing:ConfiguredBilling; declare const storage:BillingStorage;`,
+      `import type {ConfiguredBilling,BillingStorage} from '@israeloduguwa/safestripe'; declare const billing:ConfiguredBilling; declare const storage:BillingStorage;`,
     ],
     [
       '18-recipes',
-      `import type * as Core from '@safestripe/core';
+      `import type * as Core from '@israeloduguwa/safestripe';
       declare const billing:Core.ConfiguredBilling; declare const actor:Core.Actor;
       declare const user:{id:string;email:string;name:string};
       declare const customerId:string,priceId:string,recurringPriceId:string,subscriptionId:string,itemId:string,newPriceId:string,eventId:string;

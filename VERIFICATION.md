@@ -1,6 +1,8 @@
 # Verification record
 
-Reviewed 24 September 2026. Package: `@safestripe/core` 0.2.0. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
+Reviewed 25 September 2026. Package: `@israeloduguwa/safestripe` 0.2.0. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
+
+The full local release pipeline passed again after the npm package was renamed to `@israeloduguwa/safestripe`. The clean consumer check installed the 183-file archive and verified the new import paths. Publication to the npm registry remains a separate step.
 
 ## Local results
 

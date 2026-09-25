@@ -24,6 +24,6 @@ SQLite-to-hosted migration is not required for a disposable sandbox exercise if 
 
 ## Compatibility notes
 
-The current SDK is pinned to Stripe `22.6.2`, with snapshot API version `2026-08-26.dahlia`. Node.js must be at least 22.19. The package is ESM. The browser component is exported separately as `@safestripe/core/react` and uses React 18 or 19.
+The current SDK is pinned to Stripe `22.6.2`, with snapshot API version `2026-08-26.dahlia`. Node.js must be at least 22.19. The package is ESM. The browser component is exported separately as `@israeloduguwa/safestripe/react` and uses React 18 or 19.
 
 MongoDB driver 7 and Firestore server SDK 9 are optional peers. Only install the driver you use. They are compiled and exercised by the adapter checks described in [the verification record](../VERIFICATION.md); a version range alone is not proof that every provider configuration has been tested.

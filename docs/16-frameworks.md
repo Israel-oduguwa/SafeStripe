@@ -11,7 +11,7 @@ Choose the complete PostgreSQL or MongoDB module in [database setup](15-database
 Create `billing.ts` in server-only code. Cache the promise so concurrent requests reuse one initialization. Clear a failed initialization so a transient account lookup failure does not disable the instance forever.
 
 ```ts
-import { createSafeStripe } from '@safestripe/core';
+import { createSafeStripe } from '@israeloduguwa/safestripe';
 import { storage } from './billing-storage.js';
 import { billingPolicy } from './billing-policy.js';
 
@@ -48,7 +48,7 @@ Only accept an order ID from the browser. Choose the customer, price, quantity a
 :::tab Express.js
 ```ts
 import express from 'express';
-import { publicError } from '@safestripe/core';
+import { publicError } from '@israeloduguwa/safestripe';
 import { getBilling } from './billing.js';
 import { requireUser } from './auth.js';
 import { loadPayableOrder, bindCheckout } from './orders.js';
@@ -91,8 +91,8 @@ Mount `express.json({ limit: '8kb' })` before this router, but **after** the web
 :::tab Next.js
 ```ts
 // app/api/checkout/route.ts
-import { publicError } from '@safestripe/core';
-import { boundedBody } from '@safestripe/core/next';
+import { publicError } from '@israeloduguwa/safestripe';
+import { boundedBody } from '@israeloduguwa/safestripe/next';
 import { getBilling } from '@/lib/billing';
 import { requireUser } from '@/lib/auth';
 import { loadPayableOrder, bindCheckout } from '@/lib/orders';
@@ -160,7 +160,7 @@ const receiver = billing.webhooks({
 :::tab Express.js
 ```ts
 import express from 'express';
-import { expressWebhook } from '@safestripe/core/express';
+import { expressWebhook } from '@israeloduguwa/safestripe/express';
 
 const app = express();
 app.post(
@@ -179,7 +179,7 @@ Mount this route before any JSON parser or body-transforming middleware. Stripe 
 :::tab Next.js
 ```ts
 // app/api/webhooks/stripe/route.ts
-import { nextWebhook } from '@safestripe/core/next';
+import { nextWebhook } from '@israeloduguwa/safestripe/next';
 import { getBilling } from '@/lib/billing';
 
 export const runtime = 'nodejs';
@@ -206,7 +206,7 @@ Pass the untouched Request. Do not call `request.json()` first. The adapter stre
 A worker is a long-running process that repeatedly takes one stored event, applies your handler and records the result. It is separate from the customer's HTTP request.
 
 ```ts
-import { runWorkerLoop } from '@safestripe/core';
+import { runWorkerLoop } from '@israeloduguwa/safestripe';
 import { getBilling } from './billing.js';
 import { paymentHandlers } from './billing-handlers.js';
 

@@ -9,22 +9,22 @@ Choose the command for your database. npm installs SafeStripe's built JavaScript
 :::tabs database
 :::tab SQLite
 ```bash
-npm install @safestripe/core
+npm install @israeloduguwa/safestripe
 ```
 SQLite is built into supported Node.js versions. No database service or extra database driver is required.
 :::tab PostgreSQL
 ```bash
-npm install @safestripe/core pg
+npm install @israeloduguwa/safestripe pg
 ```
 Use a PostgreSQL connection string from your existing database or a hosted provider. `pg` is currently included by SafeStripe too; listing it explicitly is appropriate when your application imports it directly.
 :::tab MongoDB
 ```bash
-npm install @safestripe/core mongodb
+npm install @israeloduguwa/safestripe mongodb
 ```
 Use MongoDB Atlas or a replica set. A standalone MongoDB server does not provide the transactions this adapter needs.
 :::tab Firebase
 ```bash
-npm install @safestripe/core @google-cloud/firestore
+npm install @israeloduguwa/safestripe @google-cloud/firestore
 ```
 This adapter uses **Cloud Firestore**, through its server SDK. Firebase Realtime Database is a different product and is not supported by this adapter.
 :::endtabs
@@ -65,8 +65,8 @@ Only the publishable key gets the `NEXT_PUBLIC_` prefix. A variable with that pr
 The following is an application integration pattern. `billingPolicy` is your application's authorization function: it must check the signed-in tenant, resource ownership, approved prices and the requested action. The [local quickstart](03-quickstart.md) includes a complete, deliberately restricted learning policy.
 
 ```ts
-import { createSafeStripe } from '@safestripe/core';
-import { sqliteStorage } from '@safestripe/core/storage/sqlite';
+import { createSafeStripe } from '@israeloduguwa/safestripe';
+import { sqliteStorage } from '@israeloduguwa/safestripe/storage/sqlite';
 import { billingPolicy } from './billing-policy.js';
 
 const storage = await sqliteStorage({ filename: './.data/billing.sqlite' });

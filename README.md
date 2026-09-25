@@ -11,26 +11,26 @@ Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stri
 ## Install
 
 ```bash
-npm install @safestripe/core
+npm install @israeloduguwa/safestripe
 ```
 
 The Stripe SDK installs automatically. You do not need a separate `stripe` installation or a build step. Install your framework and the database driver your app uses:
 
 | Storage | Install | Use |
 | --- | --- | --- |
-| SQLite | `npm install @safestripe/core` | Local sandbox, built into Node |
-| PostgreSQL | `npm install @safestripe/core pg` | Shared SQL database |
-| MongoDB | `npm install @safestripe/core mongodb` | Atlas or a replica set |
-| Firebase Cloud Firestore | `npm install @safestripe/core @google-cloud/firestore` | Server-side Firestore transactions |
+| SQLite | `npm install @israeloduguwa/safestripe` | Local sandbox, built into Node |
+| PostgreSQL | `npm install @israeloduguwa/safestripe pg` | Shared SQL database |
+| MongoDB | `npm install @israeloduguwa/safestripe mongodb` | Atlas or a replica set |
+| Firebase Cloud Firestore | `npm install @israeloduguwa/safestripe @google-cloud/firestore` | Server-side Firestore transactions |
 
-For Express, also install `express`. React and Next.js applications supply their own React installation. The package uses ES modules. Import the browser component from `@safestripe/core/react`; keep the other entry points on the server. An Express app can use hosted Checkout without React.
+For Express, also install `express`. React and Next.js applications supply their own React installation. The package uses ES modules. Import the browser component from `@israeloduguwa/safestripe/react`; keep the other entry points on the server. An Express app can use hosted Checkout without React.
 
 ## Create a checkout session
 
 After configuring your storage and application authorization policy, initialize the server once:
 
 ```ts
-import { createSafeStripe } from '@safestripe/core';
+import { createSafeStripe } from '@israeloduguwa/safestripe';
 
 const billing = await createSafeStripe({
   secretKey: process.env.STRIPE_SECRET_KEY!,
@@ -63,7 +63,7 @@ The account ID is normally discovered from the secret key. A restricted key with
 Create a custom Checkout Session on your authenticated server using `uiMode: 'custom'`, then pass its client secret to the component:
 
 ```tsx
-import { SafeCheckout } from '@safestripe/core/react';
+import { SafeCheckout } from '@israeloduguwa/safestripe/react';
 
 <SafeCheckout
   key={session.id}

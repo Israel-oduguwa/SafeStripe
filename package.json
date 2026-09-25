@@ -1,5 +1,5 @@
 {
-  "name": "@safestripe/core",
+  "name": "@israeloduguwa/safestripe",
   "version": "0.2.0",
   "description": "Durable Stripe operations and webhook processing for Node.js, Express and Next.js",
   "type": "module",

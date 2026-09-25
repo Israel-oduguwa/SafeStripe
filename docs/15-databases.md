@@ -22,7 +22,7 @@ These snippets are complete storage modules. Use one, then pass `storage` to `cr
 :::tabs database
 :::tab SQLite
 ```ts
-import { sqliteStorage } from '@safestripe/core/storage/sqlite';
+import { sqliteStorage } from '@israeloduguwa/safestripe/storage/sqlite';
 
 export const storage = await sqliteStorage({
   filename: './.data/billing.sqlite',
@@ -35,7 +35,7 @@ Node.js 22.19+ is required. Node 22 labels `node:sqlite` experimental. Use share
 :::tab PostgreSQL
 ```ts
 import { Pool } from 'pg';
-import { postgresStorage } from '@safestripe/core/storage/postgres';
+import { postgresStorage } from '@israeloduguwa/safestripe/storage/postgres';
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -64,7 +64,7 @@ The portable adapter uses serializable transactions with bounded retries. Keep p
 :::tab MongoDB
 ```ts
 import { MongoClient } from 'mongodb';
-import { mongoStorage } from '@safestripe/core/storage/mongodb';
+import { mongoStorage } from '@israeloduguwa/safestripe/storage/mongodb';
 
 export const client = new MongoClient(process.env.MONGODB_URI!, {
   maxPoolSize: 5,
@@ -84,7 +84,7 @@ The adapter uses snapshot transactions, majority write concern and forced writes
 :::tab Firebase
 ```ts
 import { Firestore } from '@google-cloud/firestore';
-import { firestoreStorage } from '@safestripe/core/storage/firestore';
+import { firestoreStorage } from '@israeloduguwa/safestripe/storage/firestore';
 
 export const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,
