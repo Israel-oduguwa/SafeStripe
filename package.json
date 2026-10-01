@@ -1,5 +1,5 @@
 {
-  "name": "@israeloduguwa/safestripe",
+  "name": "safestripe",
   "version": "0.2.0",
   "description": "Durable Stripe operations and webhook processing for Node.js, Express and Next.js",
   "type": "module",
@@ -84,11 +84,14 @@
     "prepack": "npm run build",
     "test:package": "node scripts/test-package.mjs",
     "licenses": "node scripts/licenses.mjs",
-    "release:check": "npm run format:check && npm run check && npm run build:next && npm run docs:build && npm run docs:check && npm run licenses && npm run test:package",
+    "release:check": "npm run format:check && npm run check && npm run build:next && npm run docs:build && npm run docs:check && npm run licenses && npm run test:package && npm run site:build && npm run site:check",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
     "dev:express:legacy": "node --env-file=.env --import tsx examples/express/server.ts",
-    "worker:legacy": "node --env-file=.env --import tsx examples/worker.ts"
+    "worker:legacy": "node --env-file=.env --import tsx examples/worker.ts",
+    "site:build": "npm run docs:build && node scripts/build-site.mjs",
+    "site:preview": "node scripts/preview-site.mjs",
+    "site:check": "node scripts/check-site.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "6.12.0",

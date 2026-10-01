@@ -10,27 +10,29 @@ Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stri
 
 ## Install
 
+This branch prepares the shorter npm name, **safestripe**. Publication under that name is pending; the installation examples below describe the prepared release.
+
 ```bash
-npm install @israeloduguwa/safestripe
+npm install safestripe
 ```
 
 The Stripe SDK installs automatically. You do not need a separate `stripe` installation or a build step. Install your framework and the database driver your app uses:
 
 | Storage | Install | Use |
 | --- | --- | --- |
-| SQLite | `npm install @israeloduguwa/safestripe` | Local sandbox, built into Node |
-| PostgreSQL | `npm install @israeloduguwa/safestripe pg` | Shared SQL database |
-| MongoDB | `npm install @israeloduguwa/safestripe mongodb` | Atlas or a replica set |
-| Firebase Cloud Firestore | `npm install @israeloduguwa/safestripe @google-cloud/firestore` | Server-side Firestore transactions |
+| SQLite | `npm install safestripe` | Local sandbox, built into Node |
+| PostgreSQL | `npm install safestripe pg` | Shared SQL database |
+| MongoDB | `npm install safestripe mongodb` | Atlas or a replica set |
+| Firebase Cloud Firestore | `npm install safestripe @google-cloud/firestore` | Server-side Firestore transactions |
 
-For Express, also install `express`. React and Next.js applications supply their own React installation. The package uses ES modules. Import the browser component from `@israeloduguwa/safestripe/react`; keep the other entry points on the server. An Express app can use hosted Checkout without React.
+For Express, also install `express`. React and Next.js applications supply their own React installation. The package uses ES modules. Import the browser component from `safestripe/react`; keep the other entry points on the server. An Express app can use hosted Checkout without React.
 
 ## Create a checkout session
 
 After configuring your storage and application authorization policy, initialize the server once:
 
 ```ts
-import { createSafeStripe } from '@israeloduguwa/safestripe';
+import { createSafeStripe } from 'safestripe';
 
 const billing = await createSafeStripe({
   secretKey: process.env.STRIPE_SECRET_KEY!,
@@ -63,7 +65,7 @@ The account ID is normally discovered from the secret key. A restricted key with
 Create a custom Checkout Session on your authenticated server using `uiMode: 'custom'`, then pass its client secret to the component:
 
 ```tsx
-import { SafeCheckout } from '@israeloduguwa/safestripe/react';
+import { SafeCheckout } from 'safestripe/react';
 
 <SafeCheckout
   key={session.id}
@@ -115,6 +117,8 @@ Follow the [local tutorial](docs/03-quickstart.md) to add sandbox credentials, a
 These are repository commands, not installation requirements for package users. The examples use local demo authentication and reject production mode. Connect your own authentication and order policy before deploying an application.
 
 ## Documentation and maintenance
+
+The website source and hosting guide are in the repository’s site directory. Preview it with **npm run site:build** followed by **npm run site:preview**.
 
 Open [the offline handbook](docs/handbook.html) for search, framework/database tabs, highlighted snippets and copy controls. Markdown versions work directly on GitHub.
 

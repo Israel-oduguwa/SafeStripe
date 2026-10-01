@@ -3,8 +3,8 @@
   --ink: #18232f;
   --muted: #586675;
   --border: #e3e8ee;
-  --accent: #5345b9;
-  --tint: #f1efff;
+  --accent: #226448;
+  --tint: #eaf2e4;
   --code: #132333;
 }
 * {
@@ -156,8 +156,8 @@ input:focus-visible {
 }
 .nav-group h2 {
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  text-transform: none;
+  letter-spacing: 0;
   margin: 0 10px 7px;
   color: #596778;
 }
@@ -270,8 +270,8 @@ pre code {
 blockquote {
   margin: 25px 0;
   padding: 1px 20px;
-  border-left: 3px solid #9286e9;
-  background: #f8f7ff;
+  border-left: 3px solid #75a485;
+  background: #f2f7ed;
   border-radius: 0 6px 6px 0;
   color: #485568;
 }
@@ -351,8 +351,8 @@ td code {
   max-width: 48%;
 }
 .pager a:hover {
-  border-color: #aca0ee;
-  background: #fcfbff;
+  border-color: #9cb793;
+  background: #f7faf3;
 }
 footer {
   font-size: 11px;
@@ -370,8 +370,8 @@ footer {
   min-width: 130px;
   flex: 1;
   padding: 15px 10px;
-  border: 1px solid #d5cdf8;
-  background: #f7f5ff;
+  border: 1px solid #dce6d3;
+  background: #f4f7ef;
   border-radius: 7px;
   text-align: center;
   font-size: 11px;
@@ -552,8 +552,8 @@ summary {
 }
 .code-language {
   flex: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .copy-code {
   border: 1px solid #505667;
@@ -616,7 +616,7 @@ summary {
 }
 .tab-buttons button[aria-selected='true'] {
   background: #fff;
-  color: #5142be;
+  color: #226448;
   box-shadow: 0 1px 5px #212e4815;
 }
 [role='tabpanel'] {

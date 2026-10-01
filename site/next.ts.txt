@@ -1,0 +1,15 @@
+export const runtime = 'nodejs';
+
+// billing uses your storage and authorization policy.
+export async function POST(request: Request) {
+  const { user, order } = await authorizedOrder(request);
+  const session = await billing.createCheckout(
+    actorFor(user, 'checkout:' + order.id),
+    {
+      customerId: order.stripeCustomerId,
+      items: [{ priceId: order.priceId, quantity: 1 }],
+      reference: order.id,
+    },
+  );
+  return Response.json({ url: session.url });
+}

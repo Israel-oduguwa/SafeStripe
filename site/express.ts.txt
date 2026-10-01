@@ -1,0 +1,15 @@
+// billing uses your storage and authorization policy.
+// Middleware authenticates the user and loads the order.
+app.post('/checkout', requireUser, loadOrder,
+  async (req, res) => {
+    const session = await billing.createCheckout(
+      actorFor(req.user, 'checkout:' + req.order.id),
+      {
+        customerId: req.order.stripeCustomerId,
+        items: [{ priceId: req.order.priceId, quantity: 1 }],
+        reference: req.order.id,
+      },
+    );
+    res.json({ url: session.url });
+  },
+);

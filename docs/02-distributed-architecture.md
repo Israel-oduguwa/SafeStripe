@@ -59,7 +59,7 @@ Stripe's idempotency layer retains results for eligible requests, compares reuse
 
 ## Durable command protocol
 
-SafeStripe first records `(scope, tenant, operation ID, kind, fingerprint, key)` in PostgreSQL. A short transaction obtains or locks that row. Competing live requests receive `BUSY`; a changed fingerprint receives `PAYLOAD_CONFLICT`.
+SafeStripe first records `(scope, tenant, operation ID, kind, fingerprint, key)` in the configured billing store. A short transaction claims that operation. Competing live requests receive `BUSY`; a changed fingerprint receives `PAYLOAD_CONFLICT`.
 
 The Stripe call happens outside the database transaction. On success, the object ID is recorded. On an ambiguous failure, the operation becomes retryable. A retry uses the original key. Completed calls retrieve the current object by saved ID instead of reissuing the mutation. This means the response is current state, not a historical HTTP-body replay.
 

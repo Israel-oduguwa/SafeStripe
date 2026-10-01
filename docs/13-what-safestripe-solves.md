@@ -46,7 +46,7 @@ Stripe documents its key retention and replay behavior in [Idempotent requests](
 
 A successful HTTP response tells Stripe that delivery succeeded. It does not prove that your application's background work finished.
 
-SafeStripe verifies the original request bytes, signature, account scope, mode, payload shape, and API version. It inserts the event into PostgreSQL before returning a successful response. A worker processes the stored record later. If storage fails, the endpoint returns an error so delivery can be retried.
+SafeStripe verifies the original request bytes, signature, account scope, mode, payload shape, and API version. It inserts the event into the configured billing store before returning a successful response. A worker processes the stored record later. If storage fails, the endpoint returns an error so delivery can be retried.
 
 **What this prevents:** A payment event disappearing because work was detached from a short-lived request.
 

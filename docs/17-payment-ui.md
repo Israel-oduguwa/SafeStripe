@@ -35,7 +35,7 @@ The following client component receives a Session from your authenticated endpoi
 ```tsx
 'use client';
 
-import { SafeCheckout } from '@israeloduguwa/safestripe/react';
+import { SafeCheckout } from 'safestripe/react';
 
 export function OrderPayment({ session }: {
   session: { id: string; clientSecret: string };

@@ -4,9 +4,9 @@ SafeStripe coordinates financial operations with an application database. Review
 
 ## Report a vulnerability
 
-Use the repository's private vulnerability reporting channel when it is enabled. If it is unavailable, contact the maintainer through a published private contact method before sending sensitive details. Do not include keys, customer records, card data, or working exploit details in a public issue.
+Use [GitHub's private vulnerability reporting form](https://github.com/Israel-oduguwa/SafeStripe/security/advisories/new). Private reporting is enabled for this repository. Do not include keys, customer records, card data, or working exploit details in a public issue.
 
-The maintainer must configure a private reporting channel before the first public release. No response-time commitment is established for this initial release candidate.
+If the form is unavailable, open an issue requesting a private contact method without including vulnerability details. No response-time commitment is established for this release.
 
 Include the affected package version, a minimal reproduction with synthetic data, the relevant account scope, and the expected versus observed behavior. A report showing a failed invariant is more useful than a general claim that payments are insecure.
 

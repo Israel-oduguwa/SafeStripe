@@ -124,10 +124,10 @@ No measured production throughput, formal verification, independent penetration 
 
 | Import | Contents |
 | --- | --- |
-| `@israeloduguwa/safestripe` | Payment facade, stores, workers, helpers, and public types |
-| `@israeloduguwa/safestripe/express` | `expressWebhook` |
-| `@israeloduguwa/safestripe/next` | `nextWebhook` and `boundedBody` |
-| `@israeloduguwa/safestripe/migrations` | `migrate` and `MigrationOptions` |
+| `safestripe` | Payment facade, stores, workers, helpers, and public types |
+| `safestripe/express` | `expressWebhook` |
+| `safestripe/next` | `nextWebhook` and `boundedBody` |
+| `safestripe/migrations` | `migrate` and `MigrationOptions` |
 
 The `safestripe` command exposes `migrate` and `--help`. It reads `DATABASE_URL` from the environment. It does not load `.env` automatically or run during package installation.
 
