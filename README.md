@@ -6,7 +6,7 @@ A payment request can time out after Stripe accepts it. Webhooks can arrive more
 
 Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stripe.
 
-[Get started](docs/11-getting-started.md) · [Local payment tutorial](docs/03-quickstart.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Payment UI](docs/17-payment-ui.md)
+[Website](https://israel-oduguwa.github.io/SafeStripe/) · [Get started](docs/11-getting-started.md) · [Local payment tutorial](docs/03-quickstart.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Payment UI](docs/17-payment-ui.md)
 
 ## Install
 

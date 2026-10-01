@@ -1,5 +1,7 @@
 # Website
 
+Public preview: https://israel-oduguwa.github.io/SafeStripe/
+
 The public site is a static landing page and the generated SafeStripe handbook. It has no API server, analytics script or third-party font request.
 
 ## Preview locally
@@ -33,6 +35,6 @@ The site uses relative links and works from a project subpath. Do not upload the
 
 ## Package name transition
 
-The landing page currently says the unscoped package name is awaiting publication. After safestripe is published and verified by a clean registry install, update that note in site/index.html and remove the corresponding release-preview note from README.md. Keep the previous npm package available for existing consumers.
+The landing page currently says the unscoped package name is awaiting publication. After safestripe is published and verified by a clean registry install, set npmPublished to true in site/release.json and remove the corresponding release-preview note from README.md. Keep the previous npm package available for existing consumers.
 
 The demo remains a separate local application. A static host cannot run its Firestore worker or Express server.

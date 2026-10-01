@@ -104,6 +104,15 @@ input:focus-visible {
   color: var(--muted);
   font-size: 12px;
 }
+.release-notice {
+  padding: 12px 16px;
+  border: 1px solid #d9e4cf;
+  border-radius: 7px;
+  background: #f3f7ed;
+  color: #49603c;
+  font-size: 13px;
+  margin: 0 0 26px;
+}
 .topbar button {
   border: 1px solid var(--border);
   border-radius: 6px;

@@ -28,6 +28,8 @@ The three local suite skips are the test requiring independent PostgreSQL connec
 
 ## Remote checks
 
+The current release preparation passed all jobs in [run 36869730724](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/36869730724), including Node.js 22/24 release checks and the document-adapter job. The expanded demo passed its Node.js 22/24 jobs in [run 36869738049](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36869738049). The public static site deployed through [run 36869985522](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/36869985522).
+
 [GitHub Actions run 35990082440](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/35990082440) passed all three jobs for commit `e91329c`:
 
 | CI job | Result |
@@ -48,7 +50,7 @@ No real Stripe credentials were supplied or used. Actual sandbox checkout, issue
 
 There is no enterprise throughput benchmark, failover certification, independent security audit or compliance certification. Transaction conformance proves specific invariants under tested conditions. It does not establish capacity across all database tiers or hosting platforms.
 
-The documentation's generated structure and DOM interactions were checked; a rendered visual review of the handbook is not included. The React payment component compiles and imports, but its real Stripe-hosted fields still need sandbox browser and accessibility testing.
+The documentation's structure, DOM interactions and published desktop rendering were checked. The live Firebase installation tab was reviewed in the browser. The React payment component compiles and imports, but its real Stripe-hosted fields still need sandbox browser and accessibility testing.
 
 The sample authorization policy is local-only and refuses production. A deployed application needs real authentication, tenant/resource policies, approved commercial terms, monitored workers, a deduplicating outbox recipient, retention/backups and reconciliation. Read [deployment](docs/14-deployment-and-publishing.md).
 

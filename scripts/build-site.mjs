@@ -8,6 +8,13 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 const highlighter = await createHighlighter({ themes: ['dark-plus'], langs: ['typescript'] });
 let html = await readFile(new URL('index.html', source), 'utf8');
+const release = JSON.parse(await readFile(new URL('release.json', source), 'utf8'));
+if (release.npmPublished === true) {
+  html = html.replace(
+    /<p class="release-note" id="release-note">[\s\S]*?<\/p>/,
+    '<p class="release-note" id="release-note">Available on npm · MIT licensed</p>',
+  );
+}
 for (const framework of ['express', 'next']) {
   const snippet = await format(await readFile(new URL(framework + '.ts.txt', source), 'utf8'), {
     parser: 'typescript',
