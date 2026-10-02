@@ -1,15 +1,15 @@
 # Verification record
 
-Reviewed 1 October 2026. Package: `safestripe` 0.2.0. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
+Reviewed 2 October 2026. Package: `safestripe` 0.3.0 preview. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
 
-The full local release pipeline passed again after the npm package was renamed to `safestripe`. The clean consumer check installed the 183-file archive and verified the new import paths. The previously scoped 0.2.0 release is already published. Publication under the shorter name remains pending.
+The local package checks passed for the expanded billing scenario surface. The clean consumer check installed the 201-file archive, including the new scenario and metrics modules. The previously scoped 0.2.0 release is already published; the unscoped 0.3.0 release remains a preview awaiting publication.
 
 ## Local results
 
 | Check | Observed result |
 | --- | --- |
 | Full release pipeline | Passed: formatting, strict types, tests, library build, Next.js build, documentation, license generation and clean package installation |
-| Automated suite at that run | 76 tests: 73 passed, zero failures, three expected skips |
+| Automated suite at that run | 108 tests: 105 passed, zero failures, three expected skips |
 | Local starter fulfillment | Passed in the suite: authentication, durable binding, commercial-term mismatch rejection, duplicate events, single receipt intent and changed-flow conflict |
 | SQLite and embedded PostgreSQL conformance | Passed: competing claims, fingerprints, recovery cutoff, expired leases, transaction rollback, effects/outbox, signed admission, replay and concurrent record updates |
 | SQLite restart | Stored billing data survived close/reopen |
@@ -20,15 +20,23 @@ The full local release pipeline passed again after the npm package was renamed t
 | Automatic dependencies | Stripe resolved after installation; MongoDB and Firestore SDKs were absent unless separately installed |
 | Dependency audit | npm reported zero known vulnerabilities in the checked runtime dependency set |
 | License notices | Generated notices for 36 installed runtime dependencies/peers |
-| Documentation | 21 guides; 21 typed snippets plus a JavaScript tutorial checked; links, anchors, CSP and script syntax passed |
-| Official website | Static build passed; 278 local links, framework tabs, keyboard switching and copy checked; desktop and mobile layouts reviewed |
+| Documentation | 24 guides; 40 typed snippets plus a JavaScript tutorial checked; links, anchors, CSP and script syntax passed |
+| Official website | Static build passed; local links, framework tabs, keyboard switching and copy checked; desktop and mobile layouts reviewed |
 | Documentation interactions | DOM checks passed for synchronized tabs, keyboard switching, copy, syntax-color markup, search and navigation |
 
 The three local suite skips are the test requiring independent PostgreSQL connections and the MongoDB/Firestore service suites. Local testing does not install Docker, a MongoDB server or a Firebase emulator.
 
-## Remote checks
+## Added scenario coverage
 
-The current release preparation passed all jobs in [run 36869730724](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/36869730724), including Node.js 22/24 release checks and the document-adapter job. The expanded demo passed its Node.js 22/24 jobs in [run 36869738049](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36869738049). The public static site deployed through [run 36869985522](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/36869985522).
+The new SDK HTTP fixture exercises 25 write scenarios using the real pinned Stripe SDK against a local mock server. It checks paths, request bodies, idempotency keys and one-mutation replay. Separate checks cover denied authorization, changed inputs, sandbox clock restrictions, missing recipient capability, paid-invoice credit rejection and unconfigured tax.
+
+Revenue tests cover movement reconciliation, customer cohorts, zero denominators, interval normalization, rounding, duplicate identities and numeric overflow. These tests do not prove Stripe account eligibility or actual service behavior.
+
+The separate demo now installs the packed 0.3.0 archive. All 42 local workflow/HTTP tests passed after correcting metered-item result serialization. It uses 51 selectable panels, including four setup guides and one local calculator. Browser checks confirmed the calculator sample, invalid-input feedback and account-service guide dialog.
+
+## Remote checks (previous release baseline)
+
+The previous 0.2.0 preparation passed all jobs in [run 36869730724](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/36869730724), including Node.js 22/24 release checks and the document-adapter job. The expanded demo passed its Node.js 22/24 jobs in [run 36869738049](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36869738049). The public static site deployed through [run 36869985522](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/36869985522).
 
 [GitHub Actions run 35990082440](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/35990082440) passed all three jobs for commit `e91329c`:
 
@@ -42,7 +50,7 @@ The current release preparation passed all jobs in [run 36869730724](https://git
 
 The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project. Subsequent packaging and UI changes use the same CI workflow; consult the repository's latest run for the result on each commit.
 
-The separate Express/Firestore demo previously passed 20 consumer tests on Node.js 22 and 24 in [run 36004359058](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36004359058). It now installs the published npm release. Its expanded local suite passed 33 checks on 1 October, covering signatures, duplicate events, checkout replays, ownership, invoice/subscription/refund workflows and effect/outbox behavior. Its automated fixtures use SQLite and simulated Stripe responses; the running demo uses Firestore. Real Stripe and Firebase configuration remains necessary for the browser payment test.
+The separate Express/Firestore demo previously passed 20 consumer tests on Node.js 22 and 24 in [run 36004359058](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36004359058). That revision installed the published scoped npm release. Its then-expanded local suite passed 33 checks on 1 October, covering signatures, duplicate events, checkout replays, ownership, invoice/subscription/refund workflows and effect/outbox behavior. Its automated fixtures use SQLite and simulated Stripe responses; the running demo uses Firestore. Real Stripe and Firebase configuration remains necessary for the browser payment test.
 
 ## What has not been established
 

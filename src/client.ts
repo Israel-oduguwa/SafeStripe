@@ -3,25 +3,15 @@ import { z } from 'zod';
 import { SafeStripeError } from './errors.js';
 import {
   API_VERSION,
-  digest,
-  idempotencyKey,
   identifier,
   money,
   parse,
   quantity,
-  scopeKey,
   stripeId,
-  validateActor,
   type Actor,
-  type Authorizer,
-  type Resource,
-  type Scope,
 } from './primitives.js';
-import type { Operation } from './operations.js';
-import type { OperationStore } from './storage/contracts.js';
-import { observe, diagnostic, type Observer } from './telemetry.js';
-import { ConcurrencyGate, type ExecutionGate } from './limiter.js';
-
+import { BillingScenarios } from './scenarios.js';
+export type { SafeStripeOptions } from './transport.js';
 export function createStripeClient(key: string, livemode: boolean): Stripe {
   if (!new RegExp(`^[sr]k_${livemode ? 'live' : 'test'}_[A-Za-z0-9]+$`).test(key))
     throw new Error('Stripe key is missing or does not match the configured mode');
@@ -30,140 +20,15 @@ export function createStripeClient(key: string, livemode: boolean): Stripe {
     timeout: 10_000,
     maxNetworkRetries: 2,
     telemetry: false,
-    appInfo: { name: 'SafeStripe', version: '0.2.0' },
+    appInfo: { name: 'SafeStripe', version: '0.3.0' },
   });
 }
 
-export interface SafeStripeOptions {
-  stripe: Stripe;
-  scope: Scope;
-  operations: OperationStore;
-  authorize: Authorizer;
-  /** Trusted deployment configuration, never a request Host header. */
-  appOrigin: string;
-  allowLocalhost?: boolean;
-  gate?: ExecutionGate;
-  observer?: Observer;
-}
 const customer = stripeId('cus');
 const price = stripeId('price');
 const subscription = stripeId('sub');
 const invoice = stripeId('in');
-
-export class SafeStripe {
-  readonly scope: Readonly<Scope>;
-  readonly scopeId: string;
-  readonly stripe: Stripe;
-  private readonly origin: string;
-  private readonly gate: ExecutionGate;
-  private readonly observer?: Observer;
-  private readonly operations: OperationStore;
-  private readonly authorize: Authorizer;
-
-  constructor(options: SafeStripeOptions) {
-    this.scopeId = scopeKey(options.scope);
-    this.scope = Object.freeze({ ...options.scope });
-    this.stripe = options.stripe;
-    this.operations = options.operations;
-    this.observer = options.observer;
-    if (typeof options.authorize !== 'function')
-      throw new Error('An application authorizer is required');
-    this.authorize = options.authorize;
-    this.gate = options.gate ?? new ConcurrencyGate();
-    const url = new URL(options.appOrigin);
-    const local =
-      options.allowLocalhost &&
-      !options.scope.livemode &&
-      ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-    if (
-      (url.protocol !== 'https:' && !(local && url.protocol === 'http:')) ||
-      url.username ||
-      url.password ||
-      url.pathname !== '/' ||
-      url.search ||
-      url.hash
-    )
-      throw new Error('appOrigin must be a trusted HTTPS origin');
-    this.origin = url.origin;
-  }
-  requestOptions(): Stripe.RequestOptions {
-    return this.scope.connectedAccountId ? { stripeAccount: this.scope.connectedAccountId } : {};
-  }
-  private async permit(
-    actor: Actor,
-    action: string,
-    resources: Resource[],
-    parameters: unknown,
-  ): Promise<Actor> {
-    const checked = validateActor(actor);
-    if (
-      !(await this.authorize({ actor: checked, scope: this.scope, action, resources, parameters }))
-    )
-      throw new SafeStripeError('FORBIDDEN', 'Not authorized for these billing resources', 403);
-    return checked;
-  }
-  private async write<T extends { id: string }>(
-    actor: Actor,
-    kind: string,
-    params: unknown,
-    resources: Resource[],
-    create: (options: Stripe.RequestOptions) => Promise<T>,
-    retrieve: (id: string, options: Stripe.RequestOptions) => Promise<T>,
-  ): Promise<T> {
-    const started = performance.now();
-    let replay = false;
-    try {
-      const checked = await this.permit(actor, kind, resources, params);
-      const op: Operation = {
-        scope: this.scopeId,
-        tenantId: checked.tenantId,
-        operationId: checked.operationId,
-        kind,
-        fingerprint: digest({ version: API_VERSION, params }),
-        key: idempotencyKey(this.scopeId, checked, kind),
-      };
-      const result = await this.gate.run(async () => {
-        const claim = await this.operations.claim(op);
-        if (claim.replay) {
-          replay = true;
-          return retrieve(claim.resourceId, this.requestOptions());
-        }
-        try {
-          const created = await create({ ...this.requestOptions(), idempotencyKey: op.key });
-          await this.operations.succeed(op, claim.token, created.id);
-          return created;
-        } catch (error) {
-          try {
-            await this.operations.retry(op, claim.token);
-          } catch {
-            /* Lease expiry will recover it. */
-          }
-          throw error;
-        }
-      });
-      observe(this.observer, {
-        category: 'operation',
-        action: kind,
-        outcome: replay ? 'replayed' : 'succeeded',
-        durationMs: performance.now() - started,
-      });
-      return result;
-    } catch (error) {
-      observe(this.observer, {
-        category: 'operation',
-        action: kind,
-        outcome: 'failed',
-        durationMs: performance.now() - started,
-        ...diagnostic(error),
-      });
-      if (error instanceof SafeStripeError) throw error;
-      throw new SafeStripeError(
-        'UPSTREAM_FAILED',
-        'Retry the unchanged operation or inspect its Stripe request history',
-        502,
-      );
-    }
-  }
+export class SafeStripe extends BillingScenarios {
   async createCustomer(actor: Actor, input: { email: string; name?: string }) {
     const params = parse(
       z.object({ email: z.email().max(254), name: z.string().min(1).max(200).optional() }).strict(),
@@ -184,8 +49,11 @@ export class SafeStripe {
       customerId: string;
       mode: 'payment' | 'subscription';
       uiMode?: 'hosted' | 'custom';
-      items: { priceId: string; quantity: number }[];
+      items: { priceId: string; quantity?: number }[];
       reference: string;
+      trialDays?: number;
+      allowPromotionCodes?: boolean;
+      automaticTax?: boolean;
     },
   ) {
     const data = parse(
@@ -195,18 +63,48 @@ export class SafeStripe {
           mode: z.enum(['payment', 'subscription']),
           uiMode: z.enum(['hosted', 'custom']).optional(),
           items: z
-            .array(z.object({ priceId: price, quantity }).strict())
+            .array(z.object({ priceId: price, quantity: quantity.optional() }).strict())
             .min(1)
             .max(20),
           reference: identifier,
+          trialDays: z.number().int().min(3).max(730).optional(),
+          allowPromotionCodes: z.boolean().optional(),
+          automaticTax: z.boolean().optional(),
         })
         .strict(),
       input,
     );
+    if (data.trialDays !== undefined && data.mode !== 'subscription')
+      throw new SafeStripeError('INVALID_INPUT', 'Trials require subscription mode');
     const params: Stripe.Checkout.SessionCreateParams = {
       customer: data.customerId,
       mode: data.mode,
-      line_items: data.items.map((x) => ({ price: x.priceId, quantity: x.quantity })),
+      line_items: data.items.map((x) => ({
+        price: x.priceId,
+        ...(x.quantity === undefined
+          ? data.mode === 'payment'
+            ? { quantity: 1 }
+            : {}
+          : { quantity: x.quantity }),
+      })),
+      ...(data.trialDays === undefined
+        ? {}
+        : {
+            subscription_data: {
+              trial_period_days: data.trialDays,
+              trial_settings: { end_behavior: { missing_payment_method: 'pause' } },
+            },
+          }),
+      ...(data.allowPromotionCodes === undefined
+        ? {}
+        : { allow_promotion_codes: data.allowPromotionCodes }),
+      ...(data.automaticTax
+        ? {
+            automatic_tax: { enabled: true },
+            customer_update: { address: 'auto' },
+            billing_address_collection: 'required',
+          }
+        : {}),
       client_reference_id: data.reference,
       integration_identifier: 'safestripe_qvmtxkpa',
       ...(data.uiMode === 'custom'
@@ -227,7 +125,10 @@ export class SafeStripe {
         { kind: 'customer', id: data.customerId },
         ...data.items.map((x) => ({ kind: 'price' as const, id: x.priceId })),
       ],
-      (o) => this.stripe.checkout.sessions.create(params, o),
+      async (o) => {
+        if (data.automaticTax) await this.assertTaxConfigured();
+        return this.stripe.checkout.sessions.create(params, o);
+      },
       (id, o) => this.stripe.checkout.sessions.retrieve(id, {}, o),
     );
   }

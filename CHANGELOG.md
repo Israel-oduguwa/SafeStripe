@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 — billing scenarios (release preview)
+
+- Add durable scenario methods for multi-item subscriptions, saved methods, Payment Links, tiered prices, schedules, quotes, credits, basic metering, test clocks, marketplace recipients/transfers and Identity sessions.
+- Add read-only tax setup inspection and guarded optional Checkout tax, trials and promotion codes.
+- Add browser-safe MRR, retention and churn calculations with explicit cohort rules.
+- Document API coverage, account-managed services, Connect thin-event limitations and application responsibilities.
+- Keep the pinned Stripe SDK and API contract unchanged; new methods need explicit authorizer rules.
+
+
+
 ## 0.2.0
 
 Initial npm release.

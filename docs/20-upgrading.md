@@ -27,3 +27,15 @@ SQLite-to-hosted migration is not required for a disposable sandbox exercise if 
 The current SDK is pinned to Stripe `22.6.2`, with snapshot API version `2026-08-26.dahlia`. Node.js must be at least 22.19. The package is ESM. The browser component is exported separately as `safestripe/react` and uses React 18 or 19.
 
 MongoDB driver 7 and Firestore server SDK 9 are optional peers. Only install the driver you use. They are compiled and exercised by the adapter checks described in [the verification record](../VERIFICATION.md); a version range alone is not proof that every provider configuration has been tested.
+
+## Moving from 0.2 to the 0.3 preview
+
+The package name is now `safestripe`. The old published scoped 0.2.0 package remains available, but it does not contain the new scenario methods. Until 0.3.0 is published under the shorter name, install the preview archive rather than assuming `npm install safestripe` is available.
+
+The existing Checkout calls keep their defaults. New optional tax, trial and promotion settings must be approved explicitly in your authorizer. Subscription Checkout can omit quantity for metered items.
+
+The new billing-model methods send validated camelCase inputs to the authorizer and introduce new action/resource names. An existing deny-by-default policy should reject them until you add ownership and commercial-term checks. Do not change the policy to allow every action just to make an example run.
+
+The pinned Stripe SDK and snapshot API version are unchanged. Accounts v2 thin events still require a separate receiver. Storage schemas are unchanged; retain existing operation records so retry identities survive the upgrade.
+
+The browser-only revenue helpers are exported from `safestripe/metrics`. This subpath does not initialize a Stripe client or need a secret key.

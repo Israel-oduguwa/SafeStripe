@@ -62,6 +62,10 @@ const express = await import(${JSON.stringify(meta.name + '/express')});
 const next = await import(${JSON.stringify(meta.name + '/next')});
 const migrations = await import(${JSON.stringify(meta.name + '/migrations')});
 assert.equal(typeof core.SafeStripe, 'function');
+assert.equal(typeof core.SafeStripe.prototype.createMultiItemSubscription, 'function');
+const metrics = await import('${meta.name}/metrics');
+assert.equal(metrics.monthlyRecurringAmount({amount:12000,interval:'year'}),1000);
+assert.equal(typeof metrics.calculateRevenueMetrics,'function');
 assert.equal(typeof express.expressWebhook, 'function');
 assert.equal(typeof next.nextWebhook, 'function');
 assert.equal(typeof migrations.migrate, 'function');
@@ -95,6 +99,13 @@ const policy: Authorizer = async input => input.actor.tenantId.length > 0;
 const gate = new ConcurrencyGate();
 void [SafeStripe, policy, gate, migrate, expressWebhook, nextWebhook, runWorkerLoop];
 const database = null as unknown as Database; void database;
+import { calculateRevenueMetrics } from '${meta.name}/metrics';
+import type { SubscriptionPlan, ContractSchedule } from '${meta.name}';
+declare const billing: SafeStripe;
+const plan: SubscriptionPlan = { customerId:'cus_example', items:[{priceId:'price_example'}] };
+void billing.createMultiItemSubscription({tenantId:'tenant',actorId:'user',operationId:'signup'},plan);
+void calculateRevenueMetrics({currency:'usd',start:[],end:[]});
+declare const contract: ContractSchedule; void contract;
 `,
   );
   run(

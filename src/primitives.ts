@@ -28,7 +28,22 @@ export interface Actor {
   operationId: string;
 }
 export type Resource = {
-  kind: 'customer' | 'price' | 'payment_intent' | 'invoice' | 'subscription';
+  kind:
+    | 'customer'
+    | 'price'
+    | 'payment_intent'
+    | 'invoice'
+    | 'subscription'
+    | 'product'
+    | 'meter'
+    | 'quote'
+    | 'schedule'
+    | 'test_clock'
+    | 'account'
+    | 'charge'
+    | 'transfer'
+    | 'identity_reference'
+    | 'promotion_code';
   id: string;
 };
 export type Authorizer = (input: {

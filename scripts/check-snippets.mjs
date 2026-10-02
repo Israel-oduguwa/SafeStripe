@@ -61,12 +61,36 @@ try {
       declare const shutdown:AbortController;
       declare const notifications:{deliver(message:{type:string;payload:unknown;idempotencyKey:string}):Promise<void>};`,
     ],
+    [
+      '21-billing-models',
+      `import type * as Core from 'safestripe';
+       declare const billing:Core.ConfiguredBilling;
+       declare const actor:Core.Actor, draftActor:Core.Actor, finalizeActor:Core.Actor, acceptActor:Core.Actor;
+       declare const membership:{tenantId:string}, user:{id:string}, savedBillingRequest:{id:string};
+       declare const customer:{id:string}, approvedPlan:{priceId:string}, team:{seats:number}, signup:{id:string};
+       declare const customerId:string, priceId:string, productId:string, monthlyPlatformPriceId:string, seatPriceId:string, meteredPriceId:string, approvedMeterId:string, approvedPromotionCodeId:string, introductoryPriceId:string, standardPriceId:string, invoiceId:string;
+       declare const usageEvent:{id:string;customerId:string;units:number;occurredAt:number};
+       declare const approvedContract:{startAt:number};`,
+    ],
+    [
+      '22-account-services',
+      `import type * as Core from 'safestripe'; declare const billing:Core.ConfiguredBilling; declare const actor:Core.Actor;
+       declare const approvedSeller:{email:string;country:string;name:string}, savedSeller:{stripeAccountId:string};
+       declare const allocation:{sellerAccountId:string;chargeId:string;amountMinor:number;currency:string};
+       declare const order:{id:string},savedUser:{id:string};`,
+    ],
+    ['23-revenue-metrics', ''],
   ]) {
     const markdown = await readFile(path.join(root, 'docs', page + '.md'), 'utf8');
     const snippets = [...markdown.matchAll(/```ts\n([\s\S]*?)```/g)];
     for (const [index, match] of snippets.entries()) {
       const code = match[1];
-      const prelude = page === '15-databases' && code.startsWith('import ') ? '' : context;
+      let prelude = page === '15-databases' && code.startsWith('import ') ? '' : context;
+      if (page === '21-billing-models' && code.startsWith('const actor ='))
+        prelude = prelude.replace(
+          'declare const actor:Core.Actor, draftActor:',
+          'declare const draftActor:',
+        );
       const file = path.join(directory, `${page}-${index}.ts`);
       await writeFile(file, prelude + '\n' + code + '\nexport {};');
       files.push(file);

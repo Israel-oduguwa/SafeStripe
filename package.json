@@ -1,6 +1,6 @@
 {
   "name": "safestripe",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Durable Stripe operations and webhook processing for Node.js, Express and Next.js",
   "type": "module",
   "engines": {
@@ -44,6 +44,10 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
+    },
+    "./metrics": {
+      "types": "./dist/metrics.d.ts",
+      "import": "./dist/metrics.js"
     }
   },
   "files": [

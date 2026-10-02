@@ -125,3 +125,11 @@ Open [the offline handbook](docs/handbook.html) for search, framework/database t
 For package contributors, the [maintainer guide](maintainer/README.md) covers test setup and releases. See also [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [release notes](CHANGELOG.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Existing 0.1 PostgreSQL users should read [the upgrade guide](docs/20-upgrading.md). The portable store uses separate records; switching to an empty store does not preserve old payment history.
+
+## Billing models in 0.3.0
+
+Build per-seat and multi-item subscriptions, graduated/volume prices, basic metered usage, quotes, phased schedules, invoice credits, saved-payment-method setup and marketplace transfers. Use test clocks to exercise subscription changes without waiting for a renewal date. The package also includes a browser-safe recurring-revenue calculator.
+
+Start with [Choose a billing model](docs/21-billing-models.md), then check [Stripe account services](docs/22-account-services.md) and [metric definitions](docs/23-revenue-metrics.md). Every financial write still needs your authorization policy and a stable operation ID.
+
+This release does not implement Metronome, all Connect configurations, Accounts v2 thin-event handling, dispute evidence submission or accounting reports. It does not establish million-user capacity. Those boundaries and the remaining application responsibilities are documented beside the examples.

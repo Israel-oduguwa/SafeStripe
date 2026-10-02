@@ -57,7 +57,7 @@ This is an integration sketch; the fully executable composition is in `examples/
 | `cancelSubscriptionAtPeriodEnd` | subscriptionId | Sets the future cancellation instruction |
 | `createPortalSession` | customerId | Fresh, authorized short-lived session; URL is not persisted by the operation store |
 
-Except preview and Portal access-session creation, mutations use the durable command protocol. Stable operation IDs bind both method kind and normalized parameters. Reusing an ID for another method conflicts. Replays retrieve current resource state. They do not return a historical snapshot of the original result.
+Except preview and ephemeral Portal/onboarding access-session creation, mutations use the durable command protocol. Tax inspection is read-only. Basic meter ingestion replays a stable acknowledgement rather than retrieving an event resource. Stable operation IDs bind both method kind and normalized parameters. Reusing an ID for another method conflicts. Replays retrieve current resource state. They do not return a historical snapshot of the original result.
 
 The library deliberately exposes the underlying official SDK for unsupported API calls. Calling it directly bypasses the wrapper's command protocol and authorization checks; do not claim those controls apply to arbitrary SDK calls. Add another narrow, reviewed wrapper method with contract and failure tests when a new domain requires durable financial mutation.
 
@@ -114,7 +114,7 @@ Failed jobs back off with jitter up to five minutes and reach dead state after e
 | Billing | Wrappers, current-state projections, recovery intents | Complete entitlement state machine, customer messaging and quote workflow |
 | Refunds | Durable create | Approval limits, Dashboard coordination, final-status tracking and journal postings |
 | Disputes | Detailed operational guide | Evidence storage, submission workflow, deadlines and risk integration |
-| Connect | Request scope and account-matched snapshot ingestion | Accounts v2, capabilities, transfer/payout controls, reserves and liability policy |
+| Connect | Request scope, Accounts v2 recipient creation, onboarding links, capability-checked transfers and reversals | Merchant/customer configurations, thin-event handling, allocations, payouts, reserves and liability policy |
 | Finance | Balance import and exact comparisons | Double-entry accounting, bank matching, FX, revenue recognition |
 | Security | Narrow inputs, signatures, no raw errors, bounded bodies | Deployment hardening, secret vault, rate limit, CSRF, audits and access review |
 
@@ -165,3 +165,38 @@ Observers can return a promise, but the library does not await delivery. Rejecte
 ## Migration behavior
 
 `migrate(db, options?)` returns the filenames applied during the call. It holds a transaction-scoped advisory lock, verifies recorded checksums, applies pending SQL, and commits its history atomically. An unknown applied migration also blocks an older package from silently migrating a newer schema. The default limits bound lock waiting and each statement. Schema files resolve relative to the installed module, so migration works outside the source checkout.
+
+## Billing model methods (0.3.0)
+
+See [Billing models](21-billing-models.md) for inputs and runnable patterns, [Account services](22-account-services.md) for product boundaries and [Revenue metrics](23-revenue-metrics.md) for reporting definitions.
+
+New scenario methods pass their validated **camelCase input object** as `parameters` to the authorizer. This differs from some original methods' normalized Stripe parameters. Reject unknown actions and kinds; explicitly add only the operations your product supports.
+
+| Method | Authorization action | Resource kinds |
+| --- | --- | --- |
+| `createMultiItemSubscription` | `subscription.create_multi` | customer, price, optional promotion_code |
+| `createSetupCheckout` | `checkout.setup` | customer |
+| `createSetupIntent` | `setup_intent.create` | customer |
+| `createPaymentLink` | `payment_link.create` | price |
+| `setSubscriptionCollection` | `subscription.collection` | subscription |
+| `restoreSubscription` | `subscription.restore` | subscription |
+| `resumePausedSubscription` | `subscription.resume` | subscription |
+| `createTieredPrice` | `price.create_tiered` | product |
+| `createSchedule` | `schedule.create` | customer, price |
+| `createQuote` | `quote.create` | customer, price |
+| `finalizeQuote`, `acceptQuote` | `quote.finalize`, `quote.accept` | quote |
+| `createCreditNote` | `credit_note.create` | invoice |
+| `adjustCustomerBalance` | `customer.balance_adjust` | customer |
+| `createMeter` | `meter.create` | none; require administrative permission |
+| `recordUsage` | `usage.record` | customer, meter |
+| `createTestClock` | `test_clock.create` | none; sandbox-only |
+| `advanceTestClock` | `test_clock.advance` | test_clock |
+| `createClockCustomer` | `customer.create_clock` | test_clock |
+| `createMarketplaceAccount` | `account.create_recipient` | none; require platform permission |
+| `createOnboardingLink` | `account.onboard` | account |
+| `createTransfer` | `transfer.create` | account, charge |
+| `reverseTransfer` | `transfer.reverse` | transfer |
+| `createIdentitySession` | `identity.create` | identity_reference |
+| `inspectTaxSetup` | `tax.inspect` | none; read-only |
+
+The original `createCheckout` also accepts optional `trialDays`, `allowPromotionCodes` and `automaticTax`. Subscription-mode items can omit `quantity` for metered prices. No trial is permitted in payment mode. The default behavior of existing calls is unchanged.

@@ -12,3 +12,5 @@ export * from './telemetry.js';
 export * from './setup.js';
 export * from './storage/contracts.js';
 export * from './storage/store.js';
+export type { SubscriptionPlan, ContractSchedule, TieredPrice } from './scenarios.js';
+export * from './metrics.js';
