@@ -89,19 +89,19 @@
     "test:package": "node scripts/test-package.mjs",
     "licenses": "node scripts/licenses.mjs",
     "release:check": "npm run format:check && npm run check && npm run build:next && npm run docs:build && npm run docs:check && npm run licenses && npm run test:package && npm run site:build && npm run site:check",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\" \"benchmarks/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"examples/**/*.ts\" \"examples/**/*.tsx\" \"scripts/*.{ts,mjs,js,css}\" \"*.json\" \".github/workflows/*.yml\" \"benchmarks/**/*.ts\"",
     "dev:express:legacy": "node --env-file=.env --import tsx examples/express/server.ts",
     "worker:legacy": "node --env-file=.env --import tsx examples/worker.ts",
     "site:build": "npm run docs:build && node scripts/build-site.mjs",
     "site:preview": "node scripts/preview-site.mjs",
-    "site:check": "node scripts/check-site.mjs"
+    "site:check": "node scripts/check-site.mjs",
+    "test:chaos": "node --import tsx --test --test-concurrency=1 tests/chaos/*.test.ts",
+    "benchmark": "node --import tsx benchmarks/run.ts",
+    "test:stripe:e2e": "node --env-file-if-exists=.env --import tsx scripts/stripe-e2e.ts"
   },
   "dependencies": {
-    "@stripe/react-stripe-js": "6.12.0",
-    "@stripe/stripe-js": "9.17.0",
     "@types/express": "^5.0.3",
-    "pg": "^8.16.3",
     "stripe": "22.6.2",
     "zod": "^4.1.12"
   },
@@ -110,7 +110,10 @@
     "express": ">=5 <6",
     "mongodb": ">=7 <8",
     "react": ">=18 <20",
-    "react-dom": ">=18 <20"
+    "react-dom": ">=18 <20",
+    "pg": "^8.16.3",
+    "@stripe/react-stripe-js": "6.12.0",
+    "@stripe/stripe-js": "9.17.0"
   },
   "peerDependenciesMeta": {
     "express": {
@@ -126,6 +129,15 @@
       "optional": true
     },
     "react-dom": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "@stripe/react-stripe-js": {
+      "optional": true
+    },
+    "@stripe/stripe-js": {
       "optional": true
     }
   },
@@ -146,7 +158,10 @@
     "react-dom": "^19.2.0",
     "shiki": "4.4.3",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "pg": "^8.16.3",
+    "@stripe/react-stripe-js": "6.12.0",
+    "@stripe/stripe-js": "9.17.0"
   },
   "license": "MIT",
   "sideEffects": false,

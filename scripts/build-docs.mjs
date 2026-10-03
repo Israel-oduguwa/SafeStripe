@@ -14,7 +14,10 @@ const releaseNotice =
     ? ''
     : '<p class="release-notice"><strong>Release preview.</strong> The shorter npm name, <code>safestripe</code>, is awaiting publication. Installation under that name is not available yet.</p>';
 const groups = [
-  ['Start here', ['00-reading-guide', '11-getting-started', '03-quickstart']],
+  [
+    'Start here',
+    ['00-reading-guide', '24-reliability-contracts', '11-getting-started', '03-quickstart'],
+  ],
   [
     'Build your app',
     [
@@ -29,7 +32,13 @@ const groups = [
   ],
   [
     'Deploy and scale',
-    ['14-deployment-and-publishing', '19-enterprise', '20-upgrading', '13-what-safestripe-solves'],
+    [
+      '14-deployment-and-publishing',
+      '19-enterprise',
+      '20-upgrading',
+      '13-what-safestripe-solves',
+      '25-stabilization',
+    ],
   ],
   [
     'Payment concepts',
@@ -42,7 +51,13 @@ const groups = [
   ],
   [
     'Operate and review',
-    ['05-operations-workbook', '06-evaluation-and-recording', '08-testing-and-runbooks'],
+    [
+      '05-operations-workbook',
+      '06-evaluation-and-recording',
+      '08-testing-and-runbooks',
+      '26-idempotent-payment-systems',
+      '27-release-evidence',
+    ],
   ],
   ['Reference', ['09-library-reference', '12-integration', '10-sources-and-corrections']],
 ];
