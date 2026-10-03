@@ -4,6 +4,13 @@ import { parseHTML } from 'linkedom';
 import assert from 'node:assert/strict';
 const html = await readFile(new URL('../docs/handbook.html', import.meta.url), 'utf8');
 const { document, window: dom } = parseHTML(html);
+for (const diagram of document.querySelectorAll('article img')) {
+  assert.match(
+    diagram.getAttribute('src'),
+    /^data:image\/svg\+xml;base64,/,
+    'Handbook images must load under its offline data-only image policy',
+  );
+}
 const preferences = new Map();
 const callbacks = new Map();
 let copied = '';

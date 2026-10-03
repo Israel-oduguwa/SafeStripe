@@ -97,6 +97,11 @@ const aliases = {
   text: 'text',
   mermaid: 'text',
 };
+const diagrams = new Map();
+for (const name of ['architecture.svg', 'crash-boundaries.svg']) {
+  const bytes = await readFile(new URL(name, directory));
+  diagrams.set(name, `data:image/svg+xml;base64,${bytes.toString('base64')}`);
+}
 marked.use({
   async: true,
   walkTokens: async (token) => {
@@ -122,6 +127,11 @@ marked.use({
     }
   },
   renderer: {
+    image({ href, text }) {
+      const source = diagrams.get(href);
+      if (!source) throw new Error(`Documentation image must be bundled: ${href}`);
+      return `<img src="${source}" alt="${escape(text)}">`;
+    },
     code(token) {
       const language = (token.lang ?? 'text').split(/\s+/)[0];
       const lang = aliases[language] ?? language;
