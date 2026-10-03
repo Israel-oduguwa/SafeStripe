@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fixture, child, waitUntil, type Backend } from './harness.js';
+import { fixture, waitUntil, type Backend } from './harness.js';
 import { dispatchOutboxOnce } from '../../src/worker.js';
 import { digest } from '../../src/primitives.js';
 import { migrate } from '../../src/migrate.js';
@@ -17,7 +17,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
       await f.jobs.enqueue('webhook', f.scope, 'evt_crash', 'checkout.session.completed', {
         orderId: 'order-1',
       });
-      const a = child(f.config, phase);
+      const a = f.spawn(phase);
       t.after(() => a.stop());
       await a.next(phase === 'claim' ? 'claimed' : 'inside-transaction');
       a.process.kill('SIGKILL');
@@ -30,7 +30,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
         const row = await f.storage.driver.read(digest(['job', 'webhook', f.scope, 'evt_crash']));
         return !!row && row.dueAt <= (await f.storage.driver.now());
       });
-      const b = child(f.config, 'drain');
+      const b = f.spawn('drain');
       t.after(() => b.stop());
       await b.next('done');
       assert.equal((await b.closed).code, 0);
@@ -46,7 +46,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
       await f.storage.transaction(f.scope, (tx) =>
         tx.enqueue('receipt:order-1', 'receipt', { orderId: 'order-1' }),
       );
-      const a = child(f.config, 'outbox');
+      const a = f.spawn('outbox');
       t.after(() => a.stop());
       await a.next('receiver-accepted');
       a.process.kill('SIGKILL');
@@ -76,7 +76,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
     const f = await fixture(backend);
     t.after(() => f.close());
     await f.jobs.enqueue('webhook', f.scope, 'evt_term', 'checkout.session.completed', {});
-    const a = child(f.config, 'graceful');
+    const a = f.spawn('graceful');
     t.after(() => a.stop());
     await a.next('inside-transaction');
     a.process.kill('SIGTERM');
@@ -106,7 +106,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
         });
       // Multiple SQLite writers are intentionally unsupported; exercise multi-process contention on PostgreSQL.
       const workers = Array.from({ length: backend === 'postgres' ? 20 : 1 }, () =>
-        child(f.config, 'drain'),
+        f.spawn('drain'),
       );
       t.after(async () => {
         await Promise.all(workers.map((w) => w.stop()));
@@ -149,7 +149,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
         await f.storage.transaction(f.scope, (tx) =>
           tx.set('fulfillments', 'order-1', { count: 1 }),
         );
-        const a = child(f.config, 'drain');
+        const a = f.spawn('drain');
         t.after(() => a.stop());
         await a.next('done');
         await a.closed;

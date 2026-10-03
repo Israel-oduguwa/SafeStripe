@@ -31,12 +31,19 @@ export async function fixture(backend: Backend) {
   const storage = pool
     ? await postgresStorage({ db: pool, migrate: true })
     : await sqliteStorage({ filename });
+  const children = new Set<ReturnType<typeof child>>();
+  const config = { backend, filename, schema, scope };
   return {
     storage,
     jobs: new DocumentJobs(storage.driver, { leaseSeconds: 1, maxAttempts: 10 }),
     scope,
     pool,
-    config: { backend, filename, schema, scope },
+    config,
+    spawn(mode: string) {
+      const worker = child(config, mode);
+      children.add(worker);
+      return worker;
+    },
     async counts() {
       const rows = pool
         ? (await pool.query('SELECT record FROM sf_records WHERE scope=$1', [scope])).rows.map(
@@ -60,6 +67,9 @@ export async function fixture(backend: Backend) {
       };
     },
     async close() {
+      // Tear down children before dropping their schema, even when an assertion fails
+      // while a child is paused inside a transaction.
+      await Promise.all([...children].map((worker) => worker.stop()));
       await storage.close();
       await pool?.end();
       if (admin) {
