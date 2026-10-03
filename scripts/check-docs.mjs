@@ -11,7 +11,7 @@ const markdown = [
   'VERIFICATION.md',
   'CONTRIBUTING.md',
   'CHANGELOG.md',
-  ...(await readdir(path.join(root, 'docs')))
+  ...(await readdir(path.join(root, 'docs'), { recursive: true }))
     .filter((x) => x.endsWith('.md'))
     .map((x) => `docs/${x}`),
 ];

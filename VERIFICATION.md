@@ -1,5 +1,20 @@
 # Verification record
 
+## Stabilization checks — 3 October 2026
+
+The stabilization branch adds a bounded reliability contract, eight retrospective ADRs, architecture and crash-boundary diagrams, a technical article, an optional sandbox service suite and release/security workflows. These documents describe mechanisms and limits; they do not certify production readiness.
+
+- The existing local suite passed: 105 tests, zero failures, three service-dependent skips, on Node 22.20.0.
+- Real local child-process failure tests passed six cases, including SIGKILL before commit and after a simulated recipient commits, SIGTERM, duplicate delivery and stale ownership. Seven PostgreSQL cases require the CI database and are not counted as local passes.
+- Three measured SQLite benchmark runs each processed 1,000 event identities after 10,000 delivery attempts. All ended with 1,000 effects and outbox intents, no duplicate effects and no worker errors. See the [method and raw report](https://github.com/Israel-oduguwa/SafeStripe/tree/main/benchmarks). This is not an enterprise capacity measurement.
+- Backend-only clean installation passed without PostgreSQL, React or Stripe's browser libraries. Optional feature imports are checked after explicitly installing their peers. Stripe's server SDK remains included.
+- Strict types, the Next.js build, 28 documentation guides, 40 typed snippets and documentation interaction checks passed. Runtime license notices now cover 12 included dependencies.
+- The demo's 48 local tests passed, including six hosted-session checks. Its additional Firestore emulator test and real deployed walkthrough are separate checks.
+
+No real Stripe or Firebase credentials were present in the demo environment. The optional Stripe service test has not been run against an account. Render deployment, actual signed webhook delivery, npm trusted-publisher setup, a maintainer-signed release and independent usability/security review remain open release gates. Historical results below describe earlier revisions.
+
+## Earlier feature baseline
+
 Reviewed 2 October 2026. Package: `safestripe` 0.3.0 preview. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
 
 The local package checks passed for the expanded billing scenario surface. The clean consumer check installed the 201-file archive, including the new scenario and metrics modules. The previously scoped 0.2.0 release is already published; the unscoped 0.3.0 release remains a preview awaiting publication.

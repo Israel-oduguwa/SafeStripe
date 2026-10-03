@@ -16,7 +16,7 @@ SQLite is built into supported Node.js versions. No database service or extra da
 ```bash
 npm install safestripe pg
 ```
-Use a PostgreSQL connection string from your existing database or a hosted provider. `pg` is currently included by SafeStripe too; listing it explicitly is appropriate when your application imports it directly.
+Use a PostgreSQL connection string from your existing database or a hosted provider. `pg` is an optional peer. Install it when your application selects PostgreSQL.
 :::tab MongoDB
 ```bash
 npm install safestripe mongodb
@@ -29,7 +29,7 @@ npm install safestripe @google-cloud/firestore
 This adapter uses **Cloud Firestore**, through its server SDK. Firebase Realtime Database is a different product and is not supported by this adapter.
 :::endtabs
 
-Do **not** install the `stripe` package separately just to use SafeStripe. It is a pinned runtime dependency and npm installs it automatically. The Stripe browser helpers used by `SafeCheckout` are included as well. Your React or Next.js app supplies React. Express apps install Express as their web framework.
+Do **not** install the `stripe` package separately just to use SafeStripe. It is a pinned runtime dependency and npm installs it automatically. PostgreSQL and browser UI libraries are optional peers, so a core-only installation does not include them. For `SafeCheckout`, also install `@stripe/react-stripe-js`, `@stripe/stripe-js`, `react` and `react-dom`; an existing React/Next.js app may already have React. Express apps install Express as their web framework.
 
 ## Understand your credentials
 

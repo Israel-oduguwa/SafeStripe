@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 stabilization (unreleased)
+
+- Document the reliability contract, transaction boundaries and recovery limits with ADRs and diagrams.
+- Add real child-process crash/recovery tests, a reproducible local benchmark and an opt-in Stripe sandbox service suite.
+- Make PostgreSQL and browser payment libraries optional peers. Core installations continue to include the Stripe server SDK.
+- Add CodeQL, dependency review, dependency-update configuration and a gated provenance/SBOM release workflow. Publisher configuration and a verified signed tag remain maintainer setup steps.
+
 ## 0.3.0 — billing scenarios (release preview)
 
 - Add durable scenario methods for multi-item subscriptions, saved methods, Payment Links, tiered prices, schedules, quotes, credits, basic metering, test clocks, marketplace recipients/transfers and Identity sessions.

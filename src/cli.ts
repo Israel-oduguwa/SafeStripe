@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { Pool } from 'pg';
 import { migrate } from './migrate.js';
 
 async function main(): Promise<void> {
@@ -12,6 +11,10 @@ async function main(): Promise<void> {
   }
   if (args.length !== 1 || args[0] !== 'migrate') throw new Error('Use: safestripe migrate');
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+  const { Pool } = await import('pg').catch(() => {
+    console.error('PostgreSQL migrations require pg. Install it with: npm install pg');
+    throw new Error('PostgreSQL driver is not installed');
+  });
   const db = new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 1,

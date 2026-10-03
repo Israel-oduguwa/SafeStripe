@@ -1,12 +1,22 @@
 # SafeStripe
 
-Stripe payments and billing for Node.js, Express and Next.js, with durable retries, verified webhooks and a React payment form.
+A database-backed reliability layer for Stripe applications: durable operations, verified webhook admission, recoverable workers and transactional business effects.
+
+PostgreSQL · MongoDB · Firestore · SQLite
+
+Express · Next.js
 
 A payment request can time out after Stripe accepts it. Webhooks can arrive more than once, and workers can stop partway through a job. SafeStripe keeps operation and event history in your database so a retry can continue the original action.
 
 Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stripe.
 
 [Website](https://israel-oduguwa.github.io/SafeStripe/) · [Get started](docs/11-getting-started.md) · [Local payment tutorial](docs/03-quickstart.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Payment UI](docs/17-payment-ui.md)
+
+## Reliability comes first
+
+The 0.3 release is in stabilization. New billing features are frozen while crash recovery, sandbox behavior, installation and release evidence are reviewed.
+
+SafeStripe is organized around five contracts: stable operation identity, durable admission before acknowledgment, recoverable worker ownership, one committed effect per business key, and atomic state/outbox intent. Each has explicit assumptions and failure boundaries. Read [the contracts and evidence](docs/24-reliability-contracts.md), [architecture decisions](docs/adr/README.md) and [the stabilization plan](docs/25-stabilization.md).
 
 ## Install
 
@@ -60,7 +70,13 @@ const session = await billing.createCheckout(
 
 The account ID is normally discovered from the secret key. A restricted key without account-read permission can use an explicit `accountId`. Webhook verification still requires a separate `whsec_…` signing secret. The publishable key is only needed for an embedded browser payment form.
 
-## Put a payment form in your page
+## Optional payment form
+
+Install the browser dependencies only when you use the React component:
+
+```sh
+npm install @stripe/react-stripe-js @stripe/stripe-js react react-dom
+```
 
 Create a custom Checkout Session on your authenticated server using `uiMode: 'custom'`, then pass its client secret to the component:
 
