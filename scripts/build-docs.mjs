@@ -14,7 +14,10 @@ const releaseNotice =
     ? ''
     : '<p class="release-notice"><strong>Release preview.</strong> The shorter npm name, <code>safestripe</code>, is awaiting publication. Installation under that name is not available yet.</p>';
 const groups = [
-  ['Start here', ['00-reading-guide', '11-getting-started', '03-quickstart']],
+  [
+    'Start here',
+    ['00-reading-guide', '24-reliability-contracts', '11-getting-started', '03-quickstart'],
+  ],
   [
     'Build your app',
     [
@@ -29,7 +32,13 @@ const groups = [
   ],
   [
     'Deploy and scale',
-    ['14-deployment-and-publishing', '19-enterprise', '20-upgrading', '13-what-safestripe-solves'],
+    [
+      '14-deployment-and-publishing',
+      '19-enterprise',
+      '20-upgrading',
+      '13-what-safestripe-solves',
+      '25-stabilization',
+    ],
   ],
   [
     'Payment concepts',
@@ -42,7 +51,13 @@ const groups = [
   ],
   [
     'Operate and review',
-    ['05-operations-workbook', '06-evaluation-and-recording', '08-testing-and-runbooks'],
+    [
+      '05-operations-workbook',
+      '06-evaluation-and-recording',
+      '08-testing-and-runbooks',
+      '26-idempotent-payment-systems',
+      '27-release-evidence',
+    ],
   ],
   ['Reference', ['09-library-reference', '12-integration', '10-sources-and-corrections']],
 ];
@@ -82,6 +97,11 @@ const aliases = {
   text: 'text',
   mermaid: 'text',
 };
+const diagrams = new Map();
+for (const name of ['architecture.svg', 'crash-boundaries.svg']) {
+  const bytes = await readFile(new URL(name, directory));
+  diagrams.set(name, `data:image/svg+xml;base64,${bytes.toString('base64')}`);
+}
 marked.use({
   async: true,
   walkTokens: async (token) => {
@@ -107,6 +127,11 @@ marked.use({
     }
   },
   renderer: {
+    image({ href, text }) {
+      const source = diagrams.get(href);
+      if (!source) throw new Error(`Documentation image must be bundled: ${href}`);
+      return `<img src="${source}" alt="${escape(text)}">`;
+    },
     code(token) {
       const language = (token.lang ?? 'text').split(/\s+/)[0];
       const lang = aliases[language] ?? language;

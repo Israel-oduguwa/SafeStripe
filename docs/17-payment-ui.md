@@ -1,5 +1,13 @@
 # Add a payment form
 
+The browser UI is optional. Install its dependencies in your frontend application:
+
+```sh
+npm install safestripe @stripe/react-stripe-js @stripe/stripe-js react react-dom
+```
+
+Hosted Checkout does not require these browser packages.
+
 Use hosted Checkout for the shortest integration. Stripe supplies the page, payment fields and supported payment methods. Your app creates a Session and redirects to its URL.
 
 Use `SafeCheckout` when the payment form belongs inside your own React or Next.js page. It supplies the Stripe provider, Payment Element, submit button, loading state, duplicate-click guard and result message. You can place an order summary inside it and customize its appearance.

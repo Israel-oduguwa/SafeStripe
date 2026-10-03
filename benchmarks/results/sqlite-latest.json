@@ -1,0 +1,201 @@
+{
+  "recordedAt": "2026-10-03T12:43:13.640Z",
+  "sourceCommit": "35f5e9f930675cefc3d55876e374975105e7f9c2",
+  "sourceDirty": true,
+  "sourceSha256": "f7f74c84cc5c8cff0948218ac719033f74123ead968f01bfa4e95131f3c1a4de",
+  "sourceFiles": [
+    "benchmarks/run.ts",
+    "package-lock.json",
+    "src/adapters/express.ts",
+    "src/adapters/next.ts",
+    "src/cli.ts",
+    "src/client.ts",
+    "src/database.ts",
+    "src/errors.ts",
+    "src/index.ts",
+    "src/jobs.ts",
+    "src/limiter.ts",
+    "src/metrics.ts",
+    "src/migrate.ts",
+    "src/migration-sources.ts",
+    "src/operations.ts",
+    "src/primitives.ts",
+    "src/react/index.tsx",
+    "src/reconciliation.ts",
+    "src/scenarios.ts",
+    "src/setup.ts",
+    "src/storage/buffer.ts",
+    "src/storage/contracts.ts",
+    "src/storage/firestore.ts",
+    "src/storage/mongodb.ts",
+    "src/storage/postgres.ts",
+    "src/storage/sqlite.ts",
+    "src/storage/store.ts",
+    "src/telemetry.ts",
+    "src/transport.ts",
+    "src/webhooks.ts",
+    "src/worker.ts",
+    "tests/chaos/harness.ts",
+    "tests/chaos/recovery.test.ts",
+    "tests/chaos/worker.ts"
+  ],
+  "environment": {
+    "node": "v22.20.0",
+    "platform": "darwin",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "logicalCpus": 12,
+    "memoryBytes": 17179869184,
+    "database": "sqlite",
+    "connections": 1,
+    "location": "not specified"
+  },
+  "methodology": "Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms.",
+  "unmeasured": [
+    "database CPU/memory",
+    "transaction retry counts",
+    "process recovery time",
+    "multi-host throughput",
+    "production network latency"
+  ],
+  "results": [
+    {
+      "version": "3.50.4",
+      "events": 1000,
+      "deliveryAttempts": 10000,
+      "workers": 4,
+      "admissionMs": 2097.814487,
+      "processingMs": 1797.9527930000004,
+      "admissionAttemptsPerSecond": 4766.86573668418,
+      "committedEffectsPerSecond": 556.1881290172449,
+      "admission": {
+        "samples": 10000,
+        "p50Ms": 0.15245400000003428,
+        "p95Ms": 0.4798719999998866,
+        "p99Ms": 0.7402020000001812
+      },
+      "workerIteration": {
+        "samples": 1000,
+        "p50Ms": 6.791898000000401,
+        "p95Ms": 10.766075,
+        "p99Ms": 12.124911999999767
+      },
+      "admissionToCommit": {
+        "samples": 1000,
+        "p50Ms": 1871.001708984375,
+        "p95Ms": 2058.00537109375,
+        "p99Ms": 2088.019287109375
+      },
+      "contention": {
+        "claimants": 20,
+        "owners": 1,
+        "busy": 19,
+        "elapsedMs": 11.702191000000312
+      },
+      "cpuMicroseconds": {
+        "user": 3035605,
+        "system": 670208
+      },
+      "peakRssBytes": 105570304,
+      "workerErrors": 0,
+      "duplicateEffects": 0,
+      "counts": {
+        "effects": 1000,
+        "outbox": 1000,
+        "done": 1000
+      }
+    },
+    {
+      "version": "3.50.4",
+      "events": 1000,
+      "deliveryAttempts": 10000,
+      "workers": 4,
+      "admissionMs": 2051.9503299999997,
+      "processingMs": 1798.806062999999,
+      "admissionAttemptsPerSecond": 4873.412311105992,
+      "committedEffectsPerSecond": 555.9242992166858,
+      "admission": {
+        "samples": 10000,
+        "p50Ms": 0.14802099999997154,
+        "p95Ms": 0.4789099999998143,
+        "p99Ms": 0.7332429999996748
+      },
+      "workerIteration": {
+        "samples": 1000,
+        "p50Ms": 6.82669899999928,
+        "p95Ms": 10.283035999998901,
+        "p99Ms": 11.709922000000006
+      },
+      "admissionToCommit": {
+        "samples": 1000,
+        "p50Ms": 1880.013916015625,
+        "p95Ms": 2030.003173828125,
+        "p99Ms": 2048.9931640625
+      },
+      "contention": {
+        "claimants": 20,
+        "owners": 1,
+        "busy": 19,
+        "elapsedMs": 8.632133999999496
+      },
+      "cpuMicroseconds": {
+        "user": 2913322,
+        "system": 672103
+      },
+      "peakRssBytes": 111730688,
+      "workerErrors": 0,
+      "duplicateEffects": 0,
+      "counts": {
+        "effects": 1000,
+        "outbox": 1000,
+        "done": 1000
+      }
+    },
+    {
+      "version": "3.50.4",
+      "events": 1000,
+      "deliveryAttempts": 10000,
+      "workers": 4,
+      "admissionMs": 2034.201944999999,
+      "processingMs": 1797.9352280000003,
+      "admissionAttemptsPerSecond": 4915.932768907073,
+      "committedEffectsPerSecond": 556.1935627193794,
+      "admission": {
+        "samples": 10000,
+        "p50Ms": 0.14738800000122865,
+        "p95Ms": 0.47948100000030536,
+        "p99Ms": 0.7055149999996502
+      },
+      "workerIteration": {
+        "samples": 1000,
+        "p50Ms": 6.781811999999263,
+        "p95Ms": 10.74996000000101,
+        "p99Ms": 12.069567000000461
+      },
+      "admissionToCommit": {
+        "samples": 1000,
+        "p50Ms": 1865.0068359375,
+        "p95Ms": 2017.0078125,
+        "p99Ms": 2031.009033203125
+      },
+      "contention": {
+        "claimants": 20,
+        "owners": 1,
+        "busy": 19,
+        "elapsedMs": 14.527162000000317
+      },
+      "cpuMicroseconds": {
+        "user": 2970686,
+        "system": 674734
+      },
+      "peakRssBytes": 109862912,
+      "workerErrors": 0,
+      "duplicateEffects": 0,
+      "counts": {
+        "effects": 1000,
+        "outbox": 1000,
+        "done": 1000
+      }
+    }
+  ]
+}

@@ -75,11 +75,11 @@ const storage = await sqliteStorage({filename:':memory:'});
 await storage.transaction('consumer', tx => tx.set('orders','one',{persisted:true}));
 assert.deepEqual(await storage.read('consumer','orders','one'),{persisted:true});
 await storage.close();
-const { SafeCheckout } = await import('${meta.name}/react');
-assert.equal(typeof SafeCheckout,'function');
 const { createRequire } = await import('node:module');
 const require = createRequire(import.meta.url);
 assert.ok(require.resolve('stripe'));
+for (const name of ['pg','react','react-dom','@stripe/react-stripe-js','@stripe/stripe-js'])
+  assert.throws(() => require.resolve(name), {code:'MODULE_NOT_FOUND'});
 assert.throws(() => require.resolve('mongodb'), {code:'MODULE_NOT_FOUND'});
 assert.throws(() => require.resolve('@google-cloud/firestore'), {code:'MODULE_NOT_FOUND'});
 
@@ -126,6 +126,34 @@ declare const contract: ContractSchedule; void contract;
   );
   const bin = path.join(consumer, 'node_modules', ...meta.name.split('/'), 'dist/cli.js');
   assert.match(run(process.execPath, [bin, '--help'], consumer), /safestripe migrate/);
+  run(
+    'npm',
+    [
+      'install',
+      '--ignore-scripts',
+      '--no-audit',
+      '--no-fund',
+      'pg@' + meta.devDependencies.pg,
+      'react@19',
+      'react-dom@19',
+      '@stripe/react-stripe-js@' + meta.devDependencies['@stripe/react-stripe-js'],
+      '@stripe/stripe-js@' + meta.devDependencies['@stripe/stripe-js'],
+    ],
+    consumer,
+  );
+  await writeFile(
+    path.join(consumer, 'optional.mjs'),
+    `
+import assert from 'node:assert/strict';
+import { SafeCheckout } from '${meta.name}/react';
+import { postgresStorage } from '${meta.name}/storage/postgres';
+import { Pool } from 'pg';
+assert.equal(typeof SafeCheckout, 'function');
+assert.equal(typeof postgresStorage, 'function');
+assert.equal(typeof Pool, 'function');
+`,
+  );
+  run(process.execPath, ['optional.mjs'], consumer);
   // A real database can additionally prove that packaged SQL files resolve at runtime.
   if (process.env.PACKAGE_DATABASE_URL) {
     const env = { ...process.env, DATABASE_URL: process.env.PACKAGE_DATABASE_URL };

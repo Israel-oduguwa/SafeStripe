@@ -16,6 +16,7 @@
   "include": [
     "src/**/*.ts",
     "tests/**/*.ts",
+    "benchmarks/**/*.ts",
     "scripts/**/*.ts",
     "examples/**/*.ts",
     "examples/**/*.tsx",
