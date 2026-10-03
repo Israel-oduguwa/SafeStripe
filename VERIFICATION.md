@@ -13,6 +13,8 @@ The stabilization branch adds a bounded reliability contract, eight retrospectiv
 
 No real Stripe or Firebase credentials were present in the demo environment. The optional Stripe service test has not been run against an account. Render deployment, actual signed webhook delivery, npm trusted-publisher setup, a maintainer-signed release and independent usability/security review remain open release gates. Historical results below describe earlier revisions.
 
+The stabilization commit `bbe82e2` passed [GitHub CI run 37124055220](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37124055220): Node 22/24 release checks, real PostgreSQL, and document-adapter conformance. All 13 process-failure cases passed with PostgreSQL enabled, including twenty competing child processes. [Security run 37124055224](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37124055224) passed CodeQL and dependency review after the repository dependency graph was enabled. Secret scanning and push protection were enabled; no open CodeQL alerts were returned at this check. These are automated checks, not an independent security audit.
+
 ## Earlier feature baseline
 
 Reviewed 2 October 2026. Package: `safestripe` 0.3.0 preview. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
