@@ -21,7 +21,7 @@ test('scenario methods use the real SDK, stable writes and retrieval on retry', 
     let body: unknown = { id: 'fixture_id', object: 'fixture', status: 'active' };
     if (req.url?.startsWith('/v1/billing/meters/mtr_'))
       body = {
-        id: 'mtr_fixture',
+        id: 'mtr_test_61Q8nQMqIFK9fRQmr41CMAXJrFdZ5MnA',
         status: 'active',
         event_name: 'api_calls',
         default_aggregation: { formula: 'sum' },
@@ -246,7 +246,7 @@ test('scenario methods use the real SDK, stable writes and retrieval on retry', 
       (a) =>
         billing.recordUsage(a, {
           customerId: 'cus_one',
-          meterId: 'mtr_fixture',
+          meterId: 'mtr_test_61Q8nQMqIFK9fRQmr41CMAXJrFdZ5MnA',
           value: 25,
           timestamp: now,
         }),

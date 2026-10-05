@@ -1,5 +1,11 @@
 # Verification record
 
+## Billing Meter identifier regression — 5 October 2026
+
+The identifier validator rejected Stripe's documented `mtr_test_…` Meter IDs, so valid usage requests failed before reaching Stripe. The revised validator supports test/live Meter environment prefixes, retains legacy fixture compatibility and leaves other resource formats unchanged. A regression also sends the documented Meter ID through the actual Stripe SDK against a controlled local HTTP server. Identifier cases reject missing suffixes, unsupported environment segments, paths, query strings, control characters and excessive length.
+
+The local check completed on Node.js 22.20.0 with **107 tests passed, zero failed and three provider-dependent skips**, followed by a successful TypeScript build. The corrected demo fixture reproduced its interrupted-setup error before the fix; genuine hosted recovery and CI must be recorded separately. These tests do not establish real Stripe payment behavior.
+
 ## Stabilization checks — 3 October 2026
 
 The stabilization branch adds a bounded reliability contract, eight retrospective ADRs, architecture and crash-boundary diagrams, a technical article, an optional sandbox service suite and release/security workflows. These documents describe mechanisms and limits; they do not certify production readiness.
