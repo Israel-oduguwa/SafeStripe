@@ -15,7 +15,11 @@ export const stripeId = (prefix: string) =>
   z
     .string()
     .max(200)
-    .regex(new RegExp(`^${prefix}_[A-Za-z0-9]+$`));
+    .regex(
+      new RegExp(
+        prefix === 'mtr' ? '^mtr_(?:(?:test|live)_)?[A-Za-z0-9]+$' : `^${prefix}_[A-Za-z0-9]+$`,
+      ),
+    );
 
 export interface Scope {
   platformAccountId: string;
