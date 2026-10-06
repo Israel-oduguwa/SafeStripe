@@ -19,7 +19,7 @@ jobs:
         env:
           STRIPE_E2E_CONFIRM: disposable-sandbox
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_RESTRICTED_KEY }}
-          STRIPE_ACCOUNT_ID: ${{ vars.STRIPE_SANDBOX_ACCOUNT_ID }}
+          STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_SANDBOX_ACCOUNT_ID || vars.STRIPE_SANDBOX_ACCOUNT_ID }}
       - name: Require the account-verified release evidence
         run: node -e 'const r=require("./artifacts/stripe-e2e.json"); if(!r.passed || !r.accountIdentityVerified || r.sourceDirty) process.exit(1)'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
