@@ -35,6 +35,6 @@ The site uses relative links and works from a project subpath. Do not upload the
 
 ## Package name transition
 
-The landing page currently says the unscoped package name is awaiting publication. After safestripe is published and verified by a clean registry install, set npmPublished to true in site/release.json and remove the corresponding release-preview note from README.md. Keep the previous npm package available for existing consumers.
+The unscoped `safestripe@0.3.0` package is published. A [clean registry installation](../docs/evidence/npm-registry-2026-10-06.json) verified the archive, exports and types before `npmPublished` was set to `true` in `site/release.json`. The copy button now supplies the public install command. The release remains an evaluation preview; publication alone does not change the [readiness requirements](../docs/28-release-readiness.md). Keep the previous npm package available for existing consumers.
 
-The demo remains a separate local application. A static host cannot run its Firestore worker or Express server.
+The demo is a separate application with a Vercel frontend and a Render Express backend. Its Firestore worker runs on the backend; a static documentation host cannot run it.
