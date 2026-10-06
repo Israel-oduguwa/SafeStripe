@@ -9,7 +9,7 @@ import { sandboxCredentials } from './stripe-e2e-config.js';
 import { diagnostic } from '../src/telemetry.js';
 
 // An opt-in service test. Only a disposable sandbox should grant this runner access.
-const { key, account, temporary, expiry } = await sandboxCredentials(process.env);
+const { key, keyKind, account, temporary, expiry } = await sandboxCredentials(process.env);
 const stripe = new Stripe(key, {
   apiVersion: API_VERSION,
   telemetry: false,
@@ -257,7 +257,7 @@ try {
         apiVersion: API_VERSION,
         node: process.version,
         passed: !failed,
-        credentialMode: temporary ? 'unclaimed CLI sandbox' : 'account-verified restricted sandbox',
+        credentialMode: temporary ? 'unclaimed CLI sandbox' : `account-verified ${keyKind} sandbox`,
         accountIdentityVerified,
         temporaryExpiry: expiry,
         failure: failed ? { stage, ...lastDiagnostic } : undefined,
