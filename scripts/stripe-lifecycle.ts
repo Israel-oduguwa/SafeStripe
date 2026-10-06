@@ -57,12 +57,17 @@ const checkouts: string[] = [];
 const subscriptions: string[] = [];
 const sessions: DemoSession[] = [];
 let browser: Browser | undefined;
+let page: Page | undefined;
 let stage = 'account verification',
   passed = false,
   accountIdentityVerified = false,
   cleanupPassed = true;
 let deployment: Deployment | undefined;
 let failure: { stage: string; code?: string; stripeType?: string } | undefined;
+const checkpoint = (value: string) => {
+  stage = value;
+  console.log(`Lifecycle checkpoint: ${value}`);
+};
 
 const ref = (value: unknown): string => {
   if (typeof value === 'string') return value;
@@ -222,6 +227,12 @@ async function input(page: Page, pattern: RegExp, value: string, required = true
 }
 
 async function card(page: Page, number: string) {
+  checkpoint('selecting the hosted card payment option');
+  const cardOption = page.getByRole('button', { name: /^Card$/i });
+  if (await cardOption.isVisible()) await cardOption.click();
+  const cardRadio = page.getByRole('radio', { name: /^Card$/i });
+  if (await cardRadio.isVisible()) await cardRadio.click();
+  checkpoint('entering the hosted test card');
   await eventually(
     async () => {
       return input(page, /card.?number/i, number, false);
@@ -236,6 +247,7 @@ async function card(page: Page, number: string) {
   const buttons = page
     .getByRole('button', { name: /^(Pay|Subscribe)\b/i })
     .filter({ hasNotText: 'Link' });
+  checkpoint('submitting the hosted test payment');
   await buttons.first().click();
 }
 
@@ -330,7 +342,7 @@ try {
   const customer = await fixtureCustomer();
   const primary = await workspace(customer.id, price.id, recurring.id);
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  page = await browser.newPage({ locale: 'en-US' });
   stage = 'hosted card payment and signed Firestore receipt';
   const first = await order(primary.session);
   await page.goto(checkoutUrl(first.url));
@@ -599,6 +611,35 @@ try {
   console.error(
     `Lifecycle test failed during ${stage}; credentials and remote payloads are omitted.`,
   );
+  if (page && page.url().startsWith('https://checkout.stripe.com/')) {
+    await mkdir('artifacts/lifecycle-browser', { recursive: true });
+    // Synthetic payment UI only: no address bar, cookies, input values or access URL.
+    await page.screenshot({ path: 'artifacts/lifecycle-browser/checkout.png' }).catch(() => {});
+    const fields = [];
+    for (const frame of page.frames()) {
+      fields.push(
+        await frame
+          .locator('input')
+          .evaluateAll((inputs) =>
+            inputs.map((input) => ({
+              id: input.id,
+              name: (input as HTMLInputElement).name,
+              label: input.getAttribute('aria-label'),
+              type: (input as HTMLInputElement).type,
+            })),
+          )
+          .catch(() => []),
+      );
+    }
+    const buttons = await page
+      .getByRole('button')
+      .allTextContents()
+      .catch(() => []);
+    await writeFile(
+      'artifacts/lifecycle-browser/fields.json',
+      JSON.stringify({ fields, buttons }, null, 2) + '\n',
+    );
+  }
 } finally {
   await browser?.close().catch(() => {
     cleanupPassed = false;
