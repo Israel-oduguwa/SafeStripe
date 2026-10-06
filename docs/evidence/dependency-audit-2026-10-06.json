@@ -1,0 +1,28 @@
+{
+  "recordedAt": "2026-10-06T12:26:34.878Z",
+  "sourceCommit": "d0d07f9076d699b318db86d3e6f1c3b05af221bf",
+  "sourceDirty": true,
+  "lockfileSha256": "181ac1c5ee7242a77784060412582b30dfae9de1e9680bca9ae98f34ba4a315c",
+  "scope": "npm audit of the installed graph, including development dependencies; patched lockfile measured before its commit",
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "dependencyCounts": {
+    "prod": 14,
+    "dev": 371,
+    "optional": 70,
+    "peer": 2,
+    "peerOptional": 0,
+    "total": 384
+  },
+  "sourceMapJs": "1.2.2",
+  "limits": [
+    "Registry advisory snapshot, not an independent security audit",
+    "Optional dependencies installed for repository builds may differ from a minimal consumer graph"
+  ]
+}
