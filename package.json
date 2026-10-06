@@ -55,6 +55,8 @@
     "src",
     "migrations",
     "docs",
+    "benchmarks/README.md",
+    "benchmarks/results/*.json",
     "README.md",
     "LICENSE",
     "NOTICE",
