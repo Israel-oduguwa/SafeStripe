@@ -118,7 +118,7 @@ Use shared PostgreSQL, MongoDB or Firestore for deployment. Next.js routes on Ve
 
 Your app remains responsible for authentication, tenant/resource authorization, approved prices, entitlement policy, refund approvals, tax/accounting decisions and monitored infrastructure. Outbox delivery is at least once, so recipients must deduplicate. The default API gate is per process, not an account-wide rate limiter.
 
-The [verification record](VERIFICATION.md) lists the checks performed and the remaining service tests. The package has no published throughput benchmark or independent security audit. Read [deployment](docs/14-deployment-and-publishing.md) and [larger-system architecture](docs/19-enterprise.md) when planning your production integration.
+The [verification record](VERIFICATION.md) lists the checks performed and the remaining service tests. [SQLite and PostgreSQL measurements](benchmarks/README.md) retain workload details, failures and raw results; they do not establish enterprise payment capacity. An independent security audit remains open. Read [deployment](docs/14-deployment-and-publishing.md) and [larger-system architecture](docs/19-enterprise.md) when planning your production integration.
 
 ## Try the examples
 

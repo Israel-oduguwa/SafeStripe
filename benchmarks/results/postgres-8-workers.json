@@ -1,0 +1,274 @@
+{
+  "recordedAt": "2026-10-06T10:16:45.511Z",
+  "sourceCommit": "b2c8f9ab9312f574bea5d697fd8c0251cb303404",
+  "sourceDirty": false,
+  "sourceSha256": "5840c2f2e99890a2acb213ea6ee756db335330caac347962b03e628705921af6",
+  "sourceFiles": [
+    "benchmarks/drain.ts",
+    "benchmarks/run.ts",
+    "package-lock.json",
+    "src/adapters/express.ts",
+    "src/adapters/next.ts",
+    "src/cli.ts",
+    "src/client.ts",
+    "src/database.ts",
+    "src/errors.ts",
+    "src/index.ts",
+    "src/jobs.ts",
+    "src/limiter.ts",
+    "src/metrics.ts",
+    "src/migrate.ts",
+    "src/migration-sources.ts",
+    "src/operations.ts",
+    "src/primitives.ts",
+    "src/react/index.tsx",
+    "src/reconciliation.ts",
+    "src/scenarios.ts",
+    "src/setup.ts",
+    "src/storage/buffer.ts",
+    "src/storage/contracts.ts",
+    "src/storage/firestore.ts",
+    "src/storage/mongodb.ts",
+    "src/storage/postgres.ts",
+    "src/storage/sqlite.ts",
+    "src/storage/store.ts",
+    "src/telemetry.ts",
+    "src/transport.ts",
+    "src/webhooks.ts",
+    "src/worker.ts",
+    "tests/chaos/harness.ts",
+    "tests/chaos/recovery.test.ts",
+    "tests/chaos/worker.ts"
+  ],
+  "environment": {
+    "node": "v22.23.3",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logicalCpus": 4,
+    "memoryBytes": 16766414848,
+    "database": "postgres",
+    "connections": {
+      "workloadPoolMax": 4,
+      "schemaAdminPoolMax": 1
+    },
+    "location": "GitHub-hosted Ubuntu runner; PostgreSQL service on the same runner"
+  },
+  "methodology": "Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes and the production retry loop; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms. Callback retries count repeated transaction callbacks, excluding failures before the callback starts. Recognized SQL conflicts may recover; failed attempts are counted and all business invariants must pass. Warm-up is retained but excluded from measured rates.",
+  "unmeasured": [
+    "database CPU/memory",
+    "transaction retries before the callback starts",
+    "process recovery time",
+    "multi-host throughput",
+    "production network latency"
+  ],
+  "configuration": {
+    "events": 1000,
+    "workers": 8,
+    "repeats": 3,
+    "deadlineMs": 180000
+  },
+  "passed": true,
+  "results": [
+    {
+      "version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "events": 1000,
+      "deliveryAttempts": 10000,
+      "workers": 8,
+      "admissionMs": 10636.429955,
+      "processingMs": 4713.173497,
+      "admissionAttemptsPerSecond": 940.165078161322,
+      "committedEffectsPerSecond": 212.17126860203933,
+      "admission": {
+        "samples": 10000,
+        "p50Ms": 0.9770510000007562,
+        "p95Ms": 1.4870209999990038,
+        "p99Ms": 1.7552559999994628
+      },
+      "workerIteration": {
+        "samples": 1000,
+        "p50Ms": 13.164096000000427,
+        "p95Ms": 84.70550399999775,
+        "p99Ms": 108.32520099999965
+      },
+      "admissionToCommit": {
+        "samples": 1000,
+        "p50Ms": 7628.97900390625,
+        "p95Ms": 10307.655029296875,
+        "p99Ms": 10583.9990234375
+      },
+      "contention": {
+        "claimants": 20,
+        "owners": 1,
+        "busy": 19,
+        "elapsedMs": 29.825400999998237
+      },
+      "cpuMicroseconds": {
+        "user": 5782962,
+        "system": 2538957
+      },
+      "peakRssBytes": 131321856,
+      "workerErrors": 0,
+      "recoveredClaimFailures": 0,
+      "transactionCallbackRetries": 675,
+      "retryableTransactionFailures": 0,
+      "unexpectedTransactionFailures": 0,
+      "duplicateEffects": 0,
+      "counts": {
+        "effects": 1000,
+        "outbox": 1000,
+        "done": 1000
+      }
+    },
+    {
+      "version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "events": 1000,
+      "deliveryAttempts": 10000,
+      "workers": 8,
+      "admissionMs": 10442.732418,
+      "processingMs": 4581.933143999999,
+      "admissionAttemptsPerSecond": 957.6037764563546,
+      "committedEffectsPerSecond": 218.24849219144352,
+      "admission": {
+        "samples": 10000,
+        "p50Ms": 0.9727200000015728,
+        "p95Ms": 1.4558990000004997,
+        "p99Ms": 1.6938670000017737
+      },
+      "workerIteration": {
+        "samples": 1000,
+        "p50Ms": 12.973102000003564,
+        "p95Ms": 78.41993600000569,
+        "p99Ms": 100.41456599999947
+      },
+      "admissionToCommit": {
+        "samples": 1000,
+        "p50Ms": 7540.875,
+        "p95Ms": 10166.777099609375,
+        "p99Ms": 10402.1669921875
+      },
+      "contention": {
+        "claimants": 20,
+        "owners": 1,
+        "busy": 19,
+        "elapsedMs": 36.881315000006
+      },
+      "cpuMicroseconds": {
+        "user": 5281958,
+        "system": 2610876
+      },
+      "peakRssBytes": 131305472,
+      "workerErrors": 0,
+      "recoveredClaimFailures": 0,
+      "transactionCallbackRetries": 635,
+      "retryableTransactionFailures": 0,
+      "unexpectedTransactionFailures": 0,
+      "duplicateEffects": 0,
+      "counts": {
+        "effects": 1000,
+        "outbox": 1000,
+        "done": 1000
+      }
+    },
+    {
+      "version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "events": 1000,
+      "deliveryAttempts": 10000,
+      "workers": 8,
+      "admissionMs": 10565.985727,
+      "processingMs": 4731.7940949999975,
+      "admissionAttemptsPerSecond": 946.4332300247485,
+      "committedEffectsPerSecond": 211.33633034807713,
+      "admission": {
+        "samples": 10000,
+        "p50Ms": 0.9707670000061626,
+        "p95Ms": 1.461699999999837,
+        "p99Ms": 1.72607699999935
+      },
+      "workerIteration": {
+        "samples": 1000,
+        "p50Ms": 13.008665000001201,
+        "p95Ms": 81.40618299999915,
+        "p99Ms": 111.040138999997
+      },
+      "admissionToCommit": {
+        "samples": 1000,
+        "p50Ms": 7649.303955078125,
+        "p95Ms": 10285.91015625,
+        "p99Ms": 10528.047119140625
+      },
+      "contention": {
+        "claimants": 20,
+        "owners": 1,
+        "busy": 19,
+        "elapsedMs": 37.62137300000177
+      },
+      "cpuMicroseconds": {
+        "user": 5315201,
+        "system": 2629710
+      },
+      "peakRssBytes": 132198400,
+      "workerErrors": 0,
+      "recoveredClaimFailures": 0,
+      "transactionCallbackRetries": 651,
+      "retryableTransactionFailures": 0,
+      "unexpectedTransactionFailures": 0,
+      "duplicateEffects": 0,
+      "counts": {
+        "effects": 1000,
+        "outbox": 1000,
+        "done": 1000
+      }
+    }
+  ],
+  "warmup": {
+    "version": "17.11 (Debian 17.11-1.pgdg13+2)",
+    "events": 100,
+    "deliveryAttempts": 1000,
+    "workers": 8,
+    "admissionMs": 1368.833146,
+    "processingMs": 2035.133324,
+    "admissionAttemptsPerSecond": 730.5492294091482,
+    "committedEffectsPerSecond": 49.13682991709491,
+    "admission": {
+      "samples": 1000,
+      "p50Ms": 1.2308230000001004,
+      "p95Ms": 2.037916999999993,
+      "p99Ms": 3.3253799999999956
+    },
+    "workerIteration": {
+      "samples": 103,
+      "p50Ms": 32.33866200000011,
+      "p95Ms": 136.788415,
+      "p99Ms": 181.05452400000013
+    },
+    "admissionToCommit": {
+      "samples": 100,
+      "p50Ms": 986.385009765625,
+      "p95Ms": 1417.597900390625,
+      "p99Ms": 2687.0830078125
+    },
+    "contention": {
+      "claimants": 20,
+      "owners": 1,
+      "busy": 19,
+      "elapsedMs": 26.504281000000447
+    },
+    "cpuMicroseconds": {
+      "user": 1516338,
+      "system": 440353
+    },
+    "peakRssBytes": 117174272,
+    "workerErrors": 3,
+    "recoveredClaimFailures": 0,
+    "transactionCallbackRetries": 175,
+    "retryableTransactionFailures": 3,
+    "unexpectedTransactionFailures": 0,
+    "duplicateEffects": 0,
+    "counts": {
+      "effects": 100,
+      "outbox": 100,
+      "done": 100
+    }
+  }
+}

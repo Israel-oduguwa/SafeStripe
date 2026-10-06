@@ -37,10 +37,22 @@ for (const name of ['styles.css', 'site.js', 'favicon.svg'])
   await cp(new URL(name, source), new URL(name, output));
 // Copy only tracked examples and public guides, never local configuration or build output.
 const { execFileSync } = await import('node:child_process');
-const files = execFileSync('git', ['ls-files', '-z', 'docs', 'examples', 'maintainer/README.md'], {
-  cwd: new URL('..', import.meta.url),
-  encoding: 'utf8',
-})
+const files = execFileSync(
+  'git',
+  [
+    'ls-files',
+    '-z',
+    'docs',
+    'examples',
+    'maintainer/README.md',
+    'benchmarks/README.md',
+    'benchmarks/results',
+  ],
+  {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8',
+  },
+)
   .split('\0')
   .filter(Boolean);
 for (const name of files) {
