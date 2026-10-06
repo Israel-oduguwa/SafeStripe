@@ -21,7 +21,7 @@ The secret API key creates Stripe objects. The publishable key loads the browser
 
 ## Before you publish
 
-Run `npm run release:check`. CI also exercises the SQL store against real PostgreSQL and runs the document adapters against isolated services on GitHub's runners. See [VERIFICATION.md](../VERIFICATION.md) for what was actually checked. A green local run does not establish throughput at enterprise scale.
+Run `npm run release:check` and `npm audit --audit-level=high`. A failed or unavailable audit is not a clean result. CI audits the full installed graph, including example and build dependencies, and also exercises the SQL store against real PostgreSQL and runs the document adapters against isolated services on GitHub's runners. See [VERIFICATION.md](../VERIFICATION.md) for what was actually checked. A green local run does not establish throughput at enterprise scale.
 
 Run `npm pack --dry-run` and inspect the file list. Run `npm pack` to produce the installable archive. Before publishing, test that archive in a separate app with `npm install /absolute/path/to/safestripe-0.3.0.tgz`. After publishing, repeat the consumer check using the exact version from the registry.
 

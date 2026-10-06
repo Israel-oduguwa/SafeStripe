@@ -39,7 +39,8 @@ jobs:
         env:
           CHAOS_DATABASE_URL: postgresql://safestripe:safestripe@localhost:5432/safestripe_test
       - run: node scripts/check-secrets.mjs --all
-      - run: npm audit --omit=dev --audit-level=high
+      - name: Audit runtime, examples and release tooling
+        run: npm audit --audit-level=high
   document-adapters:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-06T20:35:15.339Z",
+  "sourceCommit": "879b085eaedee4347685508bb27dc63ae5709762",
+  "sourceDirty": false,
+  "sdk": "22.6.2",
+  "apiVersion": "2026-08-26.dahlia",
+  "node": "v22.23.3",
+  "passed": false,
+  "credentialMode": "account-verified restricted sandbox",
+  "accountIdentityVerified": true,
+  "failure": {
+    "stage": "Checkout creation and replay",
+    "code": "STRIPE_FAILURE",
+    "stripeType": "StripePermissionError"
+  },
+  "checks": [
+    "Remote customer mutation survived injected response loss with one customer and durable replay"
+  ],
+  "notCovered": [
+    "Browser payment fields and 3DS",
+    "Actual signed webhook delivery over the public network",
+    "Live payments"
+  ],
+  "workflowUrl": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37527335196"
+}
