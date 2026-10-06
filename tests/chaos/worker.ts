@@ -8,12 +8,25 @@ import type { BillingTransaction } from '../../src/storage/contracts.js';
 process.once('message', async (message: any) => {
   let pool: Pool | undefined;
   try {
-    if (message.backend === 'postgres')
+    if (message.backend === 'postgres') {
       pool = new Pool({
         connectionString: process.env.CHAOS_DATABASE_URL,
         options: `-c search_path=${message.schema}`,
+        application_name: message.applicationName,
         max: 1,
       });
+      if (message.mode === 'connection-loss') {
+        // Observe the real socket failure while allowing the failed transaction
+        // to reach the normal worker retry path. Never print connection details.
+        let reported = false;
+        const disconnected = () => {
+          if (!reported) process.send!({ type: 'database-disconnected' });
+          reported = true;
+        };
+        pool.on('connect', (client) => client.on('error', disconnected));
+        pool.on('error', disconnected);
+      }
+    }
     const storage = pool
       ? await postgresStorage({ db: pool })
       : await sqliteStorage({ filename: message.filename });
@@ -27,7 +40,7 @@ process.once('message', async (message: any) => {
         const previous = await effect.get<{ count: number }>('fulfillments', 'order-1');
         await effect.set('fulfillments', 'order-1', { count: (previous?.count ?? 0) + 1 });
         await effect.enqueue('receipt:order-1', 'receipt', { orderId: 'order-1' });
-        if (message.mode === 'transaction' || message.mode === 'graceful')
+        if (['transaction', 'graceful', 'connection-loss'].includes(message.mode))
           await checkpoint('inside-transaction');
       });
     };
@@ -61,8 +74,10 @@ process.once('message', async (message: any) => {
       const worker = new WebhookWorker(jobs, message.scope, {
         'checkout.session.completed': fulfill,
       });
-      if (message.mode === 'transaction') await worker.runOnce();
-      else {
+      if (message.mode === 'transaction' || message.mode === 'connection-loss') {
+        const result = await worker.runOnce();
+        process.send!({ type: 'iteration', result });
+      } else {
         const abort = new AbortController();
         // Keep workers alive through idle polls and bounded transaction failures,
         // just as deployed workers do. The parent stops them after inspecting

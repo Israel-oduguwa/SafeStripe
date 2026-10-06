@@ -240,6 +240,55 @@ for (const provider of providers)
         );
         assert.deepEqual(await storage.read(s, 'counter', 'one'), { count: 4 });
       });
+      await t.test('read dependencies prevent write skew across separate records', async (t) => {
+        await storage.transaction(s, async (tx) => {
+          await tx.set('reservations', 'a', { active: false });
+          await tx.set('reservations', 'b', { active: false });
+        });
+        // Snapshot readers can overlap without locks. Force that overlap on MongoDB
+        // and real PostgreSQL; SQLite, PGlite and locking Firestore transactions
+        // may serialize the reads themselves and must not wait at this barrier.
+        const overlap =
+          provider.name === 'mongodb' ||
+          (provider.name === 'postgres' && !!process.env.TEST_DATABASE_URL);
+        let arrivals = 0;
+        let release!: () => void;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const readers = overlap
+          ? new Promise<void>((resolve, reject) => {
+              release = resolve;
+              timer = setTimeout(() => reject(new Error('Readers did not overlap')), 10000);
+            })
+          : Promise.resolve();
+        t.after(() => clearTimeout(timer));
+        const results = await Promise.all(
+          ['a', 'b'].map((id) => {
+            let firstAttempt = true;
+            return storage.transaction(s, async (tx) => {
+              const a = await tx.get<{ active: boolean }>('reservations', 'a');
+              const b = await tx.get<{ active: boolean }>('reservations', 'b');
+              if (overlap && firstAttempt) {
+                firstAttempt = false;
+                assert.equal(a!.active || b!.active, false);
+                if (++arrivals === 2) {
+                  clearTimeout(timer);
+                  release();
+                }
+                await readers;
+              }
+              if (a!.active || b!.active) return false;
+              await tx.set('reservations', id, { active: true });
+              return true;
+            });
+          }),
+        );
+        assert.deepEqual(results.sort(), [false, true]);
+        const states = await Promise.all(
+          ['a', 'b'].map((id) => storage.read<{ active: boolean }>(s, 'reservations', id)),
+        );
+        assert.equal(states.filter((state) => state!.active).length, 1);
+        if (overlap) assert.equal(arrivals, 2);
+      });
       await t.test('unknown handlers become dead and an audited replay can run', async () => {
         await storage.jobs.enqueue('webhook', s, 'evt_missing', 'missing', event('evt_missing'));
         const worker = new WebhookWorker(storage.jobs, s, {});

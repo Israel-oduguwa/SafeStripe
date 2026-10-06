@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-10-06T20:15:46.444Z",
+  "package": "safestripe",
+  "version": "0.3.0",
+  "sourceCommit": "91bf369463b1b4cb193a08c80cd6021b6cdb25df",
+  "node": "v22.20.0",
+  "registry": "https://registry.npmjs.org/",
+  "tarball": "https://registry.npmjs.org/safestripe/-/safestripe-0.3.0.tgz",
+  "integrity": "sha512-lXHCRL5mIdEM2+cxNntI+BaafByrrCtied26Y7mbofAjcx8Gj7G3/lG310K//4c2pB72LO5phD2dY72ElxqgrA==",
+  "sha256": "82cc0d119bf0874dde276488bef2b1b6495ef84f53b911247f6664358a77d38b",
+  "stripeSdk": "22.6.2",
+  "peerVersions": {
+    "express": "5.2.1",
+    "pg": "8.23.1",
+    "mongodb": "7.6.0",
+    "@google-cloud/firestore": "9.2.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "@stripe/react-stripe-js": "6.12.0",
+    "@stripe/stripe-js": "9.17.0"
+  },
+  "checks": {
+    "normalRegistryInstall": true,
+    "reviewedArchiveIntegrityMatches": true,
+    "coreFrameworkMetricsAndMigrationImports": true,
+    "sqliteTransactionRoundTrip": true,
+    "stripeSdkIncluded": true,
+    "unrelatedOptionalPeersAbsentFromCoreInstall": true,
+    "strictConsumerTypes": true,
+    "installedCliHelp": true,
+    "explicitlyInstalledDatabaseAndReactPeerImports": true
+  },
+  "limits": [
+    "Peer imports do not establish database connectivity or production capacity.",
+    "This local first publication does not have CI provenance or a verified signed release tag."
+  ]
+}

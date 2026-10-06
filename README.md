@@ -22,7 +22,7 @@ The online sandbox is available for evaluation. The 0.3 preview is not yet an en
 
 ## Install
 
-SafeStripe 0.3.0 is an evaluation preview. Use a Stripe sandbox while assessing the library, and review the [release boundaries](docs/28-release-readiness.md) before planning a production integration. The npm package name is **safestripe**.
+SafeStripe 0.3.0 is an evaluation preview. Use a Stripe sandbox while assessing the library, and review the [release boundaries](docs/28-release-readiness.md) before planning a production integration. The published npm package is **safestripe@0.3.0**. A [clean registry installation](docs/evidence/npm-registry-2026-10-06.json) verified the release archive, exports, types and included Stripe SDK. This first publication has no CI provenance or verified signed release tag.
 
 ```bash
 npm install safestripe

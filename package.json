@@ -100,7 +100,8 @@
     "site:check": "node scripts/check-site.mjs",
     "test:chaos": "node --import tsx --test --test-concurrency=1 tests/chaos/*.test.ts",
     "benchmark": "node --import tsx benchmarks/run.ts",
-    "test:stripe:e2e": "node --env-file-if-exists=.env --import tsx scripts/stripe-e2e.ts"
+    "test:stripe:e2e": "node --env-file-if-exists=.env --import tsx scripts/stripe-e2e.ts",
+    "test:registry": "node scripts/check-registry.mjs"
   },
   "dependencies": {
     "@types/express": "^5.0.3",
