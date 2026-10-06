@@ -1,0 +1,69 @@
+name: Public Stripe payment lifecycle
+on:
+  workflow_dispatch:
+    inputs:
+      demo_commit:
+        description: Reviewed commit currently deployed on the Render demo backend
+        required: true
+        type: string
+      key_type:
+        description: Credential type in the dedicated disposable sandbox
+        type: choice
+        options: [restricted, secret]
+        default: restricted
+permissions:
+  contents: read
+concurrency:
+  group: public-stripe-lifecycle
+  cancel-in-progress: false
+jobs:
+  lifecycle:
+    environment: stripe-sandbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      STRIPE_LIFECYCLE_DEMO_COMMIT: ${{ inputs.demo_commit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Install Chromium on the isolated CI runner
+        run: node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Run with the restricted test key
+        if: inputs.key_type != 'secret'
+        run: npm run test:stripe:lifecycle
+        env:
+          STRIPE_E2E_CONFIRM: disposable-sandbox
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_RESTRICTED_KEY }}
+          STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_SANDBOX_ACCOUNT_ID || vars.STRIPE_SANDBOX_ACCOUNT_ID }}
+      - name: Run with the explicitly selected test secret key
+        if: inputs.key_type == 'secret'
+        run: npm run test:stripe:lifecycle
+        env:
+          STRIPE_E2E_CONFIRM: disposable-sandbox
+          STRIPE_E2E_ALLOW_SECRET_KEY: 'true'
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_SECRET_KEY }}
+          STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_SANDBOX_ACCOUNT_ID || vars.STRIPE_SANDBOX_ACCOUNT_ID }}
+      - name: Require complete, account-verified lifecycle evidence
+        run: >-
+          node -e 'const r=require("./artifacts/stripe-lifecycle.json");
+          if(!r.passed || !r.cleanupPassed || !r.accountIdentityVerified || r.sourceDirty
+          || r.runnerSourceCommit!==process.env.GITHUB_SHA || r.checks.length!==12
+          || r.deployment?.backendSourceCommit!==process.env.STRIPE_LIFECYCLE_DEMO_COMMIT)
+          process.exit(1)'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: stripe-lifecycle-report
+          path: artifacts/stripe-lifecycle.json
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: disposable-lifecycle-fixture-ids
+          path: artifacts/stripe-lifecycle-fixtures.json
+          retention-days: 1
+          if-no-files-found: warn

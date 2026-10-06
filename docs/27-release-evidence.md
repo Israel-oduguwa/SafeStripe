@@ -35,6 +35,8 @@ Open **Actions → Dedicated Stripe sandbox → Run workflow**, select `main`, a
 
 This script does not complete a browser Checkout or receive a real network webhook. Those checks belong in the deployed demo: pay with a test card, confirm the verified Firestore receipt, resend the event, restart the host, and check the same receipt again. Record the URL, commit, time and observed result without exposing payment data.
 
+The separate [public payment lifecycle suite](30-payment-lifecycle.md) automates browser payments, actual signed network deliveries, refunds, delayed ACH outcomes and test-clock renewal recovery against the published package and deployed Firestore demo. Its workflow is protected by the same sandbox environment and records its deployment boundary separately from the service release gate.
+
 ## Release provenance
 
 The `Publish verified release` workflow requires an existing annotated tag with a GitHub-verified signature, a tag commit on `main`, a matching package version and an npm trusted publisher. Before building, it requires successful database CI, CodeQL and account-verified Stripe service evidence on that exact tag commit; a passing run from an older revision is insufficient. It then runs the local release checks again. It generates a CycloneDX SBOM and SHA-256 checksums, publishes with provenance, and attaches the evidence to the GitHub release.
