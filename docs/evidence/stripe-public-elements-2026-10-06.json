@@ -19,16 +19,35 @@
   "orderAndReceiptPaidAtMatched": true,
   "method": "Browser interaction with Stripe-hosted fields using the documented synthetic card, followed by the authenticated order-status display. The backend verifies remote terms and commits the order and receipt together. No user credentials or private record IDs retained in this report.",
   "notCovered": [
-    "New loading-recovery implementation added after this observation",
     "Protected account-verified CI on the eventual release commit",
     "npm registry installation",
     "Live payments and production capacity",
     "Independent security review",
-    "Asynchronous payment methods"
+    "Asynchronous payment methods",
+    "Forced network stall in the public browser; timeout recovery is covered by isolated React/DOM tests"
   ],
   "declineObserved": true,
   "declinedOrderUnpaid": true,
   "declineRetrySameCheckout": true,
   "threeDSChallengeCompleted": true,
-  "threeDSSignedReceiptPaidAt": "2026-10-06T14:53:13.933Z"
+  "threeDSSignedReceiptPaidAt": "2026-10-06T14:53:13.933Z",
+  "afterDeployment": {
+    "at": "2026-10-06T15:02:41.715Z",
+    "demoSourceCommit": "7e3e0e021a076a88ec03c43bcdfe8500c40a11cb",
+    "libraryArchiveSourceCommit": "865ed28072c68c41837d25800547a6e367b67f4d",
+    "libraryMergedSourceCommit": "2d56827e265cde882466a3cadc530a3bfcb0010d",
+    "readinessObserved": true,
+    "submitEnabledAfterReady": true,
+    "browserPaymentSubmitted": true,
+    "signedFirestoreReceiptObserved": true,
+    "receiptAmount": 500,
+    "currency": "usd",
+    "orderState": "paid",
+    "savedConnectionRestoredOnReload": true,
+    "publicHealthStatus": 200,
+    "frontendAndBackendPolicyUpdated": true,
+    "libraryCI": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37483462407",
+    "librarySecurity": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37483462034",
+    "demoCI": "https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/37483525280"
+  }
 }
