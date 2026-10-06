@@ -19,9 +19,26 @@ export async function sandboxCredentials(env: Record<string, string | undefined>
       expiry > Date.now() + 8 * 86400000
     )
       throw new Error('Invalid, expired or mismatched temporary sandbox manifest');
-    return { key: value.secret_key, account, temporary: true, expiry: value.expires_at };
+    return {
+      key: value.secret_key,
+      keyKind: 'temporary' as const,
+      account,
+      temporary: true,
+      expiry: value.expires_at,
+    };
   }
   const key = env.STRIPE_SECRET_KEY ?? '';
-  if (!/^rk_test_[A-Za-z0-9]+$/.test(key)) throw new Error('Provide a restricted sandbox key');
-  return { key, account, temporary: false, expiry: undefined };
+  const restricted = /^rk_test_[A-Za-z0-9]+$/.test(key);
+  const secret = /^sk_test_[A-Za-z0-9]+$/.test(key);
+  if (!restricted && !(secret && env.STRIPE_E2E_ALLOW_SECRET_KEY === 'true'))
+    throw new Error(
+      'Provide a restricted sandbox key, or explicitly enable a sandbox secret key with STRIPE_E2E_ALLOW_SECRET_KEY=true',
+    );
+  return {
+    key,
+    keyKind: restricted ? ('restricted' as const) : ('secret' as const),
+    account,
+    temporary: false,
+    expiry: undefined,
+  };
 }

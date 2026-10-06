@@ -1,6 +1,12 @@
 name: Dedicated Stripe sandbox
 on:
   workflow_dispatch:
+    inputs:
+      key_type:
+        description: Credential type in the dedicated disposable sandbox
+        type: choice
+        options: [restricted, secret]
+        default: restricted
 permissions:
   contents: read
 jobs:
@@ -15,10 +21,20 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npm run test:stripe:e2e
+      - name: Test with the restricted sandbox key
+        if: inputs.key_type != 'secret'
+        run: npm run test:stripe:e2e
         env:
           STRIPE_E2E_CONFIRM: disposable-sandbox
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_RESTRICTED_KEY }}
+          STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_SANDBOX_ACCOUNT_ID || vars.STRIPE_SANDBOX_ACCOUNT_ID }}
+      - name: Test with the explicitly selected sandbox secret key
+        if: inputs.key_type == 'secret'
+        run: npm run test:stripe:e2e
+        env:
+          STRIPE_E2E_CONFIRM: disposable-sandbox
+          STRIPE_E2E_ALLOW_SECRET_KEY: 'true'
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_SECRET_KEY }}
           STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_SANDBOX_ACCOUNT_ID || vars.STRIPE_SANDBOX_ACCOUNT_ID }}
       - name: Require the account-verified release evidence
         run: node -e 'const r=require("./artifacts/stripe-e2e.json"); if(!r.passed || !r.accountIdentityVerified || r.sourceDirty) process.exit(1)'
