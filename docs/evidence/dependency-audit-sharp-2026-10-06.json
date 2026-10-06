@@ -1,0 +1,30 @@
+{
+  "recordedAt": "2026-10-06T20:45:02.043653+00:00",
+  "sourceCommit": "792df30137cd91ddf9a45c5b0c1dc09fe268eae9",
+  "lockfileSha256": "ddb91ceee644ebd478b12d36cd02df044c78b2d2a55930321b8ae8744ac1a074",
+  "scope": "Installed dependency graph including development tools and optional peers; lockfile from merged sharp security patch",
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "dependencyCounts": {
+    "prod": 14,
+    "dev": 369,
+    "optional": 68,
+    "peer": 0,
+    "peerOptional": 0,
+    "total": 382
+  },
+  "sharp": "0.35.5",
+  "advisory": "https://github.com/advisories/GHSA-wq5f-xc86-pv6w",
+  "patchPullRequest": "https://github.com/Israel-oduguwa/SafeStripe/pull/32",
+  "limits": [
+    "Registry advisory snapshot, not an independent security audit",
+    "The first audit request timed out; that unavailable response was not counted as a passing result",
+    "sharp is in the Next.js example/build graph, not the published core runtime dependencies"
+  ]
+}
