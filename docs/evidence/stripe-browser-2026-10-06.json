@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-06T12:12:39.622Z",
+  "sourceCommit": "fe16d2ae4871e25915dfe7b542f289a169b3cad6",
+  "sdk": "22.6.2",
+  "apiVersion": "2026-08-26.dahlia",
+  "credentialMode": "unclaimed CLI sandbox",
+  "accountIdentityVerified": false,
+  "passed": true,
+  "browserPayment": true,
+  "remotePaidVerified": true,
+  "cleanupComplete": true,
+  "notCovered": [
+    "Public deployment",
+    "Signed network webhook delivery",
+    "Firestore receipt",
+    "Live payments",
+    "Account-verified protected CI",
+    "3DS and asynchronous payment methods"
+  ],
+  "frontendSourceCommit": "4f6c5f76ea5d734aaa3730c4886023bb77f6674f",
+  "frontendBundleSha256": "81986fa9bbd59544b3e1ca9f155d13263c14973cb1bf782740ddedbe01e6eb87",
+  "fixtureSha256": "b99365b49c8cb26d81a491dbc74a512a33f5e8d7f82753fc4a9fb5709bd985fd",
+  "method": "Manual browser interaction with the actual SafeCheckout bundle and Stripe-hosted fields; server-side retrieval verified sandbox payment status, customer, 500 minor units and USD. Temporary fixture payment refunded and catalog/customer fixtures cleaned."
+}
