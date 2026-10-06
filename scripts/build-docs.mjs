@@ -59,6 +59,7 @@ const groups = [
       '08-testing-and-runbooks',
       '26-idempotent-payment-systems',
       '27-release-evidence',
+      '30-payment-lifecycle',
       '29-external-review',
     ],
   ],

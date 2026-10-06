@@ -101,6 +101,7 @@
     "test:chaos": "node --import tsx --test --test-concurrency=1 tests/chaos/*.test.ts",
     "benchmark": "node --import tsx benchmarks/run.ts",
     "test:stripe:e2e": "node --env-file-if-exists=.env --import tsx scripts/stripe-e2e.ts",
+    "test:stripe:lifecycle": "node --env-file-if-exists=.env --import tsx scripts/stripe-lifecycle.ts",
     "test:registry": "node scripts/check-registry.mjs"
   },
   "dependencies": {
@@ -113,11 +114,11 @@
     "@stripe/react-stripe-js": "6.12.0",
     "@stripe/stripe-js": "9.17.0",
     "express": ">=5 <6",
+    "express-rate-limit": ">=8 <9",
     "mongodb": ">=7 <8",
     "pg": "^8.16.3",
     "react": ">=18 <20",
-    "react-dom": ">=18 <20",
-    "express-rate-limit": ">=8 <9"
+    "react-dom": ">=18 <20"
   },
   "peerDependenciesMeta": {
     "express": {
@@ -151,6 +152,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
     "@google-cloud/firestore": "9.2.0",
+    "@stripe/cli": "1.53.0",
     "@stripe/react-stripe-js": "6.12.0",
     "@stripe/stripe-js": "9.17.0",
     "@types/node": "^22.19.0",
@@ -164,6 +166,7 @@
     "mongodb": "7.6.0",
     "next": "16.3.6",
     "pg": "^8.16.3",
+    "playwright": "1.63.0",
     "prettier": "3.9.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
