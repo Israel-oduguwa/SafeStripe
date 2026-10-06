@@ -52,7 +52,7 @@ The [verification record](../VERIFICATION.md) retains dated results. The separat
 
 ## Required before recommending a production release
 
-1. **Complete the corrected Elements Checkout journey.** The rejected parameter is fixed and covered by SDK and real API checks. Deploy the archive, complete a browser payment and verify its signed receipt. Hosted Checkout can remain the recommended evaluation path while this is open.
+1. **Complete the public Elements Checkout journey.** The parameter correction is deployed in the demo. The actual payment component passed a local fake-card browser payment and server-side verification; that temporary test did not write a Firestore receipt. Complete the payment in the public workspace and verify its signed receipt. Hosted Checkout can remain the recommended evaluation path while this is open.
 2. **Pass CI on the release commit.** Keep the actual PostgreSQL process tests and MongoDB/Firestore conformance enabled. Investigate flaky failures; do not mark skipped provider tests as passes.
 3. **Run account-verified Stripe release checks.** The temporary sandbox proved the ambiguous remote-write case and six service checks. Retain its sanitized report, then run the protected workflow using an account-verified restricted key. Complete asynchronous payment, failed renewal, retry and out-of-order cases relevant to the product being launched.
 4. **Finish the npm transition.** Publish through the maintainer's authorized account, verify a clean registry installation, switch the demo from its archive to that release, and align the README, website and imports. Use the [release workflow](27-release-evidence.md) for signed tags, provenance, SBOM and checksums once the account is configured.
