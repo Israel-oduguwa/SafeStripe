@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { loadStripe, type Appearance, type StripeCheckoutSession } from '@stripe/stripe-js';
 import {
   CheckoutElementsProvider,
   PaymentElement,
   useCheckoutElements,
 } from '@stripe/react-stripe-js/checkout';
+
+export type CheckoutLoadState = 'loading' | 'ready' | 'slow' | 'error';
 
 export interface SafeCheckoutProps {
   /** Publishable key only. Secret keys must stay on your server. */
@@ -18,6 +20,8 @@ export interface SafeCheckoutProps {
   className?: string;
   style?: CSSProperties;
   buttonLabel?: string;
+  /** Field readiness only. Never use this notification as proof of payment. */
+  onLoadStateChange?: (state: CheckoutLoadState) => void;
   /** Display-only notification. Fulfill the order through a verified server webhook. */
   onComplete?: (session: StripeCheckoutSession) => void;
 }
@@ -42,21 +46,55 @@ const button: CSSProperties = {
   color: '#fff',
   font: '600 16px system-ui',
 };
-function PaymentForm(props: SafeCheckoutProps) {
+function PaymentForm(props: SafeCheckoutProps & { retry: () => void }) {
   const state = useCheckoutElements();
+  const [ready, setReady] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [fieldError, setFieldError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [complete, setComplete] = useState(false);
   const [message, setMessage] = useState('');
   const submitting = useRef(false);
-  if (state.type === 'loading') return <p role="status">Loading secure payment form…</p>;
-  if (state.type === 'error')
-    return <p role="alert">Unable to load checkout. Refresh this page or contact support.</p>;
+  const loadState: CheckoutLoadState =
+    state.type === 'error' || fieldError ? 'error' : ready ? 'ready' : slow ? 'slow' : 'loading';
+  const observer = useRef(props.onLoadStateChange);
+  observer.current = props.onLoadStateChange;
+  useEffect(() => {
+    try {
+      observer.current?.(loadState);
+    } catch {
+      /* Display callbacks must not interrupt Stripe initialization. */
+    }
+  }, [loadState]);
+  useEffect(() => {
+    if (ready || state.type === 'error' || fieldError) return;
+    const timeout = setTimeout(() => setSlow(true), 30000);
+    return () => clearTimeout(timeout);
+  }, [ready, state.type, fieldError]);
+  const recovery = (
+    <div>
+      <p role="alert">
+        {loadState === 'error'
+          ? 'Unable to load the secure payment form.'
+          : 'Stripe is taking longer than expected to load.'}{' '}
+        Check your connection and allow Stripe in your browser, then retry. If this continues,
+        contact support.
+      </p>
+      <button type="button" onClick={props.retry} style={button}>
+        Retry payment form
+      </button>
+      <p style={{ fontSize: 12 }}>Retry reloads this checkout. It does not create a new payment.</p>
+    </div>
+  );
+  if (state.type === 'loading')
+    return slow ? recovery : <p role="status">Loading secure payment form…</p>;
+  if (state.type === 'error') return recovery;
   return (
     <form
       aria-label="Secure payment"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (submitting.current || complete) return;
+        if (submitting.current || complete || !ready || fieldError) return;
         submitting.current = true;
         setBusy(true);
         setMessage('');
@@ -82,14 +120,28 @@ function PaymentForm(props: SafeCheckoutProps) {
         }
       }}
     >
-      <PaymentElement options={{ layout: 'accordion' }} />
+      <PaymentElement
+        options={{ layout: 'accordion' }}
+        onReady={() => {
+          setReady(true);
+          setFieldError(false);
+        }}
+        onLoadError={() => {
+          setReady(false);
+          setFieldError(true);
+        }}
+      />
+      {!ready &&
+        !busy &&
+        !complete &&
+        (slow || fieldError ? recovery : <p role="status">Loading secure payment form…</p>)}
       <button
         type="submit"
-        disabled={busy || complete}
+        disabled={busy || complete || !ready || fieldError}
         style={{
           ...button,
-          opacity: busy || complete ? 0.65 : 1,
-          cursor: busy || complete ? 'default' : 'pointer',
+          opacity: busy || complete || !ready || fieldError ? 0.65 : 1,
+          cursor: busy || complete || !ready || fieldError ? 'default' : 'pointer',
         }}
       >
         {complete ? 'Submitted' : busy ? 'Processing…' : (props.buttonLabel ?? 'Pay securely')}
@@ -106,6 +158,7 @@ export function SafeCheckout(props: SafeCheckoutProps) {
   if (!/^pk_(test|live)_[A-Za-z0-9]+$/.test(props.publishableKey))
     throw new Error('SafeCheckout requires a Stripe publishable key');
   const stripe = useMemo(() => loadStripe(props.publishableKey), [props.publishableKey]);
+  const [attempt, setAttempt] = useState(0);
   const options = useMemo(
     () => ({
       clientSecret: props.clientSecret,
@@ -125,8 +178,8 @@ export function SafeCheckout(props: SafeCheckoutProps) {
   return (
     <section className={props.className} style={{ ...card, ...props.style }}>
       {props.children}
-      <CheckoutElementsProvider stripe={stripe} options={options}>
-        <PaymentForm {...props} />
+      <CheckoutElementsProvider key={attempt} stripe={stripe} options={options}>
+        <PaymentForm {...props} retry={() => setAttempt((value) => value + 1)} />
       </CheckoutElementsProvider>
     </section>
   );

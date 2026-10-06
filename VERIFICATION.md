@@ -1,5 +1,11 @@
 # Verification record
 
+## Public Elements payment and loading recovery — 6 October 2026
+
+The public demo completed a $5.00 synthetic-card Elements payment at 14:42 UTC. Its initial form stalled on loading; reopening the same checkout recovered it without another Session. The browser then showed submitted, a paid order and a signed Firestore receipt with matching 500 USD cents and paid time. The [sanitized observation](docs/evidence/stripe-public-elements-2026-10-06.json) records the deployed source and distinguishes this manual public test from protected release CI. No live money or real card was used. A second checkout rejected the insufficient-funds card and remained unpaid. Retrying that same checkout with the documented 3D Secure card opened the real test challenge; completing it produced a second matching signed Firestore receipt at 14:53 UTC. Delayed payment methods remain untested.
+
+The component now waits for the Payment Element ready event before enabling confirmation or announcing readiness. A 30-second slow notice and an initialization/field-error notice offer a retry that remounts the provider with the same client secret. Callback failures do not disrupt initialization or confirmation. Six isolated React/DOM scenarios cover stalled initialization, late arrival, SDK/field errors, duplicate confirmation, decline/ambiguous results and consumer re-renders. The live observation above predates this recovery change; deployment verification is recorded separately.
+
 ## Real browser component payment and merged checks — 6 October 2026
 
 A new high-severity Dependabot alert identified `source-map-js` 1.2.1 through the development Next.js/PostCSS graph. The lockfile now uses upstream patch 1.2.2 for [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q). The subsequent full dependency audit, including development tools, returned zero reported vulnerabilities. Its [retained snapshot](docs/evidence/dependency-audit-2026-10-06.json) identifies the patched lockfile fingerprint and records that it was measured before commit. This advisory snapshot is not an independent security review; main's alert closure requires merging the patch.
