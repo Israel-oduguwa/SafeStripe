@@ -228,18 +228,15 @@ async function input(page: Page, pattern: RegExp, value: string, required = true
 
 async function card(page: Page, number: string) {
   checkpoint('selecting the hosted card payment option');
-  const cardOption = page.getByRole('button', { name: /^Card$/i });
-  if (await cardOption.isVisible()) await cardOption.click();
-  const cardRadio = page.getByRole('radio', { name: /^Card$/i });
-  if (await cardRadio.isVisible()) await cardRadio.click();
-  checkpoint('entering the hosted test card');
-  await eventually(
-    async () => {
-      return input(page, /card.?number/i, number, false);
-    },
-    Boolean,
-    60_000,
-  );
+  // Checkout loads the selector asynchronously. An immediate visibility check
+  // can miss it and leave every card field unopened for the entire timeout.
+  if (!(await input(page, /card.?number/i, number, false))) {
+    await page.getByText('Card', { exact: true }).click({ timeout: 60_000 });
+    checkpoint('entering the hosted test card');
+    await eventually(() => input(page, /card.?number/i, number, false), Boolean, 60_000);
+  }
+  const remember = page.locator('#enableStripePass');
+  if (await remember.isVisible()) await remember.setChecked(false);
   await input(page, /expir|card.?expiry/i, '1235');
   await input(page, /cvc|cvv|security.?code/i, '123');
   await input(page, /billing.?name|cardholder|name.?on.?card/i, 'SafeStripe test', false);
@@ -347,6 +344,7 @@ try {
   const first = await order(primary.session);
   await page.goto(checkoutUrl(first.url));
   await card(page, '4242424242424242');
+  checkpoint('waiting for the signed Checkout receipt');
   const firstReceipt = await receipt(primary.session, first.id, first.sessionId);
   const paid = await stripe.checkout.sessions.retrieve(first.sessionId);
   assert.equal(paid.payment_status, 'paid');
@@ -389,6 +387,7 @@ try {
   assert.notEqual(declined.order.state, 'paid');
   assert.equal(declined.receipt, null);
   await card(page, '4242424242424242');
+  checkpoint('waiting for the retried Checkout receipt');
   await receipt(primary.session, second.id, second.sessionId);
   const retried = await stripe.checkout.sessions.retrieve(second.sessionId);
   payments.add(ref(retried.payment_intent));
