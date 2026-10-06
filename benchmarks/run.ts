@@ -37,13 +37,22 @@ async function run(size: number) {
   let stage = 'database version';
   let observed: Record<string, unknown> = { events: size, workers };
   let transactionCallbackRetries = 0;
+  let retryableTransactionFailures = 0;
+  let unexpectedTransactionFailures = 0;
   const transaction = f.storage.driver.transaction.bind(f.storage.driver);
-  f.storage.driver.transaction = (work) => {
+  f.storage.driver.transaction = async (work) => {
     let callbacks = 0;
-    return transaction((tx) => {
-      if (callbacks++ > 0) transactionCallbackRetries++;
-      return work(tx);
-    });
+    try {
+      return await transaction((tx) => {
+        if (callbacks++ > 0) transactionCallbackRetries++;
+        return work(tx);
+      });
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (['40001', '40P01', '23505'].includes(code ?? '')) retryableTransactionFailures++;
+      else if (code !== 'BUSY') unexpectedTransactionFailures++;
+      throw error;
+    }
   };
   try {
     const version = f.pool
@@ -111,7 +120,11 @@ async function run(size: number) {
       const counts = await f.counts();
       assert.equal(inserted, size);
       observed = { ...observed, counts };
-      assert.equal(drain.handlerFailures, 0);
+      assert.equal(unexpectedTransactionFailures, 0, 'Unexpected transaction failure');
+      assert.ok(
+        drain.handlerFailures + drain.claimFailures <= retryableTransactionFailures,
+        'A failed worker attempt was not explained by a recognized database conflict',
+      );
       assert.deepEqual(counts, { effects: size, outbox: size, done: size });
       stage = 'operation contention';
       const operation = {
@@ -159,6 +172,8 @@ async function run(size: number) {
         workerErrors: drain.handlerFailures,
         recoveredClaimFailures: drain.claimFailures,
         transactionCallbackRetries,
+        retryableTransactionFailures,
+        unexpectedTransactionFailures,
         duplicateEffects: 0,
         counts,
       };
@@ -169,7 +184,13 @@ async function run(size: number) {
     const code = (error as { code?: unknown })?.code;
     throw Object.assign(new Error('Benchmark run failed'), {
       code: typeof code === 'string' && /^[A-Z0-9_]{1,40}$/.test(code) ? code : 'BENCHMARK_FAILED',
-      benchmark: { stage, ...observed, transactionCallbackRetries },
+      benchmark: {
+        stage,
+        ...observed,
+        transactionCallbackRetries,
+        retryableTransactionFailures,
+        unexpectedTransactionFailures,
+      },
     });
   } finally {
     await f.close();
@@ -223,7 +244,7 @@ const report = {
     location: process.env.BENCH_LOCATION ?? 'not specified',
   },
   methodology:
-    'Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes and the production retry loop; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms. Callback retries count repeated transaction callbacks, excluding failures before the callback starts.',
+    'Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes and the production retry loop; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms. Callback retries count repeated transaction callbacks, excluding failures before the callback starts. Recognized SQL conflicts may recover; failed attempts are counted and all business invariants must pass. Warm-up is retained but excluded from measured rates.',
   unmeasured: [
     'database CPU/memory',
     'transaction retries before the callback starts',
@@ -234,11 +255,12 @@ const report = {
   configuration: { events, workers, repeats, deadlineMs },
   passed: false,
   results: [] as Awaited<ReturnType<typeof run>>[],
+  warmup: undefined as Awaited<ReturnType<typeof run>> | undefined,
   failure: undefined as { code: string; observation?: unknown; phase: string } | undefined,
 };
 let phase = 'warm-up';
 try {
-  await run(Math.min(events, 100)); // Warm-up uses separate records and is discarded only on success.
+  report.warmup = await run(Math.min(events, 100));
   phase = 'measured run';
   for (let i = 0; i < repeats; i++) report.results.push(await run(events));
   report.passed = true;

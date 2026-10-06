@@ -1,0 +1,97 @@
+{
+  "recordedAt": "2026-10-06T10:08:38.719Z",
+  "sourceCommit": "29e1cf903fb6e4142d7af30a4ff332bb97b4b80f",
+  "sourceDirty": false,
+  "sourceSha256": "5a4735ff26af8f258a69a1caff01e92b9e5d9dfc91329293fcce7565e9d8f074",
+  "sourceFiles": [
+    "benchmarks/drain.ts",
+    "benchmarks/run.ts",
+    "package-lock.json",
+    "src/adapters/express.ts",
+    "src/adapters/next.ts",
+    "src/cli.ts",
+    "src/client.ts",
+    "src/database.ts",
+    "src/errors.ts",
+    "src/index.ts",
+    "src/jobs.ts",
+    "src/limiter.ts",
+    "src/metrics.ts",
+    "src/migrate.ts",
+    "src/migration-sources.ts",
+    "src/operations.ts",
+    "src/primitives.ts",
+    "src/react/index.tsx",
+    "src/reconciliation.ts",
+    "src/scenarios.ts",
+    "src/setup.ts",
+    "src/storage/buffer.ts",
+    "src/storage/contracts.ts",
+    "src/storage/firestore.ts",
+    "src/storage/mongodb.ts",
+    "src/storage/postgres.ts",
+    "src/storage/sqlite.ts",
+    "src/storage/store.ts",
+    "src/telemetry.ts",
+    "src/transport.ts",
+    "src/webhooks.ts",
+    "src/worker.ts",
+    "tests/chaos/harness.ts",
+    "tests/chaos/recovery.test.ts",
+    "tests/chaos/worker.ts"
+  ],
+  "environment": {
+    "node": "v22.23.3",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logicalCpus": 4,
+    "memoryBytes": 16766414848,
+    "database": "postgres",
+    "connections": {
+      "workloadPoolMax": 4,
+      "schemaAdminPoolMax": 1
+    },
+    "location": "GitHub-hosted Ubuntu runner; PostgreSQL service on the same runner"
+  },
+  "methodology": "Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes and the production retry loop; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms. Callback retries count repeated transaction callbacks, excluding failures before the callback starts.",
+  "unmeasured": [
+    "database CPU/memory",
+    "transaction retries before the callback starts",
+    "process recovery time",
+    "multi-host throughput",
+    "production network latency"
+  ],
+  "configuration": {
+    "events": 1000,
+    "workers": 8,
+    "repeats": 3,
+    "deadlineMs": 180000
+  },
+  "passed": false,
+  "results": [],
+  "failure": {
+    "phase": "warm-up",
+    "code": "ERR_ASSERTION",
+    "observation": {
+      "stage": "business invariants",
+      "events": 100,
+      "workers": 8,
+      "inserted": 100,
+      "admissionMs": 1349.891999,
+      "processingMs": 2192.886388,
+      "drain": {
+        "completed": 100,
+        "handlerFailures": 4,
+        "claimFailures": 0,
+        "deadlineExceeded": false
+      },
+      "counts": {
+        "effects": 100,
+        "outbox": 100,
+        "done": 100
+      },
+      "transactionCallbackRetries": 154
+    }
+  }
+}
