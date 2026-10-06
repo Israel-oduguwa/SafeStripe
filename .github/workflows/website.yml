@@ -17,7 +17,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run site:build && npm run site:check
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site-dist
   deploy:
