@@ -32,8 +32,8 @@ Before enabling it:
 
 1. Set required reviewers and deployment restrictions for the `npm-release` GitHub environment. Require the database and security CI jobs on the release commit.
 2. Configure your own signing identity and register its public key with GitHub. Create and verify an annotated signed tag; do not substitute another person's identity.
-3. Complete the first publication of the unscoped package through your npm account if necessary. Configure its trusted publisher for this repository, `release.yml` and the `npm-release` environment. Explicitly allow direct publishing: newer npm trusted-publisher configurations otherwise default to staged publishing.
-4. Dispatch the workflow for that tag. Confirm the npm package, provenance statement, GitHub artifacts and website all refer to the same version before marking the release published.
+3. If the unscoped package does not exist, complete its first checked publication through your npm account, then configure its trusted publisher for this repository, `release.yml` and the `npm-release` environment. Explicitly allow direct publishing: newer npm trusted-publisher configurations otherwise default to staged publishing. A local first publication has no CI provenance; keep that limitation visible. If provenance on the first release is required, arrange an approved first-publication CI path before publishing.
+4. Dispatch the workflow for an unpublished version's tag. A version published during initial setup cannot be published again: prepare and verify a subsequent distinct version for the trusted workflow. Confirm the npm package, provenance statement, GitHub artifacts and website all refer to the same version before marking the release published.
 
 The workflow uses npm 11.15.0 on Node 24 and does not restore a dependency cache in the publishing job. Trusted publishing requirements can change; check [npm's current setup](https://docs.npmjs.com/trusted-publishers/) when configuring the account. Credentials are deliberately absent from the workflow.
 
