@@ -32,7 +32,7 @@ return Response.json(
 );
 ```
 
-The server fixes `return_url` from your configured origin. It does not allow browser-controlled redirect destinations or payment-method overrides. A hosted Session and a custom Session are different operation inputs; use a new order/action identity if you deliberately start a different flow.
+`uiMode: 'custom'` is SafeStripe's option for an on-page payment form. On the pinned Stripe API, SafeStripe sends `ui_mode: 'elements'`. The older Stripe value `custom` is rejected. The server fixes `return_url` from your configured origin and does not allow browser-controlled redirect destinations or payment-method overrides. A hosted Session and an Elements Session are different operation inputs; use a new order/action identity if you deliberately start a different flow.
 
 A Checkout client secret is intended for the authorized customer's payment form. Do not put it in logs, analytics, query strings, public HTML caches or another customer's response. It is different from your account's secret API key.
 

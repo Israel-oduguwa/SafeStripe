@@ -17,11 +17,17 @@ BENCH_DATABASE=postgres BENCH_EVENTS=10000 BENCH_WORKERS=8 npm run benchmark
 
 The harness creates a randomly named schema and removes only that schema when finished. The connection must have schema-creation rights. Never point test tooling at a production database. Set `BENCH_LOCATION` to describe where the database runs without including hostnames or credentials.
 
-Results include runtime/hardware, database version, connection budget, nearest-rank p50/p95/p99, CPU time, sampled RSS, operation claim contention and counts of committed effects/outbox intents. Every fulfillment must equal one; every unique event must finish; worker errors fail the run. Raw JSON is retained in `results/`.
+Results include runtime/hardware, database version, connection budget, nearest-rank p50/p95/p99, CPU time, sampled RSS, operation claim contention and counts of committed effects/outbox intents. Every fulfillment must equal one; every unique event must finish; handler failures fail the run. Exhausted claims are retried through the production worker loop and counted separately. Raw JSON is retained in `results/`, or the path set by `BENCH_OUTPUT`. Incomplete and failed runs write `passed: false`, retaining completed repetitions and a sanitized failure observation.
 
-Admission is sequential and closed loop. Processing starts after admission ends, so admission-to-commit latency includes deliberate backlog build-up. Worker iteration latency includes empty/contended claim overhead only for iterations that process work. Transaction retries can increase latency; their count is not currently instrumented. Database resource use, process recovery time, network ingress, real Stripe traffic and external deliveries are not measured. Use the separate process-failure suite for recovery correctness.
+Admission is sequential and closed loop. Processing starts after admission ends, so admission-to-commit latency includes deliberate backlog build-up. Worker iteration latency records non-idle iterations. Failed claims and backoff are counted separately; total processing time includes those delays. `transactionCallbackRetries` counts callback executions after the first attempt in a transaction. Failures before a callback begins are not counted there. Database resource use, process recovery time, network ingress, real Stripe traffic and external deliveries are not measured. Use the separate process-failure suite for recovery correctness.
 
 Record three or more runs for each configuration and keep the raw reports. Do not compare different databases or worker counts without holding event shape, duplicate ratio, runtime and infrastructure constant. Report errors alongside throughput; never remove slow or failed runs silently.
+
+## PostgreSQL without a local database server
+
+Open **Actions → PostgreSQL reliability benchmark → Run workflow** in GitHub. Select 1,000, 5,000 or 10,000 unique events. The workflow starts PostgreSQL 17 on the GitHub runner, measures three repetitions each with one, four and eight worker lanes, and uploads raw JSON, including failures. Your computer needs no Docker installation.
+
+Each configuration uses a separate GitHub-hosted runner. Event shape, Node major version, duplicate ratio and the four-connection workload pool remain fixed; the host is not an identical dedicated machine. Every report records its observed hardware. Small rate differences may reflect host variability. Same-process lanes do not establish multi-process or multi-host capacity.
 
 ## First recorded baseline
 

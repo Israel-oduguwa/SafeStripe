@@ -107,13 +107,14 @@
   },
   "peerDependencies": {
     "@google-cloud/firestore": ">=9 <10",
+    "@stripe/react-stripe-js": "6.12.0",
+    "@stripe/stripe-js": "9.17.0",
     "express": ">=5 <6",
     "mongodb": ">=7 <8",
+    "pg": "^8.16.3",
     "react": ">=18 <20",
     "react-dom": ">=18 <20",
-    "pg": "^8.16.3",
-    "@stripe/react-stripe-js": "6.12.0",
-    "@stripe/stripe-js": "9.17.0"
+    "express-rate-limit": ">=8 <9"
   },
   "peerDependenciesMeta": {
     "express": {
@@ -139,29 +140,33 @@
     },
     "@stripe/stripe-js": {
       "optional": true
+    },
+    "express-rate-limit": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
     "@google-cloud/firestore": "9.2.0",
+    "@stripe/react-stripe-js": "6.12.0",
+    "@stripe/stripe-js": "9.17.0",
     "@types/node": "^22.19.0",
     "@types/pg": "^8.15.6",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "express": "5.2.1",
+    "express-rate-limit": "8.7.1",
     "linkedom": "0.18.13",
     "marked": "18.0.14",
     "mongodb": "7.6.0",
     "next": "16.3.6",
+    "pg": "^8.16.3",
     "prettier": "3.9.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "shiki": "4.4.3",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3",
-    "pg": "^8.16.3",
-    "@stripe/react-stripe-js": "6.12.0",
-    "@stripe/stripe-js": "9.17.0"
+    "typescript": "^5.9.3"
   },
   "license": "MIT",
   "sideEffects": false,

@@ -109,7 +109,7 @@ export class SafeStripe extends BillingScenarios {
       integration_identifier: 'safestripe_qvmtxkpa',
       ...(data.uiMode === 'custom'
         ? {
-            ui_mode: 'custom' as const,
+            ui_mode: 'elements' as const,
             return_url: `${this.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
           }
         : {

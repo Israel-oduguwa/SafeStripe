@@ -29,7 +29,7 @@ npm install safestripe @google-cloud/firestore
 This adapter uses **Cloud Firestore**, through its server SDK. Firebase Realtime Database is a different product and is not supported by this adapter.
 :::endtabs
 
-Do **not** install the `stripe` package separately just to use SafeStripe. It is a pinned runtime dependency and npm installs it automatically. PostgreSQL and browser UI libraries are optional peers, so a core-only installation does not include them. For `SafeCheckout`, also install `@stripe/react-stripe-js`, `@stripe/stripe-js`, `react` and `react-dom`; an existing React/Next.js app may already have React. Express apps install Express as their web framework.
+Do **not** install the `stripe` package separately just to use SafeStripe. It is a pinned runtime dependency and npm installs it automatically. PostgreSQL and browser UI libraries are optional peers, so a core-only installation does not include them. For `SafeCheckout`, also install `@stripe/react-stripe-js`, `@stripe/stripe-js`, `react` and `react-dom`; an existing React/Next.js app may already have React. Express apps install Express as their web framework. The runnable Express examples also use `express-rate-limit`; install it if you copy those examples. It is optional and is not loaded by the core or webhook adapter.
 
 ## Understand your credentials
 

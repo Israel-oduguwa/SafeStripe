@@ -1,0 +1,57 @@
+name: PostgreSQL reliability benchmark
+on:
+  pull_request:
+    paths: ['benchmarks/**', '.github/workflows/benchmark.yml', 'src/storage/**', 'src/worker.ts']
+  workflow_dispatch:
+    inputs:
+      events:
+        description: Unique events per measured run (ten admissions each)
+        type: choice
+        options: ['1000', '5000', '10000']
+        default: '1000'
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        workers: [1, 4, 8]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: safestripe
+          POSTGRES_PASSWORD: safestripe
+          POSTGRES_DB: safestripe_benchmark
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U safestripe"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - name: Measure three repetitions and assert business invariants
+        run: npm run benchmark
+        env:
+          BENCH_DATABASE: postgres
+          BENCH_EVENTS: ${{ inputs.events || '1000' }}
+          BENCH_WORKERS: ${{ matrix.workers }}
+          BENCH_REPEATS: '3'
+          BENCH_DEADLINE_MS: '180000'
+          BENCH_LOCATION: GitHub-hosted Ubuntu runner; PostgreSQL service on the same runner
+          BENCH_OUTPUT: artifacts/benchmarks/postgres-${{ matrix.workers }}-workers.json
+          CHAOS_DATABASE_URL: postgresql://safestripe:safestripe@localhost:5432/safestripe_benchmark
+      - name: Retain successful and failed observations
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: postgres-${{ matrix.workers }}-workers
+          path: artifacts/benchmarks/*.json
+          if-no-files-found: error

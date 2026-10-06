@@ -1,4 +1,5 @@
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { expressWebhook } from '../../src/adapters/express.js';
 import { publicError, runWorkerLoop } from '../../src/index.js';
 import { authenticateLocal, getLocalRuntime } from './runtime.js';
@@ -12,7 +13,15 @@ app.post(
   expressWebhook(r.receiver),
 );
 app.use(express.json({ limit: '8kb' }));
-app.post('/api/checkout', async (req, res) => {
+const apiLimit = rateLimit({
+  windowMs: 60000,
+  limit: 60,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'TOO_MANY_REQUESTS' },
+});
+// This local example has one process and trusts no proxy. Use a shared store at scale.
+app.post('/api/checkout', apiLimit, async (req, res) => {
   try {
     authenticateLocal(req.get('authorization'), req.get('origin'));
     if (
@@ -29,7 +38,7 @@ app.post('/api/checkout', async (req, res) => {
     res.status(result.status).json(result.body);
   }
 });
-app.get('/api/order', async (req, res) => {
+app.get('/api/order', apiLimit, async (req, res) => {
   try {
     authenticateLocal(req.get('authorization'), req.get('origin'));
     res.setHeader('Cache-Control', 'no-store');
