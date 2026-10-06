@@ -27,18 +27,44 @@ Run `npm pack --dry-run` and inspect the file list. Run `npm pack` to produce th
 
 The GitHub repository owner and npm package name are separate. Verify publishing access to `safestripe`, enable npm account protection, and configure trusted publishing or a narrowly scoped automation token before publishing. `npm publish --access public` publishes a public artifact; do not run it until you have reviewed the package, license, release notes and passing CI. No npm release is performed by these instructions.
 
-## Remaining owner setup
+## Current publication and remaining owner setup
 
-The hosted preview is deployed. Publication requires account setup that a code change cannot supply. Do these steps using your own accounts; never send credentials, one-time codes, signing keys or provisioning manifests in chat or a public issue.
+`safestripe@0.3.0` is public. Its [clean registry consumer report](../docs/evidence/npm-registry-2026-10-06.json) matches the reviewed archive and confirms that consumers use ordinary `npm install safestripe`. The old scoped 0.2.0 package is not the current library. The first unscoped publication has no CI provenance or verified signed release tag.
 
-1. **Refresh npm access.** Run `npm login --registry=https://registry.npmjs.org/` in your terminal and complete npm's browser authentication. Confirm `npm whoami` returns your account. An npm website login alone does not authenticate the publishing terminal. Check that the unscoped name is available before its first publication.
-2. **Configure the dedicated Stripe sandbox.** Use a disposable account with synthetic data and a default portal configuration. In the repository's **Settings → Environments → stripe-sandbox**, add `STRIPE_SANDBOX_RESTRICTED_KEY` as a secret and `STRIPE_SANDBOX_ACCOUNT_ID` as a variable. The key needs the access listed in [release evidence](../docs/27-release-evidence.md). Review main's exact commit, dispatch **Dedicated Stripe sandbox** from main, and approve the protected job. Its report must be account-verified and match that commit. Do not reuse a public visitor session or an unclaimed CLI sandbox as release credentials.
-3. **Use your own signing identity.** Configure Git signing with a key you control and register the public signing key on GitHub. After all checks pass on the release commit, create an annotated signed tag matching the package version and verify that GitHub marks it verified. Do not create a tag claiming somebody else's signature or attach an unsigned lightweight tag to the release workflow.
-4. **Complete the first npm publication and publisher setup separately.** Trusted publishing is configured on an existing npm package. If the first checked publication is `safestripe@0.3.0`, publish it through your authenticated account as an evaluation preview, then configure its trusted publisher for `Israel-oduguwa/SafeStripe`, `release.yml`, environment `npm-release`, with direct publishing allowed. That local publication does not gain CI provenance afterward. A subsequent distinct version, such as 0.3.1, must repeat the checks and use its own verified tag before the trusted workflow publishes it with provenance. Never attempt to publish 0.3.0 again; npm versions are immutable. If first-release provenance is a requirement, stop before publishing and arrange an approved first-publication CI path instead.
-5. **Verify the registry consumer and switch the demo.** Install the exact published version in a clean app, confirm core imports and the included Stripe SDK, then test selected database/framework peers. Update the demo's dependency from the preview archive to that exact registry version in a reviewed change. Mark `site/release.json` as published only after the registry check succeeds; rebuild and publish the website.
-6. **Arrange outside review.** Give reviewers the [onboarding and security exercises](../docs/29-external-review.md). Record actual findings, timings and fixes. Independent review and production infrastructure testing remain necessary before a broad production recommendation.
+These remaining steps use your own accounts. Never send credentials, one-time codes, signing keys or provisioning manifests in chat or a public issue.
 
-The `npm-release` and `stripe-sandbox` environments already require maintainer review and are restricted to main. Their secrets have not been populated by repository code. The release workflow rejects failed or stale CI, open high/critical CodeQL findings, skipped database checks and unverified sandbox evidence. Read [release readiness](../docs/28-release-readiness.md) before changing the preview status.
+1. **Configure the dedicated Stripe sandbox.** Use a disposable account with synthetic data and a default portal configuration. In the repository's **Settings → Environments → stripe-sandbox**, add `STRIPE_SANDBOX_RESTRICTED_KEY` as a secret and `STRIPE_SANDBOX_ACCOUNT_ID` as a variable. The key needs the access listed in [release evidence](../docs/27-release-evidence.md). Review main's exact commit, dispatch **Dedicated Stripe sandbox** from main, and approve the protected job. Its report must be account-verified and match that commit. Do not reuse a public visitor session or an unclaimed CLI sandbox as release credentials.
+2. **Use your own signing identity.** Configure Git signing with a key you control and register the public signing key on GitHub. After all checks pass on the next release commit, create an annotated signed tag matching the package version and verify that GitHub marks it verified. Do not substitute someone else's identity or an unsigned lightweight tag.
+3. **Configure trusted publishing.** On npm's SafeStripe package settings, add a GitHub Actions trusted publisher for owner `Israel-oduguwa`, repository `SafeStripe`, workflow `release.yml` and environment `npm-release`. Explicitly allow direct publishing; the workflow expects a completed publication. Configure this when ready to run it: npm's initial publisher verification window is limited. A subsequent distinct version, such as 0.3.1, must repeat the checks and use its own verified tag before the trusted workflow publishes it with provenance. Never publish 0.3.0 again; versions are immutable. The first local publication cannot gain provenance afterward.
+4. **Validate the intended production integration.** Keep CI's real PostgreSQL and document-adapter checks enabled. Test the selected payment methods, renewal and cancellation behavior, monitoring, authorization and a database restore on the actual deployment. The public demo is a test service, not a payment host for companies.
+5. **Arrange outside review.** Give reviewers the [onboarding and security exercises](../docs/29-external-review.md). Record actual findings, timings and fixes. Independent review and production infrastructure testing remain necessary before a broad production recommendation.
+
+The `npm-release` and `stripe-sandbox` environments require maintainer review and are restricted to main. The release workflow rejects failed or stale CI, open high/critical CodeQL findings, skipped database checks and unverified sandbox evidence. Read [release readiness](../docs/28-release-readiness.md) before changing the preview status.
+
+## Recheck the published consumer
+
+Run `npm run test:registry` from the repository. The script creates a separate temporary application and cache, performs a normal exact-version registry installation, checks exports, strict types and a SQLite transaction, then installs the selected peers and checks their imports. It removes the temporary app afterward and writes a sanitized report to ignored `artifacts/registry-consumer.json`.
+
+To compare the registry bytes against a reviewed archive as well, run:
+
+```sh
+npm run test:registry -- --archive /absolute/path/to/safestripe-0.3.0.tgz
+```
+
+Use the original reviewed archive. Packing a later source revision with the same version does not recreate the published bytes and should fail this comparison. This check does not connect to production databases or certify release provenance.
+
+## If npm shows a holding version
+
+A version named `0.0.0-stage` is a placeholder for a new package whose actual archive is awaiting approval. It is not the usable SafeStripe library. Registry caches can also briefly show older metadata after approval. Check the exact version and latest tag:
+
+```sh
+npm view safestripe@0.3.0 version dist.integrity --registry=https://registry.npmjs.org/
+npm view safestripe dist-tags --registry=https://registry.npmjs.org/
+```
+
+For a future staged release, use npm 11.15.0 or later on a supported Node version. Run `npm stage list safestripe`, then `npm stage view STAGE_ID` and `npm stage download STAGE_ID`. Compare the downloaded archive with the checked candidate before approving it. Complete approval in npm's **Staged Packages** page or with `npm stage approve STAGE_ID`. Approval requires the owner's registered two-factor method. Open a fresh verification link in the browser where that method works; expired links cannot be reused. Never delete a stage or bump a version just to bypass a failed verification. See npm's [staged publishing guide](https://docs.npmjs.com/staged-publishing/).
+
+A successful publication makes the actual version installable. Confirm it with a clean registry consumer check, then update the demo's exact dependency and `site/release.json`. Avoid installing or promoting the holding version.
 
 ## Repository commands
 
@@ -50,6 +76,7 @@ The `npm-release` and `stripe-sandbox` environments already require maintainer r
 | `npm run docs:build`         | Generate the offline consumer documentation                                           |
 | `npm run docs:check`         | Check documentation links and compiled examples                                       |
 | `npm run test:package`       | Install the packed library into a clean consumer and check exports                    |
+| `npm run test:registry`      | Test a normal exact-version installation from npm in a temporary consumer             |
 | `npm run licenses`           | Refresh runtime dependency license notices                                            |
 | `npm run release:check`      | Run the release checks together                                                       |
 | `npm run test:stripe`        | Opt-in sandbox customer create/replay/delete smoke test; read its prerequisites first |

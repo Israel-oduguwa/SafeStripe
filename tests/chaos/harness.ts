@@ -32,7 +32,7 @@ export async function fixture(backend: Backend) {
     ? await postgresStorage({ db: pool, migrate: true })
     : await sqliteStorage({ filename });
   const children = new Set<ReturnType<typeof child>>();
-  const config = { backend, filename, schema, scope };
+  const config = { backend, filename, schema, scope, applicationName: `sfchaos:${schema}` };
   return {
     storage,
     jobs: new DocumentJobs(storage.driver, { leaseSeconds: 1, maxAttempts: 10 }),

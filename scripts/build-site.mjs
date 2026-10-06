@@ -12,7 +12,7 @@ const release = JSON.parse(await readFile(new URL('release.json', source), 'utf8
 if (release.npmPublished === true) {
   html = html.replace(
     /<p class="release-note" id="release-note">[\s\S]*?<\/p>/,
-    '<p class="release-note" id="release-note">Available on npm · MIT licensed</p>',
+    '<p class="release-note" id="release-note">0.3.0 evaluation preview · Available on npm · MIT licensed <a href="./docs/handbook.html#28-release-readiness">Release status →</a></p>',
   );
 } else {
   html = html.replace(

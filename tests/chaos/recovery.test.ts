@@ -124,6 +124,54 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
   });
   if (backend === 'postgres')
     test(
+      'postgres: terminated transaction connection rolls back and replacement worker recovers',
+      options,
+      async (t) => {
+        const f = await fixture(backend);
+        t.after(() => f.close());
+        await f.jobs.enqueue(
+          'webhook',
+          f.scope,
+          'evt_disconnect',
+          'checkout.session.completed',
+          {},
+        );
+        const a = f.spawn('connection-loss');
+        t.after(() => a.stop());
+        await a.next('inside-transaction');
+        const connections = await f.pool!.query(
+          'SELECT pid, state FROM pg_stat_activity WHERE application_name=$1',
+          [f.config.applicationName],
+        );
+        assert.equal(connections.rowCount, 1);
+        assert.equal(connections.rows[0].state, 'idle in transaction');
+        // Terminate only this fixture's worker connection, never the database
+        // service or a connection belonging to another application/test.
+        const terminated = await f.pool!.query(
+          'SELECT pg_terminate_backend(pid) AS terminated FROM pg_stat_activity WHERE pid=$1 AND application_name=$2',
+          [connections.rows[0].pid, f.config.applicationName],
+        );
+        assert.equal(terminated.rows[0].terminated, true);
+        await a.next('database-disconnected');
+        assert.deepEqual(await f.counts(), { effects: 0, outbox: 0, done: 0 });
+        assert.equal(await f.storage.read(f.scope, 'fulfillments', 'order-1'), undefined);
+        a.process.send({ release: true });
+        assert.equal((await a.next('iteration')).result, 'failed');
+        await a.next('done');
+        assert.equal((await a.closed).code, 0);
+        await waitUntil(async () => {
+          const row = await f.storage.driver.read(
+            digest(['job', 'webhook', f.scope, 'evt_disconnect']),
+          );
+          return !!row && row.dueAt <= (await f.storage.driver.now());
+        });
+        assert.equal((await f.drain(1))[0]!.code, 0);
+        assert.deepEqual(await f.storage.read(f.scope, 'fulfillments', 'order-1'), { count: 1 });
+        assert.deepEqual(await f.counts(), { effects: 1, outbox: 1, done: 1 });
+      },
+    );
+  if (backend === 'postgres')
+    test(
       'postgres: concurrent migration runners and reconnect retain committed work',
       options,
       async (t) => {

@@ -1,5 +1,11 @@
 # Verification record
 
+## Public npm installation — 6 October 2026
+
+The unscoped `safestripe@0.3.0` release became public at 20:05 UTC. Its registry integrity matches the reviewed archive from clean revision `91bf369`; SHA-256 is `82cc0d119bf0874dde276488bef2b1b6495ef84f53b911247f6664358a77d38b`. At 20:15 UTC, a new temporary consumer installed that exact version with ordinary `npm install`, without suppressing lifecycle scripts or using a sibling checkout. Core, Express, Next.js, metrics and migration exports, strict consumer types, installed CLI help and a SQLite transaction round trip passed. Stripe SDK 22.6.2 installed automatically. PostgreSQL, MongoDB, Firestore, Express and React were absent from the core installation; their exports loaded after explicitly installing the chosen peers. The [sanitized report](docs/evidence/npm-registry-2026-10-06.json) records versions and integrity.
+
+This was a local first publication, with no CI provenance or GitHub-verified signed release tag. Peer import checks do not establish database connectivity. Earlier observations that npm authentication failed or the package was unavailable remain historical results, not the current registry state. Account-verified Stripe CI, independent review and target-infrastructure validation remain necessary before a broad production recommendation.
+
 ## Public Elements payment and loading recovery — 6 October 2026
 
 The public demo completed a $5.00 synthetic-card Elements payment at 14:42 UTC. Its initial form stalled on loading; reopening the same checkout recovered it without another Session. The browser then showed submitted, a paid order and a signed Firestore receipt with matching 500 USD cents and paid time. The [sanitized observation](docs/evidence/stripe-public-elements-2026-10-06.json) records the deployed source and distinguishes this manual public test from protected release CI. No live money or real card was used. A second checkout rejected the insufficient-funds card and remained unpaid. Retrying that same checkout with the documented 3D Secure card opened the real test challenge; completing it produced a second matching signed Firestore receipt at 14:53 UTC. Delayed payment methods remain untested.
