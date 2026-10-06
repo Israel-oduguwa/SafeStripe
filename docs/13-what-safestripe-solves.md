@@ -14,13 +14,13 @@ Without a stable operation identity, the retry can create another session. Hashi
 
 SafeStripe uses an operation ID supplied by your application, such as `checkout:order-184`. It derives a Stripe idempotency key from the account scope, tenant, operation ID, and action. It separately stores a fingerprint of the normalized input. The configured operation store binds that identity to one set of terms.
 
-| Next request | SafeStripe behavior |
-| --- | --- |
-| Same operation and same terms, still in progress | Returns `BUSY`; the caller backs off |
-| Same operation and same terms, retry allowed | Reuses the original Stripe idempotency key |
-| Same operation already completed | Retrieves the recorded Stripe resource |
-| Same operation with a different price or amount | Returns `PAYLOAD_CONFLICT` |
-| New intentional purchase with a new operation ID | Creates a separate operation |
+| Next request                                     | SafeStripe behavior                        |
+| ------------------------------------------------ | ------------------------------------------ |
+| Same operation and same terms, still in progress | Returns `BUSY`; the caller backs off       |
+| Same operation and same terms, retry allowed     | Reuses the original Stripe idempotency key |
+| Same operation already completed                 | Retrieves the recorded Stripe resource     |
+| Same operation with a different price or amount  | Returns `PAYLOAD_CONFLICT`                 |
+| New intentional purchase with a new operation ID | Creates a separate operation               |
 
 **What you supply:** A permanent business identity, approved terms, and an application record that links the result to the order. Keep the ID across browser, server, queue, and support retries. A newly generated UUID on every attempt removes the benefit.
 
@@ -150,7 +150,7 @@ A telemetry callback can fail without changing a successful financial result. Th
 
 ## Where SafeStripe fits
 
-Use SafeStripe when payment workflows need durable coordination with PostgreSQL and you can run a worker. A SaaS billing service, marketplace back office, or order system can use the same primitives while enforcing different business rules.
+Use SafeStripe when payment workflows need durable coordination with your database and you can run a worker. Shared deployments can use PostgreSQL, MongoDB or Firestore; SQLite is intended for local development. A SaaS billing service, marketplace back office, or order system can use the same primitives while enforcing different business rules.
 
 For a simple payment link or a site without local fulfillment state, Stripe's hosted products may be enough. SafeStripe's portable adapters support SQLite, PostgreSQL, MongoDB and Firestore; another database needs a compatible transactional adapter. Organization-context events, thin events, complete Connect onboarding, dispute evidence submission, and full accounting are outside this release's wrapper surface.
 

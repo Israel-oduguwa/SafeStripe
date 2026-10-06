@@ -30,10 +30,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
         const row = await f.storage.driver.read(digest(['job', 'webhook', f.scope, 'evt_crash']));
         return !!row && row.dueAt <= (await f.storage.driver.now());
       });
-      const b = f.spawn('drain');
-      t.after(() => b.stop());
-      await b.next('done');
-      assert.equal((await b.closed).code, 0);
+      assert.equal((await f.drain(1))[0]!.code, 0);
       assert.deepEqual(await f.storage.read(f.scope, 'fulfillments', 'order-1'), { count: 1 });
       assert.deepEqual(await f.counts(), { effects: 1, outbox: 1, done: 1 });
     });
@@ -105,18 +102,8 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
           orderId: 'order-1',
         });
       // Multiple SQLite writers are intentionally unsupported; exercise multi-process contention on PostgreSQL.
-      const workers = Array.from({ length: backend === 'postgres' ? 20 : 1 }, () =>
-        f.spawn('drain'),
-      );
-      t.after(async () => {
-        await Promise.all(workers.map((w) => w.stop()));
-      });
-      await Promise.all(
-        workers.map(async (w) => {
-          await w.next('done');
-          assert.equal((await w.closed).code, 0);
-        }),
-      );
+      for (const worker of await f.drain(21, backend === 'postgres' ? 20 : 1))
+        assert.equal(worker.code, 0);
       assert.deepEqual(await f.storage.read(f.scope, 'fulfillments', 'order-1'), { count: 1 });
       assert.deepEqual(await f.counts(), { effects: 1, outbox: 1, done: 21 });
     },
@@ -149,10 +136,7 @@ for (const backend of ['sqlite', 'postgres'] as Backend[]) {
         await f.storage.transaction(f.scope, (tx) =>
           tx.set('fulfillments', 'order-1', { count: 1 }),
         );
-        const a = f.spawn('drain');
-        t.after(() => a.stop());
-        await a.next('done');
-        await a.closed;
+        assert.equal((await f.drain(0))[0]!.code, 0);
         assert.deepEqual(await f.storage.read(f.scope, 'fulfillments', 'order-1'), { count: 1 });
       },
     );

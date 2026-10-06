@@ -10,13 +10,15 @@ A payment request can time out after Stripe accepts it. Webhooks can arrive more
 
 Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stripe.
 
-[Website](https://israel-oduguwa.github.io/SafeStripe/) · [Get started](docs/11-getting-started.md) · [Local payment tutorial](docs/03-quickstart.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Payment UI](docs/17-payment-ui.md)
+[Website](https://israel-oduguwa.github.io/SafeStripe/) · [Try the sandbox](https://safestripe-demo.vercel.app/) · [Get started](docs/11-getting-started.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Release readiness](docs/28-release-readiness.md)
 
 ## Reliability comes first
 
 The 0.3 release is in stabilization. New billing features are frozen while crash recovery, sandbox behavior, installation and release evidence are reviewed.
 
 SafeStripe is organized around five contracts: stable operation identity, durable admission before acknowledgment, recoverable worker ownership, one committed effect per business key, and atomic state/outbox intent. Each has explicit assumptions and failure boundaries. Read [the contracts and evidence](docs/24-reliability-contracts.md), [architecture decisions](docs/adr/README.md) and [the stabilization plan](docs/25-stabilization.md).
+
+The online sandbox is available for evaluation. The 0.3 preview is not yet an enterprise production recommendation. Hosted Checkout and several billing workflows have been exercised with real Stripe test data; custom Checkout still has an unresolved sandbox failure. The [readiness report](docs/28-release-readiness.md) separates those observations from automated tests and remaining release work.
 
 ## Install
 
@@ -28,11 +30,11 @@ npm install safestripe
 
 The Stripe SDK installs automatically. You do not need a separate `stripe` installation or a build step. Install your framework and the database driver your app uses:
 
-| Storage | Install | Use |
-| --- | --- | --- |
-| SQLite | `npm install safestripe` | Local sandbox, built into Node |
-| PostgreSQL | `npm install safestripe pg` | Shared SQL database |
-| MongoDB | `npm install safestripe mongodb` | Atlas or a replica set |
+| Storage                  | Install                                          | Use                                |
+| ------------------------ | ------------------------------------------------ | ---------------------------------- |
+| SQLite                   | `npm install safestripe`                         | Local sandbox, built into Node     |
+| PostgreSQL               | `npm install safestripe pg`                      | Shared SQL database                |
+| MongoDB                  | `npm install safestripe mongodb`                 | Atlas or a replica set             |
 | Firebase Cloud Firestore | `npm install safestripe @google-cloud/firestore` | Server-side Firestore transactions |
 
 For Express, also install `express`. React and Next.js applications supply their own React installation. The package uses ES modules. Import the browser component from `safestripe/react`; keep the other entry points on the server. An Express app can use hosted Checkout without React.
@@ -78,15 +80,15 @@ Install the browser dependencies only when you use the React component:
 npm install @stripe/react-stripe-js @stripe/stripe-js react react-dom
 ```
 
-Create a custom Checkout Session on your authenticated server using `uiMode: 'custom'`, then pass its client secret to the component:
+Create a custom Checkout Session on your authenticated server using `uiMode: 'custom'`. The returned Stripe object has a `client_secret` field. Return only the ID and secret your browser needs from that authenticated route, for example `{ id: session.id, clientSecret: session.client_secret }`. In the browser, pass that response as `checkout` to the component:
 
 ```tsx
 import { SafeCheckout } from 'safestripe/react';
 
 <SafeCheckout
-  key={session.id}
+  key={checkout.id}
   publishableKey={publishableKey}
-  clientSecret={session.clientSecret}
+  clientSecret={checkout.clientSecret}
   buttonLabel="Pay securely"
 >
   <div>

@@ -16,7 +16,13 @@ const releaseNotice =
 const groups = [
   [
     'Start here',
-    ['00-reading-guide', '24-reliability-contracts', '11-getting-started', '03-quickstart'],
+    [
+      '00-reading-guide',
+      '28-release-readiness',
+      '24-reliability-contracts',
+      '11-getting-started',
+      '03-quickstart',
+    ],
   ],
   [
     'Build your app',

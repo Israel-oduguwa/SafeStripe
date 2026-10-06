@@ -63,11 +63,19 @@ process.once('message', async (message: any) => {
       });
       if (message.mode === 'transaction') await worker.runOnce();
       else {
-        const deadline = Date.now() + 15000;
-        while (Date.now() < deadline) {
-          const result = await worker.runOnce();
-          if (result === 'failed') throw new Error('Worker failure');
-          if (result === 'idle') break;
+        const abort = new AbortController();
+        // Keep workers alive through idle polls and bounded transaction failures,
+        // just as deployed workers do. The parent stops them after inspecting
+        // the durable job count, not after a single empty poll.
+        const finish = (command: unknown) => {
+          if ((command as { type?: string })?.type === 'finish') abort.abort();
+        };
+        process.on('message', finish);
+        process.send!({ type: 'running' });
+        try {
+          await runWorkerLoop(() => worker.runOnce(), { signal: abort.signal });
+        } finally {
+          process.off('message', finish);
         }
       }
     }
@@ -75,8 +83,12 @@ process.once('message', async (message: any) => {
     await pool?.end();
     process.send!({ type: 'done' });
     process.disconnect();
-  } catch {
-    process.send?.({ type: 'failed' });
+  } catch (error) {
+    const code = (error as { code?: unknown })?.code;
+    process.send?.({
+      type: 'failed',
+      code: typeof code === 'string' && /^[A-Z0-9_]{1,64}$/.test(code) ? code : 'WORKER_FAILURE',
+    });
     await pool?.end();
     process.exitCode = 1;
     process.disconnect?.();

@@ -227,6 +227,56 @@ test('64 distinct events contending on one business effect commit once', async (
   );
 });
 
+test('a temporary claim failure recovers through the worker loop without duplicate effects', async () => {
+  const jobs = new PostgresJobs(h.db);
+  const scopeId = scopeKey(scope);
+  for (const id of ['evt_retry_a', 'evt_retry_b'])
+    await jobs.enqueue('webhook', scopeId, id, 'paid', {});
+  const claim = jobs.claim.bind(jobs);
+  let claims = 0;
+  jobs.claim = async (...args) => {
+    if (++claims === 1)
+      throw Object.assign(new Error('temporary claim conflict'), { code: '40001' });
+    return claim(...args);
+  };
+  const worker = new WebhookWorker(jobs, scopeId, {
+    paid: async (_event, tx) => {
+      await effectOnce(tx, scopeId, 'order:retry:fulfill', () =>
+        jobs
+          .enqueue('outbox', scopeId, 'receipt:retry', 'receipt', { order: 'retry' }, tx)
+          .then(() => {}),
+      );
+    },
+  });
+  const stop = new AbortController();
+  const failures: Readonly<TelemetryEvent>[] = [];
+  await runWorkerLoop(
+    async () => {
+      const result = await worker.runOnce();
+      if (result === 'idle') stop.abort();
+      return result;
+    },
+    {
+      signal: AbortSignal.any([stop.signal, AbortSignal.timeout(5000)]),
+      errorIntervalMs: 10,
+      observer: (event) => {
+        failures.push(event);
+      },
+    },
+  );
+  assert.equal(stop.signal.aborted, true, 'the worker drained before the deadline');
+  assert.equal(failures.length, 1);
+  assert.equal(
+    (await h.db.query("SELECT count(*)::int AS n FROM sf_jobs WHERE state='done'")).rows[0]!.n,
+    2,
+  );
+  assert.equal((await h.db.query('SELECT count(*)::int AS n FROM sf_effects')).rows[0]!.n, 1);
+  assert.equal(
+    (await h.db.query("SELECT count(*)::int AS n FROM sf_jobs WHERE queue='outbox'")).rows[0]!.n,
+    1,
+  );
+});
+
 test('worker handler lookup does not execute inherited object properties', async () => {
   const jobs = new PostgresJobs(h.db);
   await jobs.enqueue('webhook', 'scope', 'evt_1', 'toString', {});

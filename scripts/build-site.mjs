@@ -14,6 +14,11 @@ if (release.npmPublished === true) {
     /<p class="release-note" id="release-note">[\s\S]*?<\/p>/,
     '<p class="release-note" id="release-note">Available on npm · MIT licensed</p>',
   );
+} else {
+  html = html.replace(
+    'id="copy-install"',
+    'id="copy-install" disabled title="This prepared release is not available on npm yet"',
+  );
 }
 for (const framework of ['express', 'next']) {
   const snippet = await format(await readFile(new URL(framework + '.ts.txt', source), 'utf8'), {
