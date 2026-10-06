@@ -88,8 +88,14 @@ In an Express application with a React frontend, use the same component. Pass yo
 | Redirect method / authentication | Stripe manages the required flow using the server-configured return URL |
 | Successful submission | Shows a confirmation-in-progress message and invokes optional `onComplete` |
 | New Session | Supply `key={session.id}` to remount the provider |
+| Slow or failed loading | After 30 seconds, offers a retry that reopens the same Session; no new payment is created |
+| Field readiness | Enables payment only after Stripe's Payment Element reports ready |
 
 The component uses Checkout Sessions with Stripe's `CheckoutElementsProvider`; it does not create a PaymentIntent from the browser. Dynamic payment methods remain controlled by Stripe and your account configuration.
+
+Use `onLoadStateChange` to keep the surrounding page accurate. It receives `loading`, `ready`, `slow` or `error`; it never receives a key or an upstream error message. `ready` means the fields have loaded, not that a payment succeeded. A late response can still finish loading after the slow notice. **Retry payment form** remounts the provider with the original client secret and does not call your create-checkout endpoint.
+
+If the form stays on “Loading secure payment form…”, check connectivity, browser extensions and your Content Security Policy. Allow Stripe's documented script, connection and frame origins, including Checkout and Link when enabled. Do not disable CSP or expose an account secret key to solve a loading failure. See [Stripe's security guide](https://docs.stripe.com/security/guide#content-security-policy). If the Session has expired, check the order's current state on your server before deliberately starting another purchase.
 
 ## Customize the container
 

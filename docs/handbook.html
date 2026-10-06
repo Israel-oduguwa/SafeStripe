@@ -805,7 +805,7 @@ article img {
 <tr>
 <td>Custom Checkout</td>
 <td>A fresh Stripe sandbox reproduced the rejection of <code>ui_mode: custom</code>; sending <code>elements</code> creates a usable Session</td>
-<td>The library now maps its custom option to Elements; the deployed browser payment remains to be verified. See <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/18">issue 18</a></td>
+<td>A public $5 test payment completed after reopening the same Session; the signed webhook stored the paid order and Firestore receipt. Insufficient funds left another order unpaid; retrying it with a 3DS test card completed the challenge and a signed receipt. Loading recovery is being hardened; delayed methods remain separate checks.</td>
 </tr>
 <tr>
 <td>Dedicated sandbox suite</td>
@@ -846,7 +846,7 @@ article img {
 <p>The <a href="../VERIFICATION.md">verification record</a> retains dated results. The separate <a href="https://github.com/Israel-oduguwa/Safestripe-test-demo-website">sandbox repository</a> records its browser walkthrough and deployment checks. Some billing objects were created successfully without completing their payment, renewal or tax lifecycle. Those are partial checks, not passing end-to-end scenarios.</p>
 <h2 id="28-release-readiness--required-before-recommending-a-production-release">Required before recommending a production release</h2>
 <ol>
-<li><strong>Complete the public Elements Checkout journey.</strong> The parameter correction is deployed in the demo. The actual payment component passed a local fake-card browser payment and server-side verification; that temporary test did not write a Firestore receipt. Complete the payment in the public workspace and verify its signed receipt. Hosted Checkout can remain the recommended evaluation path while this is open.</li>
+<li><strong>Verify payment methods and loading recovery.</strong> The public Elements form completed a $5 test payment and signed Firestore receipt at 14:42 UTC on 6 October. Its initial loading stalled and reopening the same Session recovered it. Keep the <a href="evidence/stripe-public-elements-2026-10-06.json">sanitized observation</a>, verify the loading-recovery fix after deployment, and exercise declines, authentication and delayed methods required by your application.</li>
 <li><strong>Pass CI on the release commit.</strong> Keep the actual PostgreSQL process tests and MongoDB/Firestore conformance enabled. Investigate flaky failures; do not mark skipped provider tests as passes.</li>
 <li><strong>Run account-verified Stripe release checks.</strong> The temporary sandbox proved the ambiguous remote-write case and six service checks. Retain its sanitized report, then run the protected workflow using an account-verified restricted key. Complete asynchronous payment, failed renewal, retry and out-of-order cases relevant to the product being launched.</li>
 <li><strong>Finish the npm transition.</strong> Publish through the maintainer&#39;s authorized account, verify a clean registry installation, switch the demo from its archive to that release, and align the README, website and imports. Use the <a href="#27-release-evidence">release workflow</a> for signed tags, provenance, SBOM and checksums once the account is configured.</li>
@@ -1483,8 +1483,18 @@ article img {
 <td>New Session</td>
 <td>Supply <code>key={session.id}</code> to remount the provider</td>
 </tr>
+<tr>
+<td>Slow or failed loading</td>
+<td>After 30 seconds, offers a retry that reopens the same Session; no new payment is created</td>
+</tr>
+<tr>
+<td>Field readiness</td>
+<td>Enables payment only after Stripe&#39;s Payment Element reports ready</td>
+</tr>
 </tbody></table></div>
 <p>The component uses Checkout Sessions with Stripe&#39;s <code>CheckoutElementsProvider</code>; it does not create a PaymentIntent from the browser. Dynamic payment methods remain controlled by Stripe and your account configuration.</p>
+<p>Use <code>onLoadStateChange</code> to keep the surrounding page accurate. It receives <code>loading</code>, <code>ready</code>, <code>slow</code> or <code>error</code>; it never receives a key or an upstream error message. <code>ready</code> means the fields have loaded, not that a payment succeeded. A late response can still finish loading after the slow notice. <strong>Retry payment form</strong> remounts the provider with the original client secret and does not call your create-checkout endpoint.</p>
+<p>If the form stays on “Loading secure payment form…”, check connectivity, browser extensions and your Content Security Policy. Allow Stripe&#39;s documented script, connection and frame origins, including Checkout and Link when enabled. Do not disable CSP or expose an account secret key to solve a loading failure. See <a href="https://docs.stripe.com/security/guide#content-security-policy">Stripe&#39;s security guide</a>. If the Session has expired, check the order&#39;s current state on your server before deliberately starting another purchase.</p>
 <h2 id="17-payment-ui--customize-the-container">Customize the container</h2>
 <p>Use <code>className</code> or <code>style</code> to change the outer card. Use <code>appearance</code> for the Stripe fields. They are separate because Stripe fields are isolated from your document&#39;s CSS.</p>
 <div class="code-block"><div class="code-toolbar"><span><i></i><i></i><i></i></span><span class="code-language">tsx</span><button type="button" class="copy-code" aria-label="Copy code">Copy</button></div><pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#4EC9B0">SafeCheckout</span></span>
