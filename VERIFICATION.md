@@ -1,5 +1,19 @@
 # Verification record
 
+## Hosted sandbox and release audit — 6 October 2026
+
+The public demo now runs at [safestripe-demo.vercel.app](https://safestripe-demo.vercel.app/) with Express on Render and Firestore. Its installed dependency is the packed 0.3.0 preview with Stripe SDK 22.6.2 and snapshot API `2026-08-26.dahlia`. The unscoped npm package was still unavailable at this review; the published scoped package is 0.2.0. Browser results from this demo do not establish installation from the future unscoped npm release.
+
+The real Stripe sandbox walkthrough completed hosted $5 one-time and $10 recurring Checkout with signed webhook processing and saved Firestore receipts. A $1 refund succeeded; replay retained the refund identity and an excessive refund was rejected. The customer portal opened, saved test payment methods were visible, and a paid subscription upgrade was previewed and applied. Setup-mode Checkout completed without payment. Invoice, credit, quote, schedule, trial, seat, pricing and usage records were exercised with different completion boundaries.
+
+Important remaining limits: an incomplete subscription is not a paid tiered-pricing test; accepting usage is not verifying its billed total; accepting a clock advance is not verifying every subsequent renewal. Payment Link completion was observed in Stripe's hosted page but did not prove local order fulfillment. Connect needs an eligible configured account, Identity remains disabled publicly, and no activated-tax calculation was completed. Custom Checkout returned `UPSTREAM_FAILED`; the corresponding private Stripe request log has not yet been inspected. See [issue 18](https://github.com/Israel-oduguwa/SafeStripe/issues/18).
+
+The main library checks failed on Node 24 in [run 37377394563](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37377394563) during twenty-process PostgreSQL contention. The finite test worker called `runOnce` without the production loop's infrastructure retry behavior. The revised harness runs that loop until the parent observes all expected completed jobs, then drains the workers. It retains one committed fulfillment, effect and outbox intent as required assertions. Child failures expose only a bounded error code, not raw database details. The regression for recovery after a temporary claim failure and all six local SQLite process cases passed locally. Revision `a59ea98` then passed [CI run 37439904112](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37439904112), including Node 22/24 release checks, all thirteen process cases with PostgreSQL enabled, and MongoDB/Firestore conformance. [Security run 37439904122](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37439904122) passed CodeQL and dependency review. [Issue 19](https://github.com/Israel-oduguwa/SafeStripe/issues/19) tracks this correction.
+
+The demo adds seven browser-DOM regressions for saved-session reload, network failure and retry, delayed restoration, interrupted setup and expiry during connection checks. These use controlled HTTP responses, not actual Stripe credentials. Its local suite passed **85 tests, zero failed and one Firestore-emulator skip**. The session retains its existing one-hour absolute expiry and HttpOnly/Secure cookie. No test key is stored in browser storage.
+
+The dedicated Stripe service suite, private custom Checkout diagnosis, independent security/usability review, shared-database capacity report and signed/provenance-backed unscoped publication remain release gates. Read the [current readiness assessment](docs/28-release-readiness.md) before recommending production use. Earlier dated statements about unavailable real credentials describe those earlier runs and are retained below.
+
 ## Billing Meter identifier regression — 5 October 2026
 
 The identifier validator rejected Stripe's documented `mtr_test_…` Meter IDs, so valid usage requests failed before reaching Stripe. The revised validator supports test/live Meter environment prefixes, retains legacy fixture compatibility and leaves other resource formats unchanged. A regression also sends the documented Meter ID through the actual Stripe SDK against a controlled local HTTP server. Identifier cases reject missing suffixes, unsupported environment segments, paths, query strings, control characters and excessive length.
@@ -29,23 +43,23 @@ The local package checks passed for the expanded billing scenario surface. The c
 
 ## Local results
 
-| Check | Observed result |
-| --- | --- |
-| Full release pipeline | Passed: formatting, strict types, tests, library build, Next.js build, documentation, license generation and clean package installation |
-| Automated suite at that run | 108 tests: 105 passed, zero failures, three expected skips |
-| Local starter fulfillment | Passed in the suite: authentication, durable binding, commercial-term mismatch rejection, duplicate events, single receipt intent and changed-flow conflict |
+| Check                                      | Observed result                                                                                                                                                       |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full release pipeline                      | Passed: formatting, strict types, tests, library build, Next.js build, documentation, license generation and clean package installation                               |
+| Automated suite at that run                | 108 tests: 105 passed, zero failures, three expected skips                                                                                                            |
+| Local starter fulfillment                  | Passed in the suite: authentication, durable binding, commercial-term mismatch rejection, duplicate events, single receipt intent and changed-flow conflict           |
 | SQLite and embedded PostgreSQL conformance | Passed: competing claims, fingerprints, recovery cutoff, expired leases, transaction rollback, effects/outbox, signed admission, replay and concurrent record updates |
-| SQLite restart | Stored billing data survived close/reopen |
-| Account discovery | Mocked SDK lookup resolved scope without an explicit account ID; real account credentials were not used |
-| Custom Checkout contract | Uses custom Sessions and the server-configured return URL; no browser-selected payment-method override |
-| Next.js example | Production build passed, including React form and checkout/order/webhook routes |
-| Clean package consumer | Installed the archive; core, framework, migration, SQLite and React exports loaded; strict server-side consumer types passed |
-| Automatic dependencies | Stripe resolved after installation; MongoDB and Firestore SDKs were absent unless separately installed |
-| Dependency audit | npm reported zero known vulnerabilities in the checked runtime dependency set |
-| License notices | Generated notices for 36 installed runtime dependencies/peers |
-| Documentation | 24 guides; 40 typed snippets plus a JavaScript tutorial checked; links, anchors, CSP and script syntax passed |
-| Official website | Static build passed; local links, framework tabs, keyboard switching and copy checked; desktop and mobile layouts reviewed |
-| Documentation interactions | DOM checks passed for synchronized tabs, keyboard switching, copy, syntax-color markup, search and navigation |
+| SQLite restart                             | Stored billing data survived close/reopen                                                                                                                             |
+| Account discovery                          | Mocked SDK lookup resolved scope without an explicit account ID; real account credentials were not used                                                               |
+| Custom Checkout contract                   | Uses custom Sessions and the server-configured return URL; no browser-selected payment-method override                                                                |
+| Next.js example                            | Production build passed, including React form and checkout/order/webhook routes                                                                                       |
+| Clean package consumer                     | Installed the archive; core, framework, migration, SQLite and React exports loaded; strict server-side consumer types passed                                          |
+| Automatic dependencies                     | Stripe resolved after installation; MongoDB and Firestore SDKs were absent unless separately installed                                                                |
+| Dependency audit                           | npm reported zero known vulnerabilities in the checked runtime dependency set                                                                                         |
+| License notices                            | Generated notices for 36 installed runtime dependencies/peers                                                                                                         |
+| Documentation                              | 24 guides; 40 typed snippets plus a JavaScript tutorial checked; links, anchors, CSP and script syntax passed                                                         |
+| Official website                           | Static build passed; local links, framework tabs, keyboard switching and copy checked; desktop and mobile layouts reviewed                                            |
+| Documentation interactions                 | DOM checks passed for synchronized tabs, keyboard switching, copy, syntax-color markup, search and navigation                                                         |
 
 The three local suite skips are the test requiring independent PostgreSQL connections and the MongoDB/Firestore service suites. Local testing does not install Docker, a MongoDB server or a Firebase emulator.
 
@@ -63,13 +77,13 @@ The previous 0.2.0 preparation passed all jobs in [run 36869730724](https://gith
 
 [GitHub Actions run 35990082440](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/35990082440) passed all three jobs for commit `e91329c`:
 
-| CI job | Result |
-| --- | --- |
-| Node.js 22 release checks | Passed, including Next.js build, package installation and audit |
-| Node.js 24 release checks | Passed, including Next.js build, package installation and audit |
-| Offline suite including local starter | 76 tests: 73 passed, zero failures, three expected skips |
-| Real PostgreSQL 17 suite | 76 tests: 74 passed, zero failures, two skips for document services checked in their own job |
-| Four-adapter conformance on a runner with MongoDB 8 and Firestore emulator | All 35 passed, zero failures or skips |
+| CI job                                                                     | Result                                                                                       |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Node.js 22 release checks                                                  | Passed, including Next.js build, package installation and audit                              |
+| Node.js 24 release checks                                                  | Passed, including Next.js build, package installation and audit                              |
+| Offline suite including local starter                                      | 76 tests: 73 passed, zero failures, three expected skips                                     |
+| Real PostgreSQL 17 suite                                                   | 76 tests: 74 passed, zero failures, two skips for document services checked in their own job |
+| Four-adapter conformance on a runner with MongoDB 8 and Firestore emulator | All 35 passed, zero failures or skips                                                        |
 
 The emulator does not enforce every production index/IAM behavior; deploy and validate the supplied Firestore indexes in your project. Subsequent packaging and UI changes use the same CI workflow; consult the repository's latest run for the result on each commit.
 

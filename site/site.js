@@ -23,6 +23,7 @@ for (const tab of tabs) {
   });
 }
 document.getElementById('copy-install').addEventListener('click', async () => {
+  if (document.getElementById('copy-install').disabled) return;
   try {
     await navigator.clipboard.writeText(document.getElementById('install-command').textContent);
     document.getElementById('copy-status').textContent = 'Installation command copied.';

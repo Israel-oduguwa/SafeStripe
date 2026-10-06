@@ -45,7 +45,11 @@ document.getElementById('next-tab').dispatchEvent(event);
 assert.equal(document.getElementById('express-code').hidden, false);
 document.getElementById('copy-install').click();
 await new Promise((resolve) => setImmediate(resolve));
-assert.equal(copied, 'npm install safestripe');
+const release = JSON.parse(
+  await readFile(new URL('../site/release.json', import.meta.url), 'utf8'),
+);
+assert.equal(document.getElementById('copy-install').disabled, release.npmPublished !== true);
+assert.equal(copied, release.npmPublished === true ? 'npm install safestripe' : undefined);
 console.log(
   'Website checked: ' +
     checked +

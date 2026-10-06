@@ -44,6 +44,18 @@ export async function fixture(backend: Backend) {
       children.add(worker);
       return worker;
     },
+    async drain(expectedJobs: number, concurrency = 1) {
+      const workers = Array.from({ length: concurrency }, () => this.spawn('drain'));
+      await Promise.all(workers.map((worker) => worker.next('running')));
+      await waitUntil(async () => (await this.counts()).done === expectedJobs, 20000);
+      for (const worker of workers) worker.process.send({ type: 'finish' });
+      return Promise.all(
+        workers.map(async (worker) => {
+          await worker.next('done');
+          return worker.closed;
+        }),
+      );
+    },
     async counts() {
       const rows = pool
         ? (await pool.query('SELECT record FROM sf_records WHERE scope=$1', [scope])).rows.map(
@@ -95,7 +107,7 @@ export function child(config: object, mode: string) {
   const messages: Array<{ type: string; [key: string]: unknown }> = [];
   const listeners = new Set<() => void>();
   let ended = false;
-  const closed = once(processChild, 'exit').then(([code, signal]) => {
+  const closed = once(processChild, 'close').then(([code, signal]) => {
     ended = true;
     for (const f of listeners) f();
     return { code, signal };
@@ -122,6 +134,10 @@ export function child(config: object, mode: string) {
             const [m] = messages.splice(i, 1);
             finish();
             resolve(m!);
+          } else if (messages.some((m) => m.type === 'failed')) {
+            const failure = messages.find((m) => m.type === 'failed')!;
+            finish();
+            reject(new Error(`Child failed before ${type}: ${failure.code}`));
           } else if (ended) {
             finish();
             reject(new Error(`Child exited before ${type}`));
