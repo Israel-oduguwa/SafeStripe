@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.3.0 stabilization (unreleased)
+## 0.3.0 — evaluation preview (6 October 2026)
+
+First publication under the unscoped `safestripe` name. This evaluation preview consolidates the billing scenarios and stabilization work below. Local publication does not provide CI provenance; signed, provenance-backed releases and account-verified Stripe release checks remain separate maintainer work.
 
 - Correct custom Checkout creation for the pinned API by mapping SafeStripe's `uiMode: custom` to Stripe's `ui_mode: elements`. Existing failed operations retain their original fingerprints; use a deliberate new test operation after this correction.
 
@@ -9,8 +11,9 @@
 - Add real child-process crash/recovery tests, a reproducible local benchmark and an opt-in Stripe sandbox service suite.
 - Make PostgreSQL and browser payment libraries optional peers. Core installations continue to include the Stripe server SDK.
 - Add CodeQL, dependency review, dependency-update configuration and a gated provenance/SBOM release workflow. Publisher configuration and a verified signed tag remain maintainer setup steps.
+- Wait for Stripe's payment fields before enabling confirmation. Provide bounded loading feedback and a retry that reopens the same Checkout Session rather than creating another payment. Public sandbox checks completed a payment, a declined-card retry and a 3DS challenge with signed Firestore receipts.
 
-## 0.3.0 — billing scenarios (release preview)
+### Billing scenarios
 
 - Add durable scenario methods for multi-item subscriptions, saved methods, Payment Links, tiered prices, schedules, quotes, credits, basic metering, test clocks, marketplace recipients/transfers and Identity sessions.
 - Add read-only tax setup inspection and guarded optional Checkout tax, trials and promotion codes.

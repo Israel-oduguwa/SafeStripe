@@ -7,13 +7,8 @@ import { parseHTML } from 'linkedom';
 
 const directory = new URL('../docs/', import.meta.url);
 const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-const release = JSON.parse(
-  await readFile(new URL('../site/release.json', import.meta.url), 'utf8'),
-);
 const releaseNotice =
-  release.npmPublished === true
-    ? ''
-    : '<p class="release-notice"><strong>Release preview.</strong> The shorter npm name, <code>safestripe</code>, is awaiting publication. Installation under that name is not available yet.</p>';
+  '<p class="release-notice"><strong>Evaluation preview.</strong> SafeStripe 0.3.0 is for sandbox evaluation. Read the release readiness guide before planning a production integration.</p>';
 const groups = [
   [
     'Start here',
