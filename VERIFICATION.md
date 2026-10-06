@@ -1,5 +1,23 @@
 # Verification record
 
+## Retained service and PostgreSQL results — 6 October 2026
+
+Revision `0bced69` passed [Node 22/24 and provider CI](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37448381176), [CodeQL and dependency review](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37448381208), and [the PostgreSQL benchmark matrix](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37448381177). Benchmark reports identify the tested pull-request merge revision and source-input fingerprint, not an assumed branch checkout. Nine measured repetitions each completed 1,000 jobs, effects and outbox intents after 10,000 admission attempts, with zero duplicate effects. Four- and eight-lane warm-ups each recovered three exhausted transactions; those failed attempts remain visible. The [report](benchmarks/README.md) includes all raw observations and the original failed matrix. This does not establish enterprise capacity.
+
+The [redacted Stripe service report](docs/evidence/stripe-service-2026-10-06.json) retains six actual API checks on clean source revision `82e51e5`, with SDK 22.6.2 and API `2026-08-26.dahlia`. It identifies its unclaimed temporary sandbox and lack of remote account verification. It does not satisfy the protected account-verified release gate. Local release checks passed 121 tests with three provider-dependent skips; release-evidence rejection tests passed separately. The demo fix passed 90 local tests with one Firestore-emulator skip. Deployed browser verification and publication remain separate work.
+
+## Elements Checkout and real service proof — 6 October 2026
+
+A newly provisioned, temporary Stripe CLI sandbox reproduced the custom Checkout failure. Stripe rejected `ui_mode: custom` and required `elements`. The corrected library preserves its public `uiMode: custom` option and sends the supported parameter. A real API probe then returned an Elements Session with a client secret. The SDK regression rejects the obsolete parameter in a controlled HTTP fixture; this regression is distinct from the real probe.
+
+The extended actual-SDK runner passed six checks: customer creation with deliberate response loss after remote success and one-customer replay; hosted Checkout replay; Elements Checkout and stable replay; a successful test PaymentIntent and one full refund; subscription price/replay; and portal creation. Fixtures were canceled, expired, archived or deleted. A portal configuration remains in the temporary sandbox. This was an unclaimed CLI sandbox with a seven-day lifetime: account details cannot be read remotely, so its provisioning response supplies the account association. It is not accepted as account-verified release evidence. Browser payment fields, 3DS, real network webhook delivery and live payments were not covered by this runner.
+
+The current scan exposed seven high-severity findings in the local Express examples and documentation tooling. The examples now apply maintained request-rate middleware before authorization; the build and checks use an HTML parser for heading text and script extraction instead of incomplete tag filters. Dependabot security fixes and vulnerability alerts are now enabled. Closure still requires a new CodeQL analysis.
+
+The release job now checks database CI, CodeQL and account-verified sandbox reports on the exact tagged commit. Tests reject evidence from another revision, skipped provider jobs, failed runs, dirty source and temporary unclaimed accounts. The `npm-release` and `stripe-sandbox` GitHub environments now require maintainer review and permit deployment only from main. No credentials have been uploaded to either environment yet; signed tags and npm trusted publishing still require the maintainer's account setup.
+
+The PostgreSQL benchmark runs on GitHub-hosted infrastructure, keeping Docker off the local computer. It retains failures, records transaction callback retries and uses the production worker retry loop until the expected backlog finishes. The outside-review guide supplies onboarding and failure exercises; it does not claim an independent audit has occurred.
+
 ## Hosted sandbox and release audit — 6 October 2026
 
 The public demo now runs at [safestripe-demo.vercel.app](https://safestripe-demo.vercel.app/) with Express on Render and Firestore. Its installed dependency is the packed 0.3.0 preview with Stripe SDK 22.6.2 and snapshot API `2026-08-26.dahlia`. The unscoped npm package was still unavailable at this review; the published scoped package is 0.2.0. Browser results from this demo do not establish installation from the future unscoped npm release.

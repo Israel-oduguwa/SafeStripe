@@ -23,24 +23,37 @@ The secret API key creates Stripe objects. The publishable key loads the browser
 
 Run `npm run release:check`. CI also exercises the SQL store against real PostgreSQL and runs the document adapters against isolated services on GitHub's runners. See [VERIFICATION.md](../VERIFICATION.md) for what was actually checked. A green local run does not establish throughput at enterprise scale.
 
-Run `npm pack --dry-run` and inspect the file list. Run `npm pack` to produce the installable archive. Before publishing, test that archive in a separate app with `npm install /absolute/path/to/safestripe-0.2.0.tgz`. After publishing, repeat the consumer check using the exact version from the registry.
+Run `npm pack --dry-run` and inspect the file list. Run `npm pack` to produce the installable archive. Before publishing, test that archive in a separate app with `npm install /absolute/path/to/safestripe-0.3.0.tgz`. After publishing, repeat the consumer check using the exact version from the registry.
 
 The GitHub repository owner and npm package name are separate. Verify publishing access to `safestripe`, enable npm account protection, and configure trusted publishing or a narrowly scoped automation token before publishing. `npm publish --access public` publishes a public artifact; do not run it until you have reviewed the package, license, release notes and passing CI. No npm release is performed by these instructions.
 
+## Remaining owner setup
+
+The hosted preview is deployed. Publication requires account setup that a code change cannot supply. Do these steps using your own accounts; never send credentials, one-time codes, signing keys or provisioning manifests in chat or a public issue.
+
+1. **Refresh npm access.** Run `npm login --registry=https://registry.npmjs.org/` in your terminal and complete npm's browser authentication. Confirm `npm whoami` returns your account. An npm website login alone does not authenticate the publishing terminal. Check that the unscoped name is available before its first publication.
+2. **Configure the dedicated Stripe sandbox.** Use a disposable account with synthetic data and a default portal configuration. In the repository's **Settings → Environments → stripe-sandbox**, add `STRIPE_SANDBOX_RESTRICTED_KEY` as a secret and `STRIPE_SANDBOX_ACCOUNT_ID` as a variable. The key needs the access listed in [release evidence](../docs/27-release-evidence.md). Review main's exact commit, dispatch **Dedicated Stripe sandbox** from main, and approve the protected job. Its report must be account-verified and match that commit. Do not reuse a public visitor session or an unclaimed CLI sandbox as release credentials.
+3. **Use your own signing identity.** Configure Git signing with a key you control and register the public signing key on GitHub. After all checks pass on the release commit, create an annotated signed tag matching the package version and verify that GitHub marks it verified. Do not create a tag claiming somebody else's signature or attach an unsigned lightweight tag to the release workflow.
+4. **Complete the first npm publication and publisher setup separately.** Trusted publishing is configured on an existing npm package. If the first checked publication is `safestripe@0.3.0`, publish it through your authenticated account as an evaluation preview, then configure its trusted publisher for `Israel-oduguwa/SafeStripe`, `release.yml`, environment `npm-release`, with direct publishing allowed. That local publication does not gain CI provenance afterward. A subsequent distinct version, such as 0.3.1, must repeat the checks and use its own verified tag before the trusted workflow publishes it with provenance. Never attempt to publish 0.3.0 again; npm versions are immutable. If first-release provenance is a requirement, stop before publishing and arrange an approved first-publication CI path instead.
+5. **Verify the registry consumer and switch the demo.** Install the exact published version in a clean app, confirm core imports and the included Stripe SDK, then test selected database/framework peers. Update the demo's dependency from the preview archive to that exact registry version in a reviewed change. Mark `site/release.json` as published only after the registry check succeeds; rebuild and publish the website.
+6. **Arrange outside review.** Give reviewers the [onboarding and security exercises](../docs/29-external-review.md). Record actual findings, timings and fixes. Independent review and production infrastructure testing remain necessary before a broad production recommendation.
+
+The `npm-release` and `stripe-sandbox` environments already require maintainer review and are restricted to main. Their secrets have not been populated by repository code. The release workflow rejects failed or stale CI, open high/critical CodeQL findings, skipped database checks and unverified sandbox evidence. Read [release readiness](../docs/28-release-readiness.md) before changing the preview status.
+
 ## Repository commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm test` | Offline tests, including SQLite and an embedded PostgreSQL engine |
-| `npm run check` | Types, tests and library build |
-| `npm run build:next` | Build the Next.js example, including the browser component |
-| `npm run docs:build` | Generate the offline consumer documentation |
-| `npm run docs:check` | Check documentation links and compiled examples |
-| `npm run test:package` | Install the packed library into a clean consumer and check exports |
-| `npm run licenses` | Refresh runtime dependency license notices |
-| `npm run release:check` | Run the release checks together |
-| `npm run test:stripe` | Opt-in sandbox customer create/replay/delete smoke test; read its prerequisites first |
-| `npm run dev:express:legacy` | Original SQL-only example, retained for existing integrations |
+| Command                      | Purpose                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `npm test`                   | Offline tests, including SQLite and an embedded PostgreSQL engine                     |
+| `npm run check`              | Types, tests and library build                                                        |
+| `npm run build:next`         | Build the Next.js example, including the browser component                            |
+| `npm run docs:build`         | Generate the offline consumer documentation                                           |
+| `npm run docs:check`         | Check documentation links and compiled examples                                       |
+| `npm run test:package`       | Install the packed library into a clean consumer and check exports                    |
+| `npm run licenses`           | Refresh runtime dependency license notices                                            |
+| `npm run release:check`      | Run the release checks together                                                       |
+| `npm run test:stripe`        | Opt-in sandbox customer create/replay/delete smoke test; read its prerequisites first |
+| `npm run dev:express:legacy` | Original SQL-only example, retained for existing integrations                         |
 
 Never include `.env`, `.data`, customer exports or recordings in a release. The git hook checks staged files for Stripe secrets. Keep the original migration files immutable; add migrations instead of editing applied history. The SQL migration runner tracks checksums.
 

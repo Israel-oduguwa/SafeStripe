@@ -1,4 +1,5 @@
 import express, { type ErrorRequestHandler } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { expressWebhook } from '../../src/adapters/express.js';
 import { publicError } from '../../src/index.js';
 import { authenticateDemo, createDemoCheckout, getRuntime } from '../shared/runtime.js';
@@ -18,19 +19,29 @@ app.post(
   expressWebhook(r.receiver),
 );
 app.use(express.json({ limit: '8kb' }));
-app.post('/api/checkout', async (req, res) => {
-  try {
-    authenticateDemo(req.get('authorization'), req.get('origin'));
-    if (req.body && Object.keys(req.body).length) {
-      res.status(400).json({ error: 'THIS_DEMO_ACCEPTS_NO_ORDER_OVERRIDES' });
-      return;
+app.post(
+  '/api/checkout',
+  rateLimit({
+    windowMs: 60000,
+    limit: 30,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: 'TOO_MANY_REQUESTS' },
+  }),
+  async (req, res) => {
+    try {
+      authenticateDemo(req.get('authorization'), req.get('origin'));
+      if (req.body && Object.keys(req.body).length) {
+        res.status(400).json({ error: 'THIS_DEMO_ACCEPTS_NO_ORDER_OVERRIDES' });
+        return;
+      }
+      res.status(200).json(await createDemoCheckout());
+    } catch (error) {
+      const response = publicError(error);
+      res.status(response.status).json(response.body);
     }
-    res.status(200).json(await createDemoCheckout());
-  } catch (error) {
-    const response = publicError(error);
-    res.status(response.status).json(response.body);
-  }
-});
+  },
+);
 app.get('/success', (_req, res) => {
   res.type('text').send('Payment processing. The verified webhook worker determines fulfillment.');
 });

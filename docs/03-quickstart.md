@@ -128,3 +128,7 @@ The automated tests also exercise duplicate webhook delivery, competing workers,
 **SQLite prints an experimental warning:** this is Node.js reporting the status of its built-in SQLite API. It is expected on Node 22. SQLite here is a development option, not your Vercel database.
 
 When the local payment works, move to [your own Express or Next.js application](16-frameworks.md).
+
+## Request limits in the local example
+
+The local Express server permits 60 authenticated-route requests per IP each minute, across Checkout and order reads. This protects the sign-in check before it runs. A 429 response means wait for the reset rather than create a new operation. Webhook admission has a separate path so these visitor limits do not block Stripe retries. The example uses an in-memory limiter with no trusted proxy; a public deployment needs a shared limiter and an explicit proxy policy. If copying the Express server into another project, also install `express-rate-limit`. Core users and Next.js integrations do not need that dependency.

@@ -3,6 +3,7 @@ import { marked } from 'marked';
 import { createHash } from 'node:crypto';
 import { createHighlighter } from 'shiki';
 import { format } from 'prettier';
+import { parseHTML } from 'linkedom';
 
 const directory = new URL('../docs/', import.meta.url);
 const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -63,6 +64,7 @@ const groups = [
       '08-testing-and-runbooks',
       '26-idempotent-payment-systems',
       '27-release-evidence',
+      '29-external-review',
     ],
   ],
   ['Reference', ['09-library-reference', '12-integration', '10-sources-and-corrections']],
@@ -73,10 +75,10 @@ const escape = (value) =>
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
+const plainText = (value) =>
+  parseHTML(`<div>${value}</div>`).document.querySelector('div').textContent;
 const slug = (value) =>
-  value
-    .replace(/<[^>]*>/g, '')
-    .replace(/&[^;]+;/g, '')
+  plainText(value)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
@@ -186,7 +188,7 @@ for (const id of order) {
     const number = used.get(base) ?? 0;
     used.set(base, number + 1);
     const anchor = `${id}--${base}${number ? `-${number}` : ''}`;
-    if (level === '2') headings.push({ anchor, label: label.replace(/<[^>]*>/g, '') });
+    if (level === '2') headings.push({ anchor, label: escape(plainText(label)) });
     return `<h${level} id="${anchor}">${label}</h${level}>`;
   });
   html = html.replace(

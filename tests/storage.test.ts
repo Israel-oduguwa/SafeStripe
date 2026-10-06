@@ -332,7 +332,7 @@ test('custom Checkout uses the server return URL and session-based Payment Eleme
     items: [{ priceId: 'price_example', quantity: 1 }],
     reference: 'order-1',
   });
-  assert.equal(params.ui_mode, 'custom');
+  assert.equal(params.ui_mode, 'elements');
   assert.equal(params.return_url, 'https://shop.example/success?session_id={CHECKOUT_SESSION_ID}');
   assert.equal(params.success_url, undefined);
   assert.equal(params.payment_method_types, undefined);

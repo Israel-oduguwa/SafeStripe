@@ -2,6 +2,8 @@
 
 ## 0.3.0 stabilization (unreleased)
 
+- Correct custom Checkout creation for the pinned API by mapping SafeStripe's `uiMode: custom` to Stripe's `ui_mode: elements`. Existing failed operations retain their original fingerprints; use a deliberate new test operation after this correction.
+
 - Accept Stripe Billing Meter IDs with `mtr_test_` and `mtr_live_` environment prefixes. Keep other resource validation and path restrictions unchanged.
 - Document the reliability contract, transaction boundaries and recovery limits with ADRs and diagrams.
 - Add real child-process crash/recovery tests, a reproducible local benchmark and an opt-in Stripe sandbox service suite.

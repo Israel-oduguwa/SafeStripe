@@ -5,6 +5,8 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fixture, type Backend } from '../tests/chaos/harness.js';
 import { WebhookWorker } from '../src/worker.js';
+import { drainBacklog } from './drain.js';
+import { dirname } from 'node:path';
 import { digest } from '../src/primitives.js';
 
 const backend: Backend = process.env.BENCH_DATABASE === 'postgres' ? 'postgres' : 'sqlite';
@@ -18,6 +20,8 @@ function count(name: string, fallback: number, max: number) {
 const events = count('BENCH_EVENTS', 1000, 100000);
 const workers = count('BENCH_WORKERS', 4, 32);
 const repeats = count('BENCH_REPEATS', 3, 10);
+const deadlineMs = count('BENCH_DEADLINE_MS', 180000, 900000);
+const output = process.env.BENCH_OUTPUT ?? `benchmarks/results/${backend}-latest.json`;
 function distribution(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
   const percentile = (p: number) => sorted[Math.max(0, Math.ceil(p * sorted.length) - 1)] ?? 0;
@@ -30,21 +34,40 @@ function distribution(values: number[]) {
 }
 async function run(size: number) {
   const f = await fixture(backend);
+  let stage = 'database version';
+  let observed: Record<string, unknown> = { events: size, workers };
+  let transactionCallbackRetries = 0;
+  let retryableTransactionFailures = 0;
+  let unexpectedTransactionFailures = 0;
+  const transaction = f.storage.driver.transaction.bind(f.storage.driver);
+  f.storage.driver.transaction = async (work) => {
+    let callbacks = 0;
+    try {
+      return await transaction((tx) => {
+        if (callbacks++ > 0) transactionCallbackRetries++;
+        return work(tx);
+      });
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (['40001', '40P01', '23505'].includes(code ?? '')) retryableTransactionFailures++;
+      else if (code !== 'BUSY') unexpectedTransactionFailures++;
+      throw error;
+    }
+  };
   try {
     const version = f.pool
       ? (await f.pool.query('SHOW server_version')).rows[0].server_version
       : process.versions.sqlite;
     const admission: number[] = [],
-      completion: number[] = [],
       queueLatency: number[] = [];
     const cpu = process.cpuUsage();
     let peakRssBytes = process.memoryUsage().rss;
     const sampler = setInterval(() => {
       peakRssBytes = Math.max(peakRssBytes, process.memoryUsage().rss);
     }, 10);
-    let inserted = 0,
-      workerErrors = 0;
+    let inserted = 0;
     try {
+      stage = 'admission';
       const admissionStart = performance.now();
       // Fixed duplicate ratio: ten identical delivery attempts for every event.
       for (let i = 0; i < size; i++) {
@@ -62,6 +85,8 @@ async function run(size: number) {
         }
       }
       const admissionMs = performance.now() - admissionStart;
+      observed = { ...observed, inserted, admissionMs };
+      stage = 'backlog processing';
       const workerStart = performance.now();
       const worker = () =>
         new WebhookWorker(f.storage.jobs, f.scope, {
@@ -76,19 +101,16 @@ async function run(size: number) {
             });
           },
         });
-      await Promise.all(
-        Array.from({ length: workers }, async () => {
-          const w = worker();
-          for (;;) {
-            const start = performance.now(),
-              result = await w.runOnce();
-            if (result === 'idle') break;
-            completion.push(performance.now() - start);
-            if (result === 'failed') workerErrors++;
-          }
-        }),
-      );
+      const w = worker();
+      const drain = await drainBacklog(() => w.runOnce(), size, {
+        concurrency: workers,
+        deadlineMs,
+      });
       const processingMs = performance.now() - workerStart;
+      observed = { ...observed, processingMs, drain: { ...drain, iterationMs: undefined } };
+      assert.equal(drain.deadlineExceeded, false, 'Backlog did not drain before the deadline');
+      assert.equal(drain.completed, size);
+      stage = 'business invariants';
       for (let i = 0; i < size; i++) {
         assert.deepEqual(await f.storage.read(f.scope, 'fulfillments', `order-${i}`), { count: 1 });
         const job = await f.storage.driver.read(digest(['job', 'webhook', f.scope, `evt_${i}`]));
@@ -97,8 +119,14 @@ async function run(size: number) {
       }
       const counts = await f.counts();
       assert.equal(inserted, size);
-      assert.equal(workerErrors, 0);
+      observed = { ...observed, counts };
+      assert.equal(unexpectedTransactionFailures, 0, 'Unexpected transaction failure');
+      assert.ok(
+        drain.handlerFailures + drain.claimFailures <= retryableTransactionFailures,
+        'A failed worker attempt was not explained by a recognized database conflict',
+      );
       assert.deepEqual(counts, { effects: size, outbox: size, done: size });
+      stage = 'operation contention';
       const operation = {
         scope: f.scope,
         tenantId: 'benchmark',
@@ -131,7 +159,7 @@ async function run(size: number) {
         admissionAttemptsPerSecond: admission.length / (admissionMs / 1000),
         committedEffectsPerSecond: size / (processingMs / 1000),
         admission: distribution(admission),
-        workerIteration: distribution(completion),
+        workerIteration: distribution(drain.iterationMs),
         admissionToCommit: distribution(queueLatency),
         contention: {
           claimants: 20,
@@ -141,20 +169,33 @@ async function run(size: number) {
         },
         cpuMicroseconds: process.cpuUsage(cpu),
         peakRssBytes,
-        workerErrors,
+        workerErrors: drain.handlerFailures,
+        recoveredClaimFailures: drain.claimFailures,
+        transactionCallbackRetries,
+        retryableTransactionFailures,
+        unexpectedTransactionFailures,
         duplicateEffects: 0,
         counts,
       };
     } finally {
       clearInterval(sampler);
     }
+  } catch (error) {
+    const code = (error as { code?: unknown })?.code;
+    throw Object.assign(new Error('Benchmark run failed'), {
+      code: typeof code === 'string' && /^[A-Z0-9_]{1,40}$/.test(code) ? code : 'BENCHMARK_FAILED',
+      benchmark: {
+        stage,
+        ...observed,
+        transactionCallbackRetries,
+        retryableTransactionFailures,
+        unexpectedTransactionFailures,
+      },
+    });
   } finally {
     await f.close();
   }
 }
-await run(Math.min(events, 100)); // Warm-up is discarded and uses separate records.
-const results = [];
-for (let i = 0; i < repeats; i++) results.push(await run(events));
 const inputs = [
   ...new Set(
     execFileSync(
@@ -168,6 +209,7 @@ const inputs = [
         'src',
         'tests/chaos',
         'benchmarks/run.ts',
+        'benchmarks/drain.ts',
         'package-lock.json',
       ],
       { encoding: 'utf8' },
@@ -185,7 +227,9 @@ for (const file of inputs)
 const report = {
   recordedAt: new Date().toISOString(),
   sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
-  sourceDirty: Boolean(execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim()),
+  sourceDirty: Boolean(
+    execFileSync('git', ['status', '--porcelain', '--', ...inputs], { encoding: 'utf8' }).trim(),
+  ),
   sourceSha256: hash.digest('hex'),
   sourceFiles: inputs,
   environment: {
@@ -200,27 +244,46 @@ const report = {
     location: process.env.BENCH_LOCATION ?? 'not specified',
   },
   methodology:
-    'Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms.',
+    'Closed-loop sequential admission; ten attempts/event; drain a pre-built backlog with same-process worker lanes and the production retry loop; nearest-rank percentiles. No HTTP, signature verification, Stripe calls or external outbox delivery. Peak RSS sampled every 10ms. Callback retries count repeated transaction callbacks, excluding failures before the callback starts. Recognized SQL conflicts may recover; failed attempts are counted and all business invariants must pass. Warm-up is retained but excluded from measured rates.',
   unmeasured: [
     'database CPU/memory',
-    'transaction retry counts',
+    'transaction retries before the callback starts',
     'process recovery time',
     'multi-host throughput',
     'production network latency',
   ],
-  results,
+  configuration: { events, workers, repeats, deadlineMs },
+  passed: false,
+  results: [] as Awaited<ReturnType<typeof run>>[],
+  warmup: undefined as Awaited<ReturnType<typeof run>> | undefined,
+  failure: undefined as { code: string; observation?: unknown; phase: string } | undefined,
 };
-await mkdir('benchmarks/results', { recursive: true });
-await writeFile(
-  `benchmarks/results/${backend}-latest.json`,
-  JSON.stringify(report, null, 2) + '\n',
-);
+let phase = 'warm-up';
+try {
+  report.warmup = await run(Math.min(events, 100));
+  phase = 'measured run';
+  for (let i = 0; i < repeats; i++) report.results.push(await run(events));
+  report.passed = true;
+} catch (error) {
+  const value = error as { code?: unknown; benchmark?: unknown };
+  report.failure = {
+    phase,
+    code:
+      typeof value.code === 'string' && /^[A-Z0-9_]{1,40}$/.test(value.code)
+        ? value.code
+        : 'BENCHMARK_FAILED',
+    observation: value.benchmark,
+  };
+  process.exitCode = 1;
+}
+await mkdir(dirname(output), { recursive: true });
+await writeFile(output, JSON.stringify(report, null, 2) + '\n');
 console.log(
   JSON.stringify({
     database: backend,
-    runs: results.length,
+    passed: report.passed,
+    runs: report.results.length,
     eventsPerRun: events,
-    duplicateEffects: 0,
-    report: `benchmarks/results/${backend}-latest.json`,
+    report: output,
   }),
 );

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { Script } from 'node:vm';
+import { parseHTML } from 'linkedom';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const markdown = [
@@ -36,7 +37,10 @@ if ((html.match(/<article\b/g) ?? []).length !== pageCount)
   throw new Error('Documentation page count mismatch');
 const allIds = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
 if (new Set(allIds).size !== allIds.length) throw new Error('Duplicate documentation anchor');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+const scripts = parseHTML(html).document.querySelectorAll('script');
+if (scripts.length !== 1 || scripts[0].hasAttribute('src'))
+  throw new Error('Unexpected handbook scripts');
+const script = scripts[0].textContent;
 if (!script) throw new Error('Missing handbook script');
 new Script(script);
 const hash = createHash('sha256').update(script).digest('base64');

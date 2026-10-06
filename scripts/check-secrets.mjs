@@ -9,7 +9,7 @@ const names = execFileSync(
 )
   .split('\0')
   .filter(Boolean);
-const pattern = /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b|\bwhsec_[A-Za-z0-9]{16,}\b/;
+const pattern = /\b(?:sk|rk|rkcs)_(?:live|test)_[A-Za-z0-9]{16,}\b|\bwhsec_[A-Za-z0-9]{16,}\b/;
 let failed = false;
 for (const name of names) {
   const content = execFileSync('git', ['show', `:${name}`], { maxBuffer: 20 * 1024 * 1024 });

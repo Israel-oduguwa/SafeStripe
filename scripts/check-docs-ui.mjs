@@ -40,7 +40,10 @@ const context = {
   },
   setTimeout: () => 0,
 };
-runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], context);
+const scripts = document.querySelectorAll('script');
+assert.equal(scripts.length, 1);
+assert.equal(scripts[0].hasAttribute('src'), false);
+runInNewContext(scripts[0].textContent, context);
 assert.equal(document.querySelector('article:not([hidden])').id, '11-getting-started');
 const database = document.querySelector('[data-tabs="database"]');
 assert.equal(database.querySelectorAll('[role="tab"]').length, 4);

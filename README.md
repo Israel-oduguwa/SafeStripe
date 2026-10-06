@@ -18,7 +18,7 @@ The 0.3 release is in stabilization. New billing features are frozen while crash
 
 SafeStripe is organized around five contracts: stable operation identity, durable admission before acknowledgment, recoverable worker ownership, one committed effect per business key, and atomic state/outbox intent. Each has explicit assumptions and failure boundaries. Read [the contracts and evidence](docs/24-reliability-contracts.md), [architecture decisions](docs/adr/README.md) and [the stabilization plan](docs/25-stabilization.md).
 
-The online sandbox is available for evaluation. The 0.3 preview is not yet an enterprise production recommendation. Hosted Checkout and several billing workflows have been exercised with real Stripe test data; custom Checkout still has an unresolved sandbox failure. The [readiness report](docs/28-release-readiness.md) separates those observations from automated tests and remaining release work.
+The online sandbox is available for evaluation. The 0.3 preview is not yet an enterprise production recommendation. Hosted Checkout and several billing workflows have been exercised with real Stripe test data; the Elements Checkout creation failure has been diagnosed and corrected, while its complete browser journey still needs verification. The [readiness report](docs/28-release-readiness.md) separates those observations from automated tests and remaining release work.
 
 ## Install
 
@@ -118,7 +118,7 @@ Use shared PostgreSQL, MongoDB or Firestore for deployment. Next.js routes on Ve
 
 Your app remains responsible for authentication, tenant/resource authorization, approved prices, entitlement policy, refund approvals, tax/accounting decisions and monitored infrastructure. Outbox delivery is at least once, so recipients must deduplicate. The default API gate is per process, not an account-wide rate limiter.
 
-The [verification record](VERIFICATION.md) lists the checks performed and the remaining service tests. The package has no published throughput benchmark or independent security audit. Read [deployment](docs/14-deployment-and-publishing.md) and [larger-system architecture](docs/19-enterprise.md) when planning your production integration.
+The [verification record](VERIFICATION.md) lists the checks performed and the remaining service tests. [SQLite and PostgreSQL measurements](benchmarks/README.md) retain workload details, failures and raw results; they do not establish enterprise payment capacity. An independent security audit remains open. Read [deployment](docs/14-deployment-and-publishing.md) and [larger-system architecture](docs/19-enterprise.md) when planning your production integration.
 
 ## Try the examples
 

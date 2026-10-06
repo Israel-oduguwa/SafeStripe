@@ -1,28 +1,21 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import Stripe from 'stripe';
 import { API_VERSION, SafeStripe } from '../src/index.js';
 import { sqliteStorage } from '../src/storage/sqlite.js';
+import { sandboxCredentials } from './stripe-e2e-config.js';
+import { diagnostic } from '../src/telemetry.js';
 
 // An opt-in service test. Only a disposable sandbox should grant this runner access.
-if (process.env.STRIPE_E2E_CONFIRM !== 'disposable-sandbox')
-  throw new Error('Set STRIPE_E2E_CONFIRM=disposable-sandbox to permit test-object creation');
-const key = process.env.STRIPE_SECRET_KEY ?? '';
-if (!/^rk_test_/.test(key)) throw new Error('Provide a restricted sandbox key');
-const account = process.env.STRIPE_ACCOUNT_ID ?? '';
-if (!/^acct_[A-Za-z0-9]+$/.test(account)) throw new Error('Set the expected sandbox account ID');
+const { key, account, temporary, expiry } = await sandboxCredentials(process.env);
 const stripe = new Stripe(key, {
   apiVersion: API_VERSION,
   telemetry: false,
   timeout: 15000,
   maxNetworkRetries: 0,
 });
-assert.equal(
-  (await stripe.accounts.retrieve(null)).id,
-  account,
-  'Key belongs to a different account',
-);
 const runId = randomUUID();
 const email = `safestripe-${runId}@example.invalid`;
 const storage = await sqliteStorage({ filename: `./.data/e2e-${runId}.sqlite` });
@@ -54,6 +47,13 @@ const billing = new SafeStripe({
   scope: { platformAccountId: account, livemode: false },
   appOrigin: 'https://example.com',
   authorize: async ({ actor }) => actor.tenantId === runId && actor.actorId === 'sandbox-runner',
+  observer: (event) => {
+    if (event.outcome === 'failed')
+      lastDiagnostic = {
+        code: event.code,
+        stripeType: event.stripeType,
+      };
+  },
 });
 const actor = (operationId: string) => ({
   tenantId: runId,
@@ -62,9 +62,23 @@ const actor = (operationId: string) => ({
 });
 const checks: string[] = [];
 const cleanup: Array<() => Promise<unknown>> = [];
-let stage = 'ambiguous customer write';
+let stage = 'account identity verification';
 let failed = false;
+let fixturesStarted = false;
+let accountIdentityVerified = false;
+let lastDiagnostic: { code?: string; stripeType?: string } | undefined;
 try {
+  // Unclaimed CLI sandboxes cannot read account details; that limitation is recorded.
+  if (!temporary) {
+    assert.equal(
+      (await stripe.accounts.retrieve(null)).id,
+      account,
+      'Key belongs to a different account',
+    );
+    accountIdentityVerified = true;
+  }
+  fixturesStarted = true;
+  stage = 'ambiguous customer write';
   await assert.rejects(billing.createCustomer(actor('customer'), { email }), {
     code: 'UPSTREAM_FAILED',
   });
@@ -80,6 +94,7 @@ try {
   checks.push(
     'Remote customer mutation survived injected response loss with one customer and durable replay',
   );
+  lastDiagnostic = undefined;
 
   stage = 'sandbox catalog';
   const product = await stripe.products.create({ name: `SafeStripe E2E ${runId}` });
@@ -109,6 +124,19 @@ try {
   assert.equal((await billing.createCheckout(actor('checkout'), request)).id, checkout.id);
   assert.equal((await stripe.checkout.sessions.retrieve(checkout.id)).customer, customer.id);
   checks.push('Checkout creation, remote retrieval and replay');
+
+  stage = 'Elements Checkout creation and replay';
+  const customRequest = { ...request, uiMode: 'custom' as const };
+  const custom = await billing.createCheckout(actor('elements-checkout'), customRequest);
+  cleanup.push(() => stripe.checkout.sessions.expire(custom.id));
+  assert.equal(custom.ui_mode, 'elements');
+  assert.equal(custom.livemode, false);
+  assert.ok(custom.client_secret);
+  assert.equal(
+    (await billing.createCheckout(actor('elements-checkout'), customRequest)).id,
+    custom.id,
+  );
+  checks.push('Elements Checkout accepted by Stripe, client secret present and replay stable');
 
   stage = 'refund and replay';
   const payment = await stripe.paymentIntents.create({
@@ -160,12 +188,27 @@ try {
   );
   checks.push('Subscription creation, remote line-item verification and replay');
   stage = 'customer portal (default sandbox configuration required)';
+  if (temporary) {
+    // Only this newly provisioned, disposable sandbox receives a portal fixture.
+    const configurations = await stripe.billingPortal.configurations.list({
+      active: true,
+      is_default: true,
+      limit: 1,
+    });
+    if (!configurations.data.length)
+      await stripe.billingPortal.configurations.create({
+        features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true } },
+        metadata: { safestripe_e2e: runId },
+      });
+  }
   const portal = await billing.createPortalSession(actor('portal'), customer.id);
   assert.equal(portal.customer, customer.id);
   assert.equal(new URL(portal.url).protocol, 'https:');
   checks.push('Portal session for the expected test customer');
-} catch {
+} catch (error) {
   failed = true;
+  const details = diagnostic(error);
+  lastDiagnostic = lastDiagnostic ?? { code: details.code, stripeType: details.stripeType };
   console.error(
     `Stripe E2E failed during: ${stage}. Inspect this dedicated sandbox; credentials and remote payloads are omitted.`,
   );
@@ -179,8 +222,10 @@ try {
     }
   }
   try {
-    const customers = await stripe.customers.list({ email, limit: 100 });
-    for (const customer of customers.data) await stripe.customers.del(customer.id);
+    if (fixturesStarted) {
+      const customers = await stripe.customers.list({ email, limit: 100 });
+      for (const customer of customers.data) await stripe.customers.del(customer.id);
+    }
   } catch {
     failed = true;
     console.error('Sandbox customer cleanup needs manual review.');
@@ -192,15 +237,41 @@ try {
     JSON.stringify(
       {
         at: new Date().toISOString(),
+        sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+        sourceDirty: Boolean(
+          execFileSync(
+            'git',
+            [
+              'status',
+              '--porcelain',
+              '--',
+              'src',
+              'scripts/stripe-e2e.ts',
+              'scripts/stripe-e2e-config.ts',
+              'package-lock.json',
+            ],
+            { encoding: 'utf8' },
+          ).trim(),
+        ),
         sdk: Stripe.PACKAGE_VERSION,
         apiVersion: API_VERSION,
         node: process.version,
         passed: !failed,
+        credentialMode: temporary ? 'unclaimed CLI sandbox' : 'account-verified restricted sandbox',
+        accountIdentityVerified,
+        temporaryExpiry: expiry,
+        failure: failed ? { stage, ...lastDiagnostic } : undefined,
         checks,
         notCovered: [
           'Browser payment fields and 3DS',
           'Actual signed webhook delivery over the public network',
           'Live payments',
+          ...(temporary
+            ? [
+                'Remote account identity read; association comes from the CLI provisioning response',
+                'Portal configuration fixture remains until the temporary sandbox expires',
+              ]
+            : []),
         ],
       },
       null,

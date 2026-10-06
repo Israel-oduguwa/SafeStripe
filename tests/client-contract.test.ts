@@ -138,6 +138,57 @@ test('checkout parameters have fixed origins, approved prices and no client-cont
   assert.match(seen!.integration_identifier!, /_[a-z]{8}$/);
 });
 
+test('actual SDK sends Elements Checkout mode instead of the rejected legacy value', async () => {
+  const modes: string[] = [];
+  const server = createServer(async (req, res) => {
+    const buffers: Buffer[] = [];
+    for await (const chunk of req) buffers.push(Buffer.from(chunk));
+    const body = new URLSearchParams(Buffer.concat(buffers).toString());
+    modes.push(body.get('ui_mode') ?? '');
+    const accepted = body.get('ui_mode') === 'elements';
+    res.writeHead(accepted ? 200 : 400, { 'content-type': 'application/json' });
+    res.end(
+      JSON.stringify(
+        accepted
+          ? { id: 'cs_fixture', client_secret: 'fixture' }
+          : { error: { type: 'invalid_request_error', param: 'ui_mode', message: 'Use elements' } },
+      ),
+    );
+  }).listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    const stripe = new Stripe('sk_test_' + 'offlineFixture', {
+      apiVersion: API_VERSION,
+      host: '127.0.0.1',
+      port: address.port,
+      protocol: 'http',
+      maxNetworkRetries: 0,
+    });
+    const safe = new SafeStripe({
+      stripe,
+      scope,
+      operations: new PostgresOperations(harness.db),
+      appOrigin: 'https://shop.example',
+      authorize: async () => true,
+    });
+    const result = await safe.createCheckout(actor, {
+      customerId: 'cus_fixture',
+      mode: 'payment',
+      uiMode: 'custom',
+      reference: 'order-fixture',
+      items: [{ priceId: 'price_fixture' }],
+    });
+    assert.deepEqual(modes, ['elements']);
+    assert.equal(result.client_secret, 'fixture');
+  } finally {
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+  }
+});
+
 test('proration preview and update share item, quantity and timestamp', async () => {
   let preview: Stripe.InvoiceCreatePreviewParams | undefined,
     update: Stripe.SubscriptionUpdateParams | undefined;
