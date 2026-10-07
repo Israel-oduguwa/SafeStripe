@@ -107,18 +107,28 @@ for (const group of tabGroups) {
     });
   }
 }
+const copyTimers = new WeakMap();
 for (const button of document.querySelectorAll('.copy-code'))
   button.addEventListener('click', async () => {
+    if (button.disabled) return;
+    if (copyTimers.has(button)) clearTimeout(copyTimers.get(button));
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = 'Copying…';
     const block = button.closest('.code-block');
     const status = block.querySelector('.copy-status');
     try {
       await navigator.clipboard.writeText(block.querySelector('code').textContent);
       button.textContent = 'Copied';
       status.textContent = 'Code copied to clipboard';
-      setTimeout(() => {
-        button.textContent = 'Copy';
-        status.textContent = '';
-      }, 2000);
+      copyTimers.set(
+        button,
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          status.textContent = '';
+          copyTimers.delete(button);
+        }, 2000),
+      );
     } catch {
       const selection = window.getSelection();
       const range = document.createRange();
@@ -126,5 +136,9 @@ for (const button of document.querySelectorAll('.copy-code'))
       selection.removeAllRanges();
       selection.addRange(range);
       status.textContent = 'Code selected. Press Command+C or Control+C to copy.';
+      button.textContent = 'Copy';
+    } finally {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
     }
   });

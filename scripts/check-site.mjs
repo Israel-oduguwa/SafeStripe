@@ -169,6 +169,35 @@ for (const path of ['index.html', 'get-started/index.html']) {
 bench.document.querySelector('[data-copy="postgres-command"]').click();
 await new Promise((resolve) => setImmediate(resolve));
 assert.ok(copied.includes('BENCH_WORKERS=8 npm run benchmark'));
+const pendingCopy = parseHTML(await readFile(new URL('index.html', base), 'utf8'));
+let finishCopy;
+let copyCalls = 0;
+runInNewContext(client, {
+  document: pendingCopy.document,
+  navigator: {
+    clipboard: {
+      writeText: () => {
+        copyCalls++;
+        return new Promise((resolve) => {
+          finishCopy = resolve;
+        });
+      },
+    },
+  },
+});
+const pendingButton = pendingCopy.document.getElementById('copy-install');
+if (release.npmPublished) {
+  pendingButton.click();
+  pendingButton.click();
+  assert.equal(copyCalls, 1);
+  assert.equal(pendingButton.getAttribute('aria-busy'), 'true');
+  assert.equal(pendingButton.disabled, true);
+  finishCopy();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(pendingButton.hasAttribute('aria-busy'), false);
+  assert.equal(pendingButton.disabled, false);
+  assert.equal(pendingButton.textContent.trim(), 'Copy');
+}
 const fallback = parseHTML(await readFile(new URL('index.html', base), 'utf8'));
 runInNewContext(client, {
   document: fallback.document,

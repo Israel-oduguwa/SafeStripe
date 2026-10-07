@@ -39,6 +39,7 @@ const context = {
     setItem: (key, value) => preferences.set(key, value),
   },
   setTimeout: () => 0,
+  clearTimeout: () => {},
 };
 const scripts = document.querySelectorAll('script');
 assert.equal(scripts.length, 1);

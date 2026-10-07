@@ -29,6 +29,10 @@ for (const group of document.querySelectorAll('[data-tabs]')) {
 for (const button of document.querySelectorAll('[data-copy]')) {
   button.addEventListener('click', async () => {
     if (button.disabled) return;
+    const label = button.textContent;
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = 'Copying…';
     const value = document.getElementById(button.dataset.copy).textContent;
     const status =
       button.closest('.code-card')?.querySelector('[role="status"]') ||
@@ -38,6 +42,10 @@ for (const button of document.querySelectorAll('[data-copy]')) {
       if (status) status.textContent = 'Copied to clipboard.';
     } catch {
       if (status) status.textContent = 'Select the command above to copy it.';
+    } finally {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.textContent = label;
     }
   });
 }

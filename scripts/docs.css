@@ -665,3 +665,26 @@ article img {
   width: 100%;
   height: auto;
 }
+/* Clipboard requests keep their controls and expose an explicit pending state. */
+.copy-code[aria-busy='true']::before {
+  content: '';
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: copy-turn 800ms linear infinite;
+}
+@keyframes copy-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .copy-code[aria-busy='true']::before {
+    animation: none;
+  }
+}

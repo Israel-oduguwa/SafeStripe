@@ -1500,6 +1500,28 @@ tbody tr:hover {
     scroll-behavior: auto;
   }
 }
+button[aria-busy='true']::before {
+  content: '';
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 7px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: copy-turn 800ms linear infinite;
+}
+@keyframes copy-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button[aria-busy='true']::before {
+    animation: none;
+  }
+}
 @media print {
   .site-header,
   .menu-toggle,
