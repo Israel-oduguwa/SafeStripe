@@ -272,8 +272,8 @@ async function card(page: Page, number: string) {
   await input(page, /billing.?name|cardholder|name.?on.?card/i, 'SafeStripe test', false);
   await input(page, /postal|zip/i, '94111', false);
   const buttons = page
-    .getByRole('button', { name: /^(?:Pay|Subscribe)(?:\b|Processing$)/i })
-    .filter({ hasNotText: 'Link' });
+    .getByRole('button')
+    .filter({ hasText: /^(?:Pay|Subscribe)(?:Processing)?$/i });
   checkpoint('submitting the hosted test payment');
   await buttons.first().click();
 }
@@ -304,18 +304,24 @@ async function receipt(session: DemoSession, id: string, sessionId: string) {
   return row.receipt;
 }
 
-async function intent(session: DemoSession, token: string) {
-  const result = await session.request<{ result: { id: string } }>('/api/runs', 'POST', {
-    id: `run-${randomUUID()}`,
-    workflow: 'intent',
-    values: {},
-  });
-  const id = result.result.id;
+async function bankIntent(customerId: string, token: string) {
+  // The public wrapper command creates an unconfirmed intent with dynamic methods.
+  // Create a dedicated SDK fixture to test the published webhook layer's ACH states.
+  const created = await stripe.paymentIntents.create(
+    {
+      customer: customerId,
+      amount: 500,
+      currency: 'usd',
+      payment_method_types: ['us_bank_account'],
+      metadata,
+    },
+    { idempotencyKey: `lifecycle:${runId}:bank:${randomUUID()}` },
+  );
+  const id = created.id;
   assert.match(id, /^pi_[A-Za-z0-9]+$/);
   payments.add(id);
+  assert.deepEqual(created.payment_method_types, ['us_bank_account']);
   let payment = await stripe.paymentIntents.confirm(id, {
-    // Configure only this disposable fixture; merchant-wide payment settings stay unchanged.
-    allowed_payment_method_types: ['us_bank_account'],
     payment_method: token,
     return_url: `${DEMO_ORIGIN}/success`,
     mandate_data: {
@@ -325,8 +331,15 @@ async function intent(session: DemoSession, token: string) {
       },
     },
   });
-  if (payment.next_action?.type === 'verify_with_microdeposits')
-    payment = await stripe.paymentIntents.verifyMicrodeposits(id, { amounts: [32, 45] });
+  if (payment.next_action?.type === 'verify_with_microdeposits') {
+    const verification = payment.next_action.verify_with_microdeposits;
+    payment = await stripe.paymentIntents.verifyMicrodeposits(
+      id,
+      verification?.microdeposit_type === 'descriptor_code'
+        ? { descriptor_code: 'SM11AA' }
+        : { amounts: [32, 45] },
+    );
+  }
   assert.equal(payment.status, 'processing');
   return payment;
 }
@@ -342,8 +355,9 @@ async function advance(id: string, time: number) {
 async function recordFailure(error: unknown, captureBrowser = false) {
   const details = diagnostic(error);
   const reason =
-    error instanceof Stripe.errors.StripeError
+    error instanceof Error
       ? error.message
+          .split('\n')[0]!
           .replace(/https?:[^\s"'<>]+/g, '[URL]')
           .replace(/\b(?:sk|rk|pk|whsec)_[A-Za-z0-9_]+\b/g, '[credential]')
           .replace(
@@ -406,7 +420,14 @@ async function recordFailure(error: unknown, captureBrowser = false) {
     }
     const buttons = await page
       .getByRole('button')
-      .allTextContents()
+      .evaluateAll((elements) =>
+        elements.map((element) => ({
+          text: element.textContent,
+          ariaLabel: element.getAttribute('aria-label'),
+          type: element.getAttribute('type'),
+          disabled: (element as HTMLButtonElement).disabled,
+        })),
+      )
       .catch(() => []);
     await writeFile(
       'artifacts/lifecycle-browser/fields.json',
@@ -601,7 +622,7 @@ try {
 
   await journey(async () => {
     checkpoint('ACH processing without premature payment');
-    const pendingBank = await intent(primary.session, 'pm_usBankAccount_processing');
+    const pendingBank = await bankIntent(customer.id, 'pm_usBankAccount_processing');
     await recorded(
       primary.session,
       await remoteEvent('payment_intent.processing', pendingBank.id),
@@ -620,7 +641,7 @@ try {
   });
   await journey(async () => {
     checkpoint('ACH delayed success');
-    const bank = await intent(primary.session, 'pm_usBankAccount_success');
+    const bank = await bankIntent(customer.id, 'pm_usBankAccount_success');
     await eventually(
       () => stripe.paymentIntents.retrieve(bank.id),
       (payment) => payment.status === 'succeeded',
@@ -637,7 +658,7 @@ try {
   });
   await journey(async () => {
     checkpoint('ACH delayed failure');
-    const failedBank = await intent(primary.session, 'pm_usBankAccount_insufficientFunds');
+    const failedBank = await bankIntent(customer.id, 'pm_usBankAccount_insufficientFunds');
     await eventually(
       () => stripe.paymentIntents.retrieve(failedBank.id),
       (payment) => payment.status === 'requires_payment_method',
