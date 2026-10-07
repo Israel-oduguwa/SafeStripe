@@ -304,23 +304,23 @@ async function receipt(session: DemoSession, id: string, sessionId: string) {
   return row.receipt;
 }
 
-async function intent(session: DemoSession, token: string) {
-  const result = await session.request<{ result: { id: string } }>('/api/runs', 'POST', {
-    id: `run-${randomUUID()}`,
-    workflow: 'intent',
-    values: {},
-  });
-  const id = result.result.id;
+async function bankIntent(customerId: string, token: string) {
+  // The public wrapper command creates an unconfirmed intent with dynamic methods.
+  // Create a dedicated SDK fixture to test the published webhook layer's ACH states.
+  const created = await stripe.paymentIntents.create(
+    {
+      customer: customerId,
+      amount: 500,
+      currency: 'usd',
+      payment_method_types: ['us_bank_account'],
+      metadata,
+    },
+    { idempotencyKey: `lifecycle:${runId}:bank:${randomUUID()}` },
+  );
+  const id = created.id;
   assert.match(id, /^pi_[A-Za-z0-9]+$/);
   payments.add(id);
-  // This fixture tests ACH outcomes independently of the account's dynamic method selection.
-  // Leave amount, currency, customer and merchant-wide payment settings unchanged.
-  const configured = await stripe.paymentIntents.update(
-    id,
-    { automatic_payment_methods: { enabled: false }, payment_method_types: ['us_bank_account'] },
-    { idempotencyKey: `lifecycle:${runId}:ach-configure:${id}` },
-  );
-  assert.deepEqual(configured.payment_method_types, ['us_bank_account']);
+  assert.deepEqual(created.payment_method_types, ['us_bank_account']);
   let payment = await stripe.paymentIntents.confirm(id, {
     payment_method: token,
     return_url: `${DEMO_ORIGIN}/success`,
@@ -615,7 +615,7 @@ try {
 
   await journey(async () => {
     checkpoint('ACH processing without premature payment');
-    const pendingBank = await intent(primary.session, 'pm_usBankAccount_processing');
+    const pendingBank = await bankIntent(customer.id, 'pm_usBankAccount_processing');
     await recorded(
       primary.session,
       await remoteEvent('payment_intent.processing', pendingBank.id),
@@ -634,7 +634,7 @@ try {
   });
   await journey(async () => {
     checkpoint('ACH delayed success');
-    const bank = await intent(primary.session, 'pm_usBankAccount_success');
+    const bank = await bankIntent(customer.id, 'pm_usBankAccount_success');
     await eventually(
       () => stripe.paymentIntents.retrieve(bank.id),
       (payment) => payment.status === 'succeeded',
@@ -651,7 +651,7 @@ try {
   });
   await journey(async () => {
     checkpoint('ACH delayed failure');
-    const failedBank = await intent(primary.session, 'pm_usBankAccount_insufficientFunds');
+    const failedBank = await bankIntent(customer.id, 'pm_usBankAccount_insufficientFunds');
     await eventually(
       () => stripe.paymentIntents.retrieve(failedBank.id),
       (payment) => payment.status === 'requires_payment_method',
