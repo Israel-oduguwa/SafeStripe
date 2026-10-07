@@ -49,6 +49,8 @@ An event describes the object when that event was created. A failed invoice snap
 
 The original snapshot status remains in the minimal event record for diagnosis. The saved current status drives the aggregate record. Your application still supplies its own entitlement policy: an active subscription does not automatically authorize every product or user.
 
+For the ordered invoice check, the runner temporarily enables only `invoice.paid` on its own fixture endpoint. It waits for that durable paid record and verifies that the older failure has not been admitted. It then restores the fixture's event list, requests the older signed failure and requires its saved timestamp to be later than the paid record. The report keeps those timestamps without event or invoice identifiers. Resend request order alone is insufficient evidence of receiver order.
+
 Signed admission counts are demo diagnostics. They add a transaction after the inbox write and before acknowledgment. If that diagnostic fails, Stripe gets an error and can retry; the inbox job is already durable. Business effects and receipts use their own keys and transaction boundaries. An increased delivery count does not represent another payment or fulfillment.
 
 ## Coverage boundaries
