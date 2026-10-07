@@ -331,8 +331,15 @@ async function bankIntent(customerId: string, token: string) {
       },
     },
   });
-  if (payment.next_action?.type === 'verify_with_microdeposits')
-    payment = await stripe.paymentIntents.verifyMicrodeposits(id, { amounts: [32, 45] });
+  if (payment.next_action?.type === 'verify_with_microdeposits') {
+    const verification = payment.next_action.verify_with_microdeposits;
+    payment = await stripe.paymentIntents.verifyMicrodeposits(
+      id,
+      verification?.microdeposit_type === 'descriptor_code'
+        ? { descriptor_code: 'SM11AA' }
+        : { amounts: [32, 45] },
+    );
+  }
   assert.equal(payment.status, 'processing');
   return payment;
 }
