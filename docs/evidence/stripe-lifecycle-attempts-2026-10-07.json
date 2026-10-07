@@ -487,6 +487,117 @@
         "Every payment method and account eligibility combination",
         "Company-specific authorization and entitlement policies"
       ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941",
+      "at": "2026-10-07T09:32:32.137Z",
+      "passed": true,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "a79d70bd612a6012e32c9216f1bb00b8cff1a105",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failures": [],
+      "replayObservation": {
+        "baseline": {
+          "admitted": 1,
+          "duplicates": 0
+        },
+        "latest": {
+          "admitted": 11,
+          "duplicates": 10
+        },
+        "requested": 10,
+        "responses": [
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          },
+          {
+            "eventIdentityVerified": true,
+            "livemode": false,
+            "pendingWebhooks": 5
+          }
+        ]
+      },
+      "invoiceOrderObservation": {
+        "failedEventAbsentBeforeReplay": true,
+        "paidRecordedAt": "2026-10-07T09:32:13.863Z",
+        "failureRecordedAt": "2026-10-07T09:32:18.782Z"
+      },
+      "checks": [
+        "Hosted browser payment produced an authenticated Firestore receipt for the expected order, Session and 500 USD cents",
+        "A real card decline left the order unpaid; retrying the same Session produced its signed receipt",
+        "A real partial refund reached its signed Firestore state; replaying the same business operation returned the same refund",
+        "Two deliberate partial refunds closed the 500-cent charge; replay added no third refund and preserved the historical sale receipt",
+        "Ten additional authenticated duplicate admissions were recorded after Stripe CLI replays; the original receipt and paid time were unchanged",
+        "An indefinitely processing ACH fixture had no received amount and its cancellation reached Firestore",
+        "ACH remained unpaid while processing and reached a signed, durable paid state only after Stripe success",
+        "ACH delayed failure produced a signed failure record with no received amount",
+        "Initial subscription invoice payment reached the authenticated Firestore billing record",
+        "A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record",
+        "The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state",
+        "Subscription cancellation reached the signed, durable canceled state"
+      ],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
     }
   ]
 }

@@ -714,6 +714,10 @@ article img {
 <td><a href="#18-recipes">Recipes</a></td>
 </tr>
 <tr>
+<td>Review real payment, refund and renewal test coverage</td>
+<td><a href="#30-payment-lifecycle">Payment lifecycle verification</a></td>
+</tr>
+<tr>
 <td>Design a larger production system</td>
 <td><a href="#19-enterprise">Enterprise architecture</a></td>
 </tr>
@@ -732,7 +736,7 @@ article img {
 <p>The package is ESM and server-side code requires Node.js 22.19 or later. Only <code>safestripe/react</code> belongs in a client component. The SQLite adapter uses Node&#39;s built-in SQLite API, which emits an experimental warning on Node 22.</p>
 <div class="page-end">SafeStripe 0.3.0 · Stripe API 2026-08-26.dahlia</div></article>
 <article id="28-release-readiness" data-title="Release readiness"><p class="release-notice"><strong>Evaluation preview.</strong> SafeStripe 0.3.0 is for sandbox evaluation. Read the release readiness guide before planning a production integration.</p><div class="eyebrow">Start here</div><h1 id="28-release-readiness--release-readiness">Release readiness</h1>
-<p>Reviewed 6 October 2026. SafeStripe 0.3.0 is published on npm as an evaluation preview. The public sandbox is available for evaluation. There is enough working software to run a pilot, but the evidence does not support recommending this release for unattended production payments at a large company.</p>
+<p>Reviewed 7 October 2026. SafeStripe 0.3.0 is published on npm as an evaluation preview. The public sandbox is available for evaluation. There is enough working software to run a pilot, but the evidence does not support recommending this release for unattended production payments at a large company.</p>
 <h2 id="28-release-readiness--what-the-project-does">What the project does</h2>
 <p>Stripe processes payments and manages billing. Your application still needs to decide who can buy, what they owe, when to grant access, and how to recover after a server or database failure.</p>
 <p>SafeStripe stores the history of that work in your database. It wraps selected Stripe commands, receives verified webhooks, and gives workers a recoverable queue. Within a transaction, your handler can update application state, record that a business effect happened, and schedule a downstream notification together.</p>
@@ -795,60 +799,55 @@ article img {
 <tbody><tr>
 <td>Public demo</td>
 <td>Vercel frontend, Render Express backend and Firestore workspaces are deployed</td>
-<td>A temporary test service, not a production payment endpoint or availability commitment</td>
+<td>Temporary evaluation service; no production availability commitment</td>
 </tr>
 <tr>
-<td>Real Stripe walkthrough</td>
-<td>Hosted one-time and recurring Checkout produced signed webhook receipts; refund replay, portal, paid plan change and several billing records were exercised</td>
-<td>One sandbox and selected paths; not complete lifecycle or payment-method coverage</td>
+<td>Browser payment form</td>
+<td>Hosted and embedded Checkout completed fake-card payments with signed Firestore receipts. The embedded form recovered from an initial loading failure; decline/retry, one 3DS challenge and reload restoration passed</td>
+<td><a href="evidence/stripe-public-elements-2026-10-06.json">Dated browser observations</a> cover selected cards and deployments</td>
 </tr>
 <tr>
-<td>Custom Checkout</td>
-<td>A fresh Stripe sandbox reproduced the rejection of <code>ui_mode: custom</code>; sending <code>elements</code> creates a usable Session</td>
-<td>A public $5 test payment completed after reopening the same Session; the signed webhook stored the paid order and Firestore receipt. Insufficient funds left another order unpaid; retrying it with a 3DS test card completed the challenge and a signed receipt. The corrected readiness/recovery component completed another public payment and signed receipt after deployment at 15:02 UTC; delayed methods remain separate checks.</td>
+<td>Published-package lifecycle</td>
+<td><a href="#30-payment-lifecycle">All twelve selected journeys passed</a> at 09:32 UTC on 7 October: cards, refund replay, ten signed duplicates, delayed ACH outcomes and subscription renewal/recovery/cancellation. Account verification and cleanup passed</td>
+<td>Actual npm 0.3.0 consumer on backend <code>8b01d90</code>; bank creation/confirmation used SDK fixtures. Live payments, capture, disputes and every method are outside this run</td>
 </tr>
 <tr>
-<td>Dedicated sandbox suite</td>
-<td>Protected CI verified the account and passed all six service checks on clean revision <code>5f06e28</code>, using an explicitly selected test secret key</td>
-<td><a href="evidence/stripe-protected-secret-2026-10-06.json">The passing report</a> covers customer response loss, Checkout, refund, subscription and portal API behavior. Browser payments and public webhook delivery remain separate evidence; repeat the protected checks on the exact eventual tag commit</td>
+<td>Dedicated service suite</td>
+<td>Protected CI passed six account-verified API checks on clean revision <code>5f06e28</code></td>
+<td><a href="evidence/stripe-protected-secret-2026-10-06.json">The report</a> covers customer response loss, Checkout, refund, subscription and portal. Repeat on the exact eventual release tag</td>
 </tr>
 <tr>
-<td>Failure tests</td>
-<td>Local processes are killed with SIGKILL; tests check effect/outbox counts, lease recovery and graceful shutdown</td>
-<td>Local SQLite results and PostgreSQL CI results are separate evidence</td>
-</tr>
-<tr>
-<td>CI recovery</td>
-<td>The twenty-process harness failure from main was corrected. Revision <code>a59ea98</code> passed <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37439904112">Node 22/24 and adapter checks</a> and <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37439904122">security checks</a></td>
-<td>Still require green checks on the eventual release commit; passing CI is not enterprise capacity evidence</td>
+<td>Failure tests and CI</td>
+<td>Actual child workers are killed with SIGKILL. Node 22/24, PostgreSQL recovery and MongoDB/Firestore conformance passed for <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600353033">the strengthened lifecycle runner</a></td>
+<td>Tested invariants under stated conditions; not a hosted failover or enterprise capacity certification</td>
 </tr>
 <tr>
 <td>Storage adapters</td>
-<td>PostgreSQL, MongoDB replica sets and Firestore have transaction-facing adapters and CI conformance tests</td>
+<td>PostgreSQL, MongoDB replica sets and Firestore have transaction-facing adapters and CI conformance checks; the public lifecycle used actual Cloud Firestore</td>
 <td>Validate production IAM, indexes, connection budgets and backup recovery in your deployment</td>
 </tr>
 <tr>
 <td>Benchmarks</td>
-<td>SQLite baseline and nine measured PostgreSQL repetitions retained zero duplicate effects; four- and eight-lane warm-ups recovered transaction failures. <a href="../benchmarks/README.md">Read the report</a></td>
-<td>Store measurements on stated machines; no HTTP, payment, multi-host or enterprise capacity claim follows</td>
+<td>SQLite baseline and nine measured PostgreSQL repetitions retained zero duplicate effects. Failed four/eight-lane warm-ups and recovery are retained in <a href="../benchmarks/README.md">the report</a></td>
+<td>Store measurements on stated machines; no HTTP, payment or multi-host capacity claim</td>
 </tr>
 <tr>
 <td>npm</td>
-<td>Unscoped <code>safestripe@0.3.0</code> is public. A normal clean installation matched the reviewed archive and passed core, SQLite, framework exports, strict types and optional-peer imports</td>
-<td>First publication has no CI provenance or verified signed release tag. Import checks do not establish connectivity or application capacity</td>
+<td>Public <code>safestripe@0.3.0</code> passed a normal clean install, integrity, exports, types and selected optional-peer imports</td>
+<td>No CI provenance or verified signed release tag on this first publication. Import checks do not prove connectivity or capacity</td>
 </tr>
 <tr>
-<td>GitHub and docs</td>
-<td>Source, license, architecture, ADRs, guides, security policy and automated workflows exist</td>
-<td>Repository documentation and automated scans are not independent review</td>
+<td>Source and documentation</td>
+<td>License notices, architecture, ADRs, guides, runbooks, security policy and automated workflows are available</td>
+<td>Documentation and automated scans are not independent review</td>
 </tr>
 </tbody></table></div>
-<p>The <a href="../VERIFICATION.md">verification record</a> retains dated results. The separate <a href="https://github.com/Israel-oduguwa/Safestripe-test-demo-website">sandbox repository</a> records its browser walkthrough and deployment checks. Some billing objects were created successfully without completing their payment, renewal or tax lifecycle. Those are partial checks, not passing end-to-end scenarios.</p>
+<p>The <a href="../VERIFICATION.md">verification record</a> retains dated results. The separate <a href="https://github.com/Israel-oduguwa/Safestripe-test-demo-website">sandbox repository</a> records its browser walkthrough and deployment checks. The newer lifecycle suite is separate from the first walkthrough. Catalog, tax, Connect and other workflows marked API-only or unconfigured in that walkthrough have not become passing lifecycle tests.</p>
 <h2 id="28-release-readiness--required-before-recommending-a-production-release">Required before recommending a production release</h2>
 <ol>
-<li><strong>Verify payment methods and loading recovery.</strong> The public Elements form completed a $5 test payment and signed Firestore receipt at 14:42 UTC on 6 October. Its initial loading stalled and reopening the same Session recovered it. The deployed recovery fix completed another signed receipt, and saved connection restoration passed on reload. One decline and one 3DS challenge also passed. Keep the <a href="evidence/stripe-public-elements-2026-10-06.json">sanitized observation</a> and test the remaining methods and failure paths required by your application.</li>
+<li><strong>Verify the application&#39;s required payment journeys.</strong> The <a href="#30-payment-lifecycle">public lifecycle suite</a> passed twelve selected journeys against the published package. The <a href="evidence/stripe-public-elements-2026-10-06.json">embedded form observation</a> separately covers loading recovery, one decline, one 3DS challenge and signed receipts. These do not cover every country, payment method, capture policy or dispute outcome. Add the scenarios the adopting application actually needs.</li>
 <li><strong>Pass CI on the release commit.</strong> Keep the actual PostgreSQL process tests and MongoDB/Firestore conformance enabled. Investigate flaky failures; do not mark skipped provider tests as passes.</li>
-<li><strong>Keep account-verified Stripe release checks current.</strong> The <a href="evidence/stripe-protected-secret-2026-10-06.json">protected suite</a> passed all six service checks after explicitly selecting a sandbox test secret key. The earlier restricted-key permission failure remains in the history. Repeat the <a href="#27-release-evidence">protected workflow</a> on the exact eventual tag commit. Complete asynchronous payment, failed renewal, retry and out-of-order cases relevant to the product being launched; service API checks do not establish those lifecycles.</li>
+<li><strong>Keep account-verified Stripe release checks current.</strong> The protected <a href="evidence/stripe-protected-secret-2026-10-06.json">six-service suite</a> and <a href="evidence/stripe-lifecycle-2026-10-07.json">twelve-journey deployed-consumer suite</a> passed on their recorded revisions. Eight lifecycle development failures and the earlier restricted-key permission failure remain visible. Repeat the relevant protected workflows on the exact eventual tag and reviewed deployment. A passing earlier runner does not verify a later package build.</li>
 <li><strong>Complete the release supply chain.</strong> The npm naming transition and <a href="evidence/npm-registry-2026-10-06.json">clean registry check</a> are complete. The demo now pins the exact npm release; <a href="https://github.com/Israel-oduguwa/Safestripe-test-demo-website/pull/31">its transition</a> passed Node 22/24, the pruned production build and Firestore emulator checks before merging. Configure the trusted publisher and use the <a href="#27-release-evidence">release workflow</a> for a subsequent unpublished version with a verified signed tag, provenance, SBOM and checksums. npm versions are immutable; 0.3.0 cannot be republished to add provenance.</li>
 <li><strong>Review the security boundaries independently.</strong> Focus on authorization, tenant isolation, credential handling, replay permissions, ownership and restore behavior. Turn findings into reproducible issues and fixes.</li>
 <li><strong>Validate the intended production infrastructure.</strong> Measure database contention and queue recovery with representative workloads. Test migrations, rolling deployments, Stripe rate limits, retries and database outages. Exercise backup restoration before financial writes resume. Alert on queue age, dead jobs, review-state operations and outbox failures.</li>
@@ -870,7 +869,7 @@ article img {
 <h2 id="24-reliability-contracts--1-one-operation-keeps-its-identity">1. One operation keeps its identity</h2>
 <p><strong>Problem:</strong> a server times out after Stripe accepts a request. A new request identity could create a second charge or refund.</p>
 <p><strong>Mechanism:</strong> the caller supplies a stable business operation ID. SafeStripe binds its scope, kind and parameter fingerprint in durable storage, derives a stable Stripe key, and retrieves the recorded resource on completed retries. Changed terms conflict. Unresolved older operations enter review instead of being retried indefinitely.</p>
-<p><strong>Evidence:</strong> <code>tests/operations.test.ts</code>, <code>tests/storage.test.ts</code> and <code>tests/scenarios.test.ts</code> exercise competing claims, parameter conflicts, successful replay and the recovery cutoff. The mocked SDK fixture does not establish real remote outcomes. Dedicated sandbox evidence remains tracked in <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/3">issue 3</a>.</p>
+<p><strong>Evidence:</strong> <code>tests/operations.test.ts</code>, <code>tests/storage.test.ts</code> and <code>tests/scenarios.test.ts</code> exercise competing claims, parameter conflicts, successful replay and the recovery cutoff. The mocked SDK fixture does not establish real remote outcomes. The <a href="evidence/stripe-protected-secret-2026-10-06.json">protected service report</a> separately verifies one remote customer after response loss and replay. The <a href="#30-payment-lifecycle">public lifecycle suite</a> checks refund replay through the deployed npm consumer. Dedicated sandbox work is tracked in <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/3">issue 3</a>.</p>
 <p><strong>Boundary:</strong> Stripe&#39;s key retention is finite. Retain local operation history, keep the same ID on retries, and review ambiguous outcomes before the configured cutoff. A restored database can be missing writes Stripe already accepted. Reconcile before reopening payment writes.</p>
 <h2 id="24-reliability-contracts--2-admission-precedes-acknowledgment">2. Admission precedes acknowledgment</h2>
 <p><strong>Problem:</strong> acknowledging a webhook before storing it lets a process crash erase the work.</p>
@@ -3397,7 +3396,10 @@ article img {
 <p>This is selected lifecycle coverage, not a claim that every Stripe capability or payment method has been tested. Manual capture and partial capture, disputes, reversal policies, failed refunds, subscription schedules, pause/resume, tax decisions, Connect money movement and country-specific methods need their own application scenarios. The package does not currently expose a dedicated capture or dispute-management command. Do not replace those gaps with synthetic events and describe them as real end-to-end tests.</p>
 <p>Production review also needs the application&#39;s authorization and fulfillment rules, its database restore procedures, actual infrastructure limits and independent security review. The public Render service is an evaluation environment; these checks are not a capacity or uptime commitment. See the <a href="#28-release-readiness">release assessment</a>.</p>
 <h2 id="30-payment-lifecycle--recorded-results">Recorded results</h2>
-<p>The public workflow has been added. A passing report will be linked here only after all real checkpoints and cleanup have succeeded.</p>
+<p>On 7 October 2026 at 09:32 UTC, <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941">the protected workflow</a> passed all twelve journeys, remote account verification and fixture cleanup. The <a href="evidence/stripe-lifecycle-2026-10-07.json">original sanitized report</a> identifies clean runner revision <code>a79d70b</code>, deployed demo revision <code>8b01d90</code>, published <code>safestripe@0.3.0</code>, Stripe SDK 22.6.2, API <code>2026-08-26.dahlia</code> and Node 22.23.3.</p>
+<p>The card event&#39;s admission count rose from one to eleven, with ten duplicates. Its receipt and original paid time stayed unchanged. A declined card recovered in the same Session. Two 250-cent refunds closed the original 500-cent charge; replay returned the first refund and Stripe retained only two refunds. All three delayed ACH outcomes and all four subscription checks passed.</p>
+<p>The failed renewal event had not been admitted when the recovered invoice was already saved as paid. The paid record was written at <code>09:32:13.863Z</code>; the older failure was recorded at <code>09:32:18.782Z</code> with its original <code>open</code> snapshot, while the current invoice remained paid with 1,000 cents received. These are server observation times, not customer-facing payment timestamps.</p>
+<p>An <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37599538772">earlier full run</a> passed at 09:21 UTC before the independent admission/timestamp assertion was added. The <a href="evidence/stripe-lifecycle-attempts-2026-10-07.json">attempt history</a> retains both passing reports and eight failed runs. Hosted form selectors, dynamic bank-method configuration and unobserved duplicate deliveries failed during runner development; they were corrected and rerun. Failed attempts are not counted as passing coverage. Every retained attempt completed its fixture cleanup.</p>
 <div class="page-end">SafeStripe 0.3.0 · Stripe API 2026-08-26.dahlia</div></article>
 <article id="29-external-review" data-title="Review an integration before adopting it"><p class="release-notice"><strong>Evaluation preview.</strong> SafeStripe 0.3.0 is for sandbox evaluation. Read the release readiness guide before planning a production integration.</p><div class="eyebrow">Operate and review</div><h1 id="29-external-review--review-an-integration-before-adopting-it">Review an integration before adopting it</h1>
 <p>Independent review is still open. The following exercises give an outside developer something concrete to test and a useful way to report findings. A maintainer running these exercises is a self-review, not an independent audit.</p>

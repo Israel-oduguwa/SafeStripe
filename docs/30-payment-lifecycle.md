@@ -61,4 +61,10 @@ Production review also needs the application's authorization and fulfillment rul
 
 ## Recorded results
 
-The public workflow has been added. A passing report will be linked here only after all real checkpoints and cleanup have succeeded.
+On 7 October 2026 at 09:32 UTC, [the protected workflow](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941) passed all twelve journeys, remote account verification and fixture cleanup. The [original sanitized report](evidence/stripe-lifecycle-2026-10-07.json) identifies clean runner revision `a79d70b`, deployed demo revision `8b01d90`, published `safestripe@0.3.0`, Stripe SDK 22.6.2, API `2026-08-26.dahlia` and Node 22.23.3.
+
+The card event's admission count rose from one to eleven, with ten duplicates. Its receipt and original paid time stayed unchanged. A declined card recovered in the same Session. Two 250-cent refunds closed the original 500-cent charge; replay returned the first refund and Stripe retained only two refunds. All three delayed ACH outcomes and all four subscription checks passed.
+
+The failed renewal event had not been admitted when the recovered invoice was already saved as paid. The paid record was written at `09:32:13.863Z`; the older failure was recorded at `09:32:18.782Z` with its original `open` snapshot, while the current invoice remained paid with 1,000 cents received. These are server observation times, not customer-facing payment timestamps.
+
+An [earlier full run](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37599538772) passed at 09:21 UTC before the independent admission/timestamp assertion was added. The [attempt history](evidence/stripe-lifecycle-attempts-2026-10-07.json) retains both passing reports and eight failed runs. Hosted form selectors, dynamic bank-method configuration and unobserved duplicate deliveries failed during runner development; they were corrected and rerun. Failed attempts are not counted as passing coverage. Every retained attempt completed its fixture cleanup.
