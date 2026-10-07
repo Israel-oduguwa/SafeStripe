@@ -12,7 +12,7 @@ These contracts apply to supported SafeStripe methods and transactions. Calls ma
 
 **Mechanism:** the caller supplies a stable business operation ID. SafeStripe binds its scope, kind and parameter fingerprint in durable storage, derives a stable Stripe key, and retrieves the recorded resource on completed retries. Changed terms conflict. Unresolved older operations enter review instead of being retried indefinitely.
 
-**Evidence:** `tests/operations.test.ts`, `tests/storage.test.ts` and `tests/scenarios.test.ts` exercise competing claims, parameter conflicts, successful replay and the recovery cutoff. The mocked SDK fixture does not establish real remote outcomes. Dedicated sandbox evidence remains tracked in [issue 3](https://github.com/Israel-oduguwa/SafeStripe/issues/3).
+**Evidence:** `tests/operations.test.ts`, `tests/storage.test.ts` and `tests/scenarios.test.ts` exercise competing claims, parameter conflicts, successful replay and the recovery cutoff. The mocked SDK fixture does not establish real remote outcomes. The [protected service report](evidence/stripe-protected-secret-2026-10-06.json) separately verifies one remote customer after response loss and replay. The [public lifecycle suite](30-payment-lifecycle.md) checks refund replay through the deployed npm consumer. Dedicated sandbox work is tracked in [issue 3](https://github.com/Israel-oduguwa/SafeStripe/issues/3).
 
 **Boundary:** Stripe's key retention is finite. Retain local operation history, keep the same ID on retries, and review ambiguous outcomes before the configured cutoff. A restored database can be missing writes Stripe already accepted. Reconcile before reopening payment writes.
 

@@ -31,6 +31,7 @@ The success page is a receipt for the browser journey. The verified webhook and 
 | Add Express routes or Next.js Route Handlers | [Framework integration](16-frameworks.md) |
 | Style a payment form without wiring every Stripe component | [Payment UI](17-payment-ui.md) |
 | Create customers, refunds, subscriptions and invoices | [Recipes](18-recipes.md) |
+| Review real payment, refund and renewal test coverage | [Payment lifecycle verification](30-payment-lifecycle.md) |
 | Design a larger production system | [Enterprise architecture](19-enterprise.md) |
 | Learn Dashboard workflows and financial operations | [Operations workbook](05-operations-workbook.md) |
 | Maintain or publish this package | [Maintainer guide](../maintainer/README.md) |
