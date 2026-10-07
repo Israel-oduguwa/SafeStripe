@@ -1,14 +1,13 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { execFileSync, execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import Stripe from 'stripe';
 import { chromium, type Browser, type Page } from 'playwright';
 import { API_VERSION } from '../src/primitives.js';
 import { diagnostic } from '../src/telemetry.js';
 import { sandboxCredentials } from './stripe-e2e-config.js';
+import { runBoundedCli, stripeCliBinary } from './stripe-lifecycle-cli.js';
 import {
   checkoutUrl,
   DemoSession,
@@ -70,6 +69,31 @@ const checkpoint = (value: string) => {
   console.log(`Lifecycle checkpoint: ${value}`);
 };
 
+async function persistFixtures() {
+  await mkdir('artifacts', { recursive: true });
+  const path = 'artifacts/stripe-lifecycle-fixtures.json';
+  // Replace atomically; a hard stop during a write leaves the preceding journal intact.
+  await writeFile(
+    `${path}.tmp`,
+    JSON.stringify(
+      {
+        runId,
+        customers,
+        products,
+        prices,
+        endpoints,
+        clocks,
+        payments: [...payments],
+        checkouts,
+        subscriptions,
+      },
+      null,
+      2,
+    ) + '\n',
+  );
+  await rename(`${path}.tmp`, path);
+}
+
 const ref = (value: unknown): string => {
   if (typeof value === 'string') return value;
   assert.ok(value && typeof value === 'object' && 'id' in value && typeof value.id === 'string');
@@ -108,6 +132,7 @@ async function fixtureCustomer(testClock?: string) {
     ...(testClock ? { test_clock: testClock } : {}),
   });
   customers.push(customer.id);
+  await persistFixtures();
   return customer;
 }
 
@@ -132,6 +157,7 @@ async function workspace(customerId: string, priceId: string, recurringPriceId: 
     metadata,
   });
   endpoints.push(endpoint.id);
+  await persistFixtures();
   assert.equal(endpoint.livemode, false);
   assert.ok(endpoint.secret);
   await session.request('/api/workspace/webhook', 'POST', { signingSecret: endpoint.secret });
@@ -180,20 +206,17 @@ async function resend(event: Stripe.Event | undefined, endpointId: string) {
   assert.ok(event);
   // The official CLI requests a new Stripe-signed delivery to this fixture endpoint.
   // Keep the key out of command arguments and discard payload-bearing CLI output.
-  await promisify(execFile)(
-    process.execPath,
+  await runBoundedCli(
+    stripeCliBinary(),
     [
-      resolve('node_modules/@stripe/cli/bin/shim.js'),
       'events',
       'resend',
       event.id,
       `--webhook-endpoint=${endpointId}`,
+      '--confirm',
+      `--stripe-version=${API_VERSION}`,
     ],
-    {
-      env: { ...process.env, STRIPE_API_KEY: credentials.key },
-      timeout: 30_000,
-      maxBuffer: 1_048_576,
-    },
+    { ...process.env, STRIPE_API_KEY: credentials.key, STRIPE_INSTALL_METHOD: 'npm_run' },
   );
 }
 
@@ -287,6 +310,7 @@ async function order(session: DemoSession) {
     {},
   );
   checkouts.push(checkout.sessionId);
+  await persistFixtures();
   return { id, ...checkout };
 }
 
@@ -320,6 +344,7 @@ async function bankIntent(customerId: string, token: string) {
   const id = created.id;
   assert.match(id, /^pi_[A-Za-z0-9]+$/);
   payments.add(id);
+  await persistFixtures();
   assert.deepEqual(created.payment_method_types, ['us_bank_account']);
   let payment = await stripe.paymentIntents.confirm(id, {
     payment_method: token,
@@ -470,12 +495,14 @@ async function journey(work: () => Promise<void>, captureBrowser = false) {
 try {
   assert.equal((await stripe.accounts.retrieve(null)).id, credentials.account);
   accountIdentityVerified = true;
+  await persistFixtures();
   checkpoint('fixture catalog');
   const purchase = await stripe.products.create({
     name: 'SafeStripe lifecycle purchase',
     metadata,
   });
   products.push(purchase.id);
+  await persistFixtures();
   const price = await stripe.prices.create({
     product: purchase.id,
     currency: 'usd',
@@ -483,11 +510,13 @@ try {
     metadata,
   });
   prices.push(price.id);
+  await persistFixtures();
   const plan = await stripe.products.create({
     name: 'SafeStripe lifecycle subscription',
     metadata,
   });
   products.push(plan.id);
+  await persistFixtures();
   const recurring = await stripe.prices.create({
     product: plan.id,
     currency: 'usd',
@@ -496,6 +525,7 @@ try {
     metadata,
   });
   prices.push(recurring.id);
+  await persistFixtures();
   const customer = await fixtureCustomer();
   const primary = await workspace(customer.id, price.id, recurring.id);
   await journey(async () => {
@@ -520,7 +550,11 @@ try {
     const before = await primary.session.request<{
       deliveries: { admitted: number; duplicates: number };
     }>(`/api/deliveries/${paidEvent.id}`);
-    for (let n = 0; n < 10; n++) await resend(paidEvent, primary.endpoint.id);
+    for (let n = 0; n < 10; n++) {
+      await resend(paidEvent, primary.endpoint.id);
+      checkpoint(`requested signed replay ${n + 1} of 10`);
+    }
+    checkpoint('waiting for ten additional duplicate admissions');
     await eventually(
       () =>
         primary.session.request<{ deliveries: { admitted: number; duplicates: number } }>(
@@ -682,6 +716,7 @@ try {
       name: 'SafeStripe lifecycle',
     });
     clocks.push(clock.id);
+    await persistFixtures();
     const subscriber = await fixtureCustomer(clock.id);
     const visa = await stripe.paymentMethods.attach('pm_card_visa', { customer: subscriber.id });
     await stripe.customers.update(subscriber.id, {
@@ -699,6 +734,7 @@ try {
     );
     const subscriptionId = created.result.id;
     subscriptions.push(subscriptionId);
+    await persistFixtures();
     const pendingSubscription = await stripe.subscriptions.retrieve(subscriptionId);
     const pendingInvoice = await stripe.invoices.retrieve(ref(pendingSubscription.latest_invoice));
     if (pendingInvoice.status === 'open') {
@@ -853,6 +889,7 @@ try {
           'src',
           'scripts/stripe-lifecycle.ts',
           'scripts/stripe-lifecycle-http.ts',
+          'scripts/stripe-lifecycle-cli.ts',
           'package-lock.json',
         ],
         { encoding: 'utf8' },
@@ -885,25 +922,8 @@ try {
     ],
   };
   await writeFile('artifacts/stripe-lifecycle.json', JSON.stringify(report, null, 2) + '\n');
-  // Fixture IDs aid owner cleanup after interruption. No keys, cookies or secret URLs are retained.
-  await writeFile(
-    'artifacts/stripe-lifecycle-fixtures.json',
-    JSON.stringify(
-      {
-        runId,
-        customers,
-        products,
-        prices,
-        endpoints,
-        clocks,
-        payments: [...payments],
-        checkouts,
-        subscriptions,
-      },
-      null,
-      2,
-    ) + '\n',
-  );
+  // Fixture IDs aid owner cleanup. No keys, cookies or secret URLs are retained.
+  await persistFixtures();
   if (!report.passed) process.exitCode = 1;
   else
     console.log(

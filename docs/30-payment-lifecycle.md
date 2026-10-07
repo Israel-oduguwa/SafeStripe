@@ -39,7 +39,9 @@ The runner creates its own customer, prices, webhook destinations and two privat
 
 The card journey, each bank outcome and the subscription journey run independently after shared setup. A browser failure does not hide the bank and renewal checks. The report retains every failed checkpoint and the checks that completed; any failure keeps the overall result failed. All twelve checks and cleanup are required for a passing run.
 
-Refunds or cancellations close the one-time payment fixtures. The runner deletes its webhook endpoints, disconnects its demo workspaces, deletes synthetic customers and test clocks, and archives its prices and products. Stripe keeps financial history. A one-day private fixture-ID artifact supports cleanup if the process is interrupted; it contains no credentials. Do not treat a run with failed cleanup as complete.
+Refunds or cancellations close the one-time payment fixtures. The runner deletes its webhook endpoints, disconnects its demo workspaces, deletes synthetic customers and test clocks, and archives its prices and products. Stripe keeps financial history. A private fixture journal is written before creation and updated atomically as resource IDs are received. Its one-day artifact contains no credentials. If the process stops before a creation response arrives, the journal's run ID can identify tagged Stripe fixtures. Lost browser cookies cannot be recovered from it; interrupted public workspaces use the server's one-hour expiry and cleanup. Do not treat an interrupted run or failed cleanup as complete.
+
+The official CLI replay uses its confirmation flag for these authorized sandbox events, closed input and a bounded native process. Its output is discarded. A successful command is still insufficient: the suite waits for ten additional duplicate admissions before counting replay as passed.
 
 ## How the demo avoids stale state
 
