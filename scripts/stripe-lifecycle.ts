@@ -236,7 +236,10 @@ async function card(page: Page, number: string) {
         for (const frame of page.frames()) {
           const option = frame.getByText('Card', { exact: true }).first();
           if (await option.isVisible()) {
-            await option.click();
+            const control = option.locator(
+              'xpath=ancestor-or-self::*[self::button or self::label or @role="radio" or @role="button" or @tabindex="0"][1]',
+            );
+            await ((await control.count()) ? control : option).click();
             return true;
           }
         }
@@ -629,6 +632,7 @@ try {
     // Structured field diagnostics omit values; neither artifact includes the address bar.
     await page.screenshot({ path: 'artifacts/lifecycle-browser/checkout.png' }).catch(() => {});
     const fields = [];
+    const controls = [];
     for (const frame of page.frames()) {
       fields.push(
         await frame
@@ -643,6 +647,28 @@ try {
           )
           .catch(() => []),
       );
+      controls.push(
+        await frame
+          .getByText('Card', { exact: true })
+          .evaluateAll((elements) =>
+            elements.map((element) => {
+              const ancestors = [];
+              for (
+                let node: Element | null = element, depth = 0;
+                node && depth < 5;
+                node = node.parentElement, depth++
+              )
+                ancestors.push({
+                  tag: node.tagName,
+                  role: node.getAttribute('role'),
+                  tabIndex: node.getAttribute('tabindex'),
+                  pointerEvents: getComputedStyle(node).pointerEvents,
+                });
+              return ancestors;
+            }),
+          )
+          .catch(() => []),
+      );
     }
     const buttons = await page
       .getByRole('button')
@@ -650,7 +676,25 @@ try {
       .catch(() => []);
     await writeFile(
       'artifacts/lifecycle-browser/fields.json',
-      JSON.stringify({ fields, buttons }, null, 2) + '\n',
+      JSON.stringify(
+        {
+          fields,
+          buttons,
+          controls,
+          error:
+            error instanceof Error
+              ? {
+                  name: error.name,
+                  pointerIntercepted: error.message.includes('intercepts pointer events'),
+                  notEnabled: error.message.includes('not enabled'),
+                  detached: error.message.includes('detached'),
+                  timeout: error.message.includes('Timeout'),
+                }
+              : undefined,
+        },
+        null,
+        2,
+      ) + '\n',
     );
   }
 } finally {
