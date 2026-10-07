@@ -108,7 +108,19 @@ test('operation diagnostics retain safe request IDs but omit payloads and raw me
   assert.equal(events[0]!.requestId, 'req_abc123');
   assert.equal(events[0]!.stripeType, 'StripeConnectionError');
   assert.ok(Object.isFrozen(events[0]));
-  assert.doesNotMatch(JSON.stringify(events), /customer@|private|pi_1|1200/);
+  assert.equal(events.length, 1);
+  const { durationMs, ...fields } = events[0]!;
+  assert.ok(Number.isFinite(durationMs) && durationMs >= 0);
+  // A timing measurement can contain the amount's digits by chance. Check the
+  // complete permitted field set rather than searching the serialized number.
+  assert.deepEqual(fields, {
+    category: 'operation',
+    action: 'refund.create',
+    outcome: 'failed',
+    code: 'STRIPE_FAILURE',
+    requestId: 'req_abc123',
+    stripeType: 'StripeConnectionError',
+  });
   assert.deepEqual(diagnostic({ requestId: 'req_abc\ninjection', type: 'secret string' }), {
     code: 'UNEXPECTED_FAILURE',
   });
