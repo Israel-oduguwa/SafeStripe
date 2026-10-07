@@ -89,6 +89,8 @@ The stabilization commit `bbe82e2` passed [GitHub CI run 37124055220](https://gi
 
 ## Earlier feature baseline
 
+The following local results and limits describe the 2 October baseline. Later dated sections above supersede its statements about unavailable credentials, registry publication and real sandbox coverage. The original results are retained for comparison.
+
 Reviewed 2 October 2026. Package: `safestripe` 0.3.0 preview. Local runtime: Node.js 22.19.0 on macOS. Stripe SDK: 22.6.2. Snapshot API contract: `2026-08-26.dahlia`.
 
 The local package checks passed for the expanded billing scenario surface. The clean consumer check installed the 201-file archive, including the new scenario and metrics modules. The previously scoped 0.2.0 release is already published; the unscoped 0.3.0 release remains a preview awaiting publication.
@@ -141,9 +143,9 @@ The emulator does not enforce every production index/IAM behavior; deploy and va
 
 The separate Express/Firestore demo previously passed 20 consumer tests on Node.js 22 and 24 in [run 36004359058](https://github.com/Israel-oduguwa/Safestripe-test-demo-website/actions/runs/36004359058). That revision installed the published scoped npm release. Its then-expanded local suite passed 33 checks on 1 October, covering signatures, duplicate events, checkout replays, ownership, invoice/subscription/refund workflows and effect/outbox behavior. Its automated fixtures use SQLite and simulated Stripe responses; the running demo uses Firestore. Real Stripe and Firebase configuration remains necessary for the browser payment test.
 
-## What has not been established
+## Limits of the 2 October baseline
 
-No real Stripe credentials were supplied or used. Actual sandbox checkout, issuer authentication, asynchronous payment methods, Dashboard workflows and live payments have not been exercised against an account. The SDK HTTP fixture verifies request behavior, not the full Stripe service.
+At that review, no real Stripe credentials were supplied or used. Actual sandbox checkout, issuer authentication, asynchronous payment methods, Dashboard workflows and live payments have not been exercised against an account. The SDK HTTP fixture verifies request behavior, not the full Stripe service.
 
 There is no enterprise throughput benchmark, failover certification, independent security audit or compliance certification. Transaction conformance proves specific invariants under tested conditions. It does not establish capacity across all database tiers or hosting platforms.
 

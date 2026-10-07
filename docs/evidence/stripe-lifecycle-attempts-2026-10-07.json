@@ -1,0 +1,386 @@
+{
+  "description": "Real sandbox attempts retained during lifecycle suite development. Failed attempts are not counted as passing coverage.",
+  "attempts": [
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37548020880",
+      "at": "2026-10-06T23:45:12.967Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "8cb163414ce9530ef0da30336ea9d1ffac75372c",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "hosted card payment and signed Firestore receipt",
+        "code": "UNEXPECTED_FAILURE"
+      },
+      "checks": [],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37548941512",
+      "at": "2026-10-06T23:55:09.813Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "50443ebf5dd4ff25fd972a5f7df52d05c4a133e8",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "entering the hosted test card",
+        "code": "UNEXPECTED_FAILURE"
+      },
+      "checks": [],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37550317113",
+      "at": "2026-10-07T00:09:55.065Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "49302cb7969b0e2c8eb826197291570c7a3aceef",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "selecting the hosted card payment option",
+        "code": "UNEXPECTED_FAILURE"
+      },
+      "checks": [],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37551458316",
+      "at": "2026-10-07T00:25:47.815Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "b29f58c45541edfddc49712d316d9bea6720640f",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "selecting the hosted card payment option",
+        "code": "UNEXPECTED_FAILURE"
+      },
+      "failures": [
+        {
+          "stage": "selecting the hosted card payment option",
+          "code": "UNEXPECTED_FAILURE"
+        },
+        {
+          "stage": "ACH processing without premature payment",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError"
+        },
+        {
+          "stage": "ACH delayed success",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError"
+        },
+        {
+          "stage": "ACH delayed failure",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError"
+        },
+        {
+          "stage": "subscription initial payment",
+          "code": "UNEXPECTED_FAILURE"
+        }
+      ],
+      "checks": [],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37552805411",
+      "at": "2026-10-07T00:39:01.880Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "c94200fe8619b6b6f68fec2772ef81daa1e8f3fb",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "submitting the hosted test payment",
+        "code": "UNEXPECTED_FAILURE"
+      },
+      "failures": [
+        {
+          "stage": "submitting the hosted test payment",
+          "code": "UNEXPECTED_FAILURE"
+        },
+        {
+          "stage": "ACH processing without premature payment",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError",
+          "reason": "The allowed types provided (card, klarna, link, cashapp, amazon_pay) are incompatible with the PaymentMethod provided. Please include us_bank_account in the allowed types."
+        },
+        {
+          "stage": "ACH delayed success",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError",
+          "reason": "The allowed types provided (card, klarna, link, cashapp, amazon_pay) are incompatible with the PaymentMethod provided. Please include us_bank_account in the allowed types."
+        },
+        {
+          "stage": "ACH delayed failure",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError",
+          "reason": "The allowed types provided (card, klarna, link, cashapp, amazon_pay) are incompatible with the PaymentMethod provided. Please include us_bank_account in the allowed types."
+        }
+      ],
+      "checks": [
+        "Initial subscription invoice payment reached the authenticated Firestore billing record",
+        "A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record",
+        "The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state",
+        "Subscription cancellation reached the signed, durable canceled state"
+      ],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37553681769",
+      "at": "2026-10-07T00:48:56.427Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "54fd5c8178561bdcf51c00a958017926b16d4e12",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "submitting the hosted test payment",
+        "code": "UNEXPECTED_FAILURE"
+      },
+      "failures": [
+        {
+          "stage": "submitting the hosted test payment",
+          "code": "UNEXPECTED_FAILURE"
+        },
+        {
+          "stage": "ACH processing without premature payment",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError",
+          "reason": "The `allowed_payment_method_types` parameter can't be used with PaymentIntents created with Dynamic Payment Methods."
+        },
+        {
+          "stage": "ACH delayed success",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError",
+          "reason": "The `allowed_payment_method_types` parameter can't be used with PaymentIntents created with Dynamic Payment Methods."
+        },
+        {
+          "stage": "ACH delayed failure",
+          "code": "STRIPE_FAILURE",
+          "stripeType": "StripeInvalidRequestError",
+          "reason": "The `allowed_payment_method_types` parameter can't be used with PaymentIntents created with Dynamic Payment Methods."
+        }
+      ],
+      "checks": [
+        "Initial subscription invoice payment reached the authenticated Firestore billing record",
+        "A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record",
+        "The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state",
+        "Subscription cancellation reached the signed, durable canceled state"
+      ],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37554886600",
+      "at": "2026-10-07T01:06:58.895Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "8e4d88081aafe226e5c718d8fbb5aa767bc24d10",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "actual signed duplicate deliveries",
+        "code": "UNEXPECTED_FAILURE",
+        "reason": "Lifecycle checkpoint timed out"
+      },
+      "failures": [
+        {
+          "stage": "actual signed duplicate deliveries",
+          "code": "UNEXPECTED_FAILURE",
+          "reason": "Lifecycle checkpoint timed out"
+        }
+      ],
+      "checks": [
+        "Hosted browser payment produced an authenticated Firestore receipt for the expected order, Session and 500 USD cents",
+        "An indefinitely processing ACH fixture had no received amount and its cancellation reached Firestore",
+        "ACH remained unpaid while processing and reached a signed, durable paid state only after Stripe success",
+        "ACH delayed failure produced a signed failure record with no received amount",
+        "Initial subscription invoice payment reached the authenticated Firestore billing record",
+        "A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record",
+        "The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state",
+        "Subscription cancellation reached the signed, durable canceled state"
+      ],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    },
+    {
+      "workflowRun": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37556339026",
+      "at": "2026-10-07T01:24:10.949Z",
+      "passed": false,
+      "cleanupPassed": true,
+      "runnerSourceCommit": "bbc1920fee46fa1141c5e5a6a0c5cede7a68f20b",
+      "sourceDirty": false,
+      "accountIdentityVerified": true,
+      "credentialMode": "secret",
+      "sdk": "22.6.2",
+      "apiVersion": "2026-08-26.dahlia",
+      "node": "v22.23.3",
+      "browserTool": "1.63.0",
+      "stripeCli": "1.53.0",
+      "deployment": {
+        "backendSourceCommit": "8b01d906e059242186416ec60b50c5bb30542e20",
+        "packageVersion": "0.3.0",
+        "packageSource": "npm registry",
+        "frontendOrigin": "https://safestripe-demo.vercel.app",
+        "webhookOrigin": "https://safestripe-sandbox.onrender.com",
+        "storage": "Cloud Firestore"
+      },
+      "failure": {
+        "stage": "waiting for ten additional duplicate admissions",
+        "code": "UNEXPECTED_FAILURE",
+        "reason": "Lifecycle checkpoint timed out"
+      },
+      "failures": [
+        {
+          "stage": "waiting for ten additional duplicate admissions",
+          "code": "UNEXPECTED_FAILURE",
+          "reason": "Lifecycle checkpoint timed out"
+        }
+      ],
+      "checks": [
+        "Hosted browser payment produced an authenticated Firestore receipt for the expected order, Session and 500 USD cents",
+        "An indefinitely processing ACH fixture had no received amount and its cancellation reached Firestore",
+        "ACH remained unpaid while processing and reached a signed, durable paid state only after Stripe success",
+        "ACH delayed failure produced a signed failure record with no received amount",
+        "Initial subscription invoice payment reached the authenticated Firestore billing record",
+        "A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record",
+        "The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state",
+        "Subscription cancellation reached the signed, durable canceled state"
+      ],
+      "notCovered": [
+        "Live payments",
+        "Every payment method and account eligibility combination",
+        "Company-specific authorization and entitlement policies"
+      ]
+    }
+  ]
+}
