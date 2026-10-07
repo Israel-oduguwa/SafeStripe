@@ -15,7 +15,7 @@ const types = {
 createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const file = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+    const file = resolve(root, '.' + (pathname.endsWith('/') ? pathname + 'index.html' : pathname));
     if (!file.startsWith(root + sep)) throw new Error('Outside site');
     const data = await readFile(file);
     res.writeHead(200, {

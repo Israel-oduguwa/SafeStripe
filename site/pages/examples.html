@@ -1,0 +1,112 @@
+<div class="wrap">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="../">Home</a><span aria-hidden="true">/</span><span>Examples</span>
+  </nav>
+  <section class="page-hero">
+    <p class="eyebrow">Express &amp; Next.js</p>
+    <h1>Start with a route.<br /><em>Keep the context.</em></h1>
+    <p class="lead">
+      The request is small. The operation identity, storage, authorization and worker setup are the
+      parts that make it recoverable.
+    </p>
+    <div class="hero-actions">
+      <a class="button" href="../get-started/"
+        >Make your first payment <span aria-hidden="true">→</span></a
+      ><a class="text-link" href="../docs/handbook.html#16-frameworks">Full integration guide ↗</a>
+    </div>
+  </section>
+  <section class="section" aria-labelledby="route-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Server-side checkout</p>
+      <h2 id="route-heading">Same billing service.<br />Your framework.</h2>
+      <p>
+        These route fragments assume an initialized <code>billing</code> service and
+        application-owned authentication. They are not complete applications.
+      </p>
+    </div>
+    <div class="editor" data-tabs>
+      <div class="editor-top">
+        <span class="file-dot"></span><span>checkout.ts</span><span>Server only</span>
+      </div>
+      <div class="tab-list" role="tablist" aria-label="Framework example">
+        <button id="express-tab" role="tab" aria-selected="true" aria-controls="express-code">
+          Express</button
+        ><button
+          id="next-tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="next-code"
+          tabindex="-1"
+        >
+          Next.js
+        </button>
+      </div>
+      <div id="express-code" role="tabpanel" aria-labelledby="express-tab">
+        <!-- EXPRESS_CODE -->
+      </div>
+      <div id="next-code" role="tabpanel" aria-labelledby="next-tab"><!-- NEXT_CODE --></div>
+      <div class="editor-foot">
+        A stable order identity is reused on retry. Prices and customer ownership are checked on the
+        server.
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="resource-grid">
+      <a class="resource-card" href="../docs/handbook.html#03-quickstart"
+        ><span>Express · SQLite</span>
+        <h3>Run the local payment app.</h3>
+        <p>
+          Website, checkout route, webhook endpoint and worker. No Docker or database server
+          required.
+        </p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="../docs/handbook.html#16-frameworks"
+        ><span>Next.js · Node runtime</span>
+        <h3>Wire up the route handlers.</h3>
+        <p>Keep webhook bytes intact and run the durable worker outside short-lived requests.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="https://safestripe-demo.vercel.app/"
+        ><span>Express · Firestore</span>
+        <h3>Try the deployed npm consumer.</h3>
+        <p>
+          The online sandbox runs the published package with actual Stripe test records and signed
+          receipts.
+        </p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      >
+    </div>
+  </section>
+  <section class="stack-section">
+    <div>
+      <p class="eyebrow">Choose the store you run</p>
+      <h2>The same contracts.<br />Different deployment requirements.</h2>
+      <p>
+        Install the driver for your chosen adapter. MongoDB needs a replica set; SQLite is for local
+        development. Each production deployment still needs recovery and capacity validation.
+      </p>
+    </div>
+    <div class="stack-list">
+      <a href="../docs/handbook.html#15-databases"
+        ><strong>PostgreSQL</strong><span>Transactions, durable leases and concurrent workers</span
+        ><code>npm install pg</code></a
+      ><a href="../docs/handbook.html#15-databases"
+        ><strong>MongoDB</strong
+        ><span>Replica-set transactions; standalone servers are insufficient</span
+        ><code>npm install mongodb</code></a
+      ><a href="../docs/handbook.html#15-databases"
+        ><strong>Cloud Firestore</strong
+        ><span>Service credentials, indexes and transaction contention</span
+        ><code>npm install @google-cloud/firestore</code></a
+      ><a href="../docs/handbook.html#15-databases"
+        ><strong>SQLite</strong><span>Local development with one active worker</span
+        ><code>Included with supported Node.js</code></a
+      >
+    </div>
+  </section>
+  <aside class="notice section-note">
+    <strong>NestJS example:</strong> planned, not shipped. The runnable consumer example is tracked
+    in <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/48">issue 48</a>. Express and
+    Next.js are the documented framework adapters today.
+  </aside>
+</div>
