@@ -12,6 +12,8 @@ Requires Node.js 22.19 or later. MIT licensed. SafeStripe is independent of Stri
 
 [Website](https://israel-oduguwa.github.io/SafeStripe/) · [Try the sandbox](https://safestripe-demo.vercel.app/) · [Get started](docs/11-getting-started.md) · [Database adapters](docs/15-databases.md) · [Express / Next.js](docs/16-frameworks.md) · [Release readiness](docs/28-release-readiness.md)
 
+[Try one payment](docs/31-try-safestripe.md) before exploring the billing recipes. The [launch checklist](maintainer/LAUNCH.md) includes a short recording script and an independent onboarding exercise; measured setup times and outside adoption are still to be established.
+
 ## Reliability comes first
 
 The 0.3 release is in stabilization. New billing features are frozen while crash recovery, sandbox behavior, installation and release evidence are reviewed.

@@ -4,7 +4,7 @@ Independent review is still open. The following exercises give an outside develo
 
 ## Try the quickstart without coaching
 
-Use a new folder and a dedicated Stripe sandbox with synthetic customer details. Follow [Make your first payment](03-quickstart.md), starting a timer before installation. While the unscoped release is unavailable, use the prepared package archive described there; record the archive's checksum. Do not substitute the older scoped 0.2.0 package.
+Use a new folder and a dedicated Stripe sandbox with synthetic customer details. Follow [Make your first payment](03-quickstart.md), starting a timer before installation. For a separate application, install `safestripe@0.3.0` from npm and record that version. The repository tutorial also includes the source examples and development tooling; record its commit. Do not substitute the older scoped 0.2.0 package.
 
 Try to reach a paid hosted Checkout, a verified webhook and one committed receipt. Record each place you needed help, including an unclear instruction. Save the time to first successful receipt. Run the same operation again and confirm that its Stripe identity stays the same. The five-minute onboarding target has not been established by outside testing yet.
 

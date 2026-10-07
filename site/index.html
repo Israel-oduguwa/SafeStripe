@@ -11,7 +11,9 @@
     <title>SafeStripe — Reliable payment workflows for Node.js</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./support.css" />
     <script src="./site.js" defer></script>
+    <script src="./support.js" defer></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -30,18 +32,25 @@
       <section class="hero wrap">
         <div class="hero-copy">
           <span class="release"><span class="status-dot"></span>Node.js · Express · Next.js</span>
-          <h1>Keep payment<br />retries under<br /><em>control.</em></h1>
+          <h1>Stripe accepted it.<br />Your server<br /><em>timed out.</em></h1>
           <p>
-            When a request times out or a webhook arrives twice, your billing history should still
-            make sense. SafeStripe gives your Stripe integration durable operations, verified events
-            and recoverable workers.
+            Retrying should recover the same operation. SafeStripe keeps its identity in your
+            database, saves verified webhooks before acknowledging them and lets workers recover
+            after a crash. Your application keeps control of authorization and fulfillment.
           </p>
           <div class="hero-actions">
             <a class="button" href="https://safestripe-demo.vercel.app/"
               >Try the sandbox <span>→</span></a
-            ><a class="text-link" href="./docs/handbook.html#24-reliability-contracts"
-              >See what it solves ↗</a
+            ><a class="text-link" href="./docs/handbook.html#31-try-safestripe"
+              >Start with one payment ↗</a
             >
+          </div>
+          <div class="proof-links" aria-label="Recorded engineering evidence">
+            <a href="./docs/handbook.html#30-payment-lifecycle">12 sandbox journeys verified ↗</a>
+            <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/workflows/ci.yml"
+              >Public CI ↗</a
+            >
+            <a href="./benchmarks/README.md">Measured benchmarks ↗</a>
           </div>
           <div class="install">
             <code id="install-command">npm install safestripe</code
@@ -239,7 +248,9 @@
       <nav aria-label="Footer">
         <a href="./LICENSE">License</a><a href="./SECURITY.md">Security</a
         ><a href="./THIRD_PARTY_NOTICES.md">Third-party notices</a>
+        <!-- SUPPORT_BUTTON -->
       </nav>
     </footer>
+    <!-- SUPPORT_DIALOG -->
   </body>
 </html>

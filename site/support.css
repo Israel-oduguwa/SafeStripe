@@ -1,0 +1,117 @@
+.support-trigger {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 5px 0;
+  font: inherit;
+  cursor: pointer;
+}
+.support-trigger:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.support-dialog {
+  box-sizing: border-box;
+  margin: auto;
+  width: 460px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border: 1px solid #dce3d6;
+  border-radius: 20px;
+  padding: 0;
+  color: #213b2d;
+  background: #fffefa;
+  box-shadow: 0 24px 100px #142f2940;
+}
+.support-dialog::backdrop {
+  background: #142f2966;
+}
+.support-content {
+  position: relative;
+  padding: 36px;
+}
+.support-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #53654f;
+  font: 24px/1 sans-serif;
+  cursor: pointer;
+}
+.support-close:hover {
+  background: #f0f3eb;
+}
+.support-cup {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #f7efcf;
+  font-size: 28px;
+  margin-bottom: 24px;
+}
+.support-dialog h2 {
+  margin: 0 0 16px;
+  font:
+    600 28px/1.15 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  letter-spacing: -0.025em;
+}
+.support-dialog p {
+  margin: 0 0 24px;
+  color: #5d6e5d;
+  font:
+    15px/1.65 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+.support-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-radius: 10px;
+  padding: 13px 18px;
+  background: #ffdd7b;
+  color: #2b311f;
+  text-decoration: none;
+  font:
+    600 14px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+.support-action:hover {
+  background: #fbd165;
+}
+.support-dialog .support-note {
+  margin: 16px 0 0;
+  font-size: 12px;
+}
+.support-trigger:focus-visible,
+.support-dialog button:focus-visible,
+.support-dialog a:focus-visible {
+  outline: 3px solid #6ba182;
+  outline-offset: 4px;
+}
+@media (max-width: 500px) {
+  .support-content {
+    padding: 28px;
+  }
+}
+@media print {
+  .support-trigger,
+  .support-dialog {
+    display: none !important;
+  }
+}

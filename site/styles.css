@@ -101,13 +101,16 @@ h3 {
   padding: 7px 15px;
   border-radius: 6px;
 }
+.footer nav {
+  flex-wrap: wrap;
+}
 .hero {
   display: grid;
   grid-template-columns: 1fr 1.04fr;
   gap: 75px;
-  align-items: center;
-  padding-top: 82px;
-  padding-bottom: 75px;
+  align-items: start;
+  padding-top: 52px;
+  padding-bottom: 52px;
 }
 .release {
   display: inline-flex;
@@ -115,7 +118,19 @@ h3 {
   align-items: center;
   color: #5b7052;
   font-size: 12px;
-  margin-bottom: 26px;
+  margin-bottom: 18px;
+}
+.proof-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 18px;
+  font-size: 11px;
+  color: var(--green);
+}
+.proof-links a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .status-dot {
   width: 6px;
@@ -126,7 +141,7 @@ h3 {
   flex: none;
 }
 h1 {
-  font-size: clamp(48px, 5.25vw, 73px);
+  font-size: clamp(48px, 4.7vw, 64px);
   letter-spacing: -0.058em;
   line-height: 1.05;
 }
@@ -138,17 +153,17 @@ h1 em {
   letter-spacing: -0.05em;
 }
 .hero-copy > p {
-  max-width: 440px;
+  max-width: 490px;
   font-size: 15px;
   color: var(--muted);
-  line-height: 1.85;
-  margin-top: 25px;
+  line-height: 1.65;
+  margin-top: 20px;
 }
 .hero-actions {
   display: flex;
   align-items: center;
   gap: 24px;
-  margin-top: 30px;
+  margin-top: 22px;
 }
 .button {
   display: inline-flex;
