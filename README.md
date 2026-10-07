@@ -18,7 +18,7 @@ The 0.3 release is in stabilization. New billing features are frozen while crash
 
 SafeStripe is organized around five contracts: stable operation identity, durable admission before acknowledgment, recoverable worker ownership, one committed effect per business key, and atomic state/outbox intent. Each has explicit assumptions and failure boundaries. Read [the contracts and evidence](docs/24-reliability-contracts.md), [architecture decisions](docs/adr/README.md) and [the stabilization plan](docs/25-stabilization.md).
 
-The online sandbox is available for evaluation. The 0.3 preview is not yet an enterprise production recommendation. Hosted and embedded Checkout have completed real Stripe test payments with signed Firestore receipts. Declined-card handling and a 3DS challenge have also been exercised. The [readiness report](docs/28-release-readiness.md) separates those observations from automated tests and remaining release work.
+The online sandbox is available for evaluation. The 0.3 preview is not yet an enterprise production recommendation. Hosted and embedded Checkout have completed real Stripe test payments with signed Firestore receipts. The [payment lifecycle guide](docs/30-payment-lifecycle.md) records card decline/retry, refund replay, signed duplicate deliveries, delayed bank outcomes and subscription renewal checks against the published package. It distinguishes SDK-created bank fixtures from wrapper commands. The [readiness report](docs/28-release-readiness.md) lists remaining release work.
 
 ## Install
 
