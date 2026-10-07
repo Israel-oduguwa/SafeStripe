@@ -231,7 +231,20 @@ async function card(page: Page, number: string) {
   // Checkout loads the selector asynchronously. An immediate visibility check
   // can miss it and leave every card field unopened for the entire timeout.
   if (!(await input(page, /card.?number/i, number, false))) {
-    await page.getByText('Card', { exact: true }).click({ timeout: 60_000 });
+    await eventually(
+      async () => {
+        for (const frame of page.frames()) {
+          const option = frame.getByText('Card', { exact: true }).first();
+          if (await option.isVisible()) {
+            await option.click();
+            return true;
+          }
+        }
+        return false;
+      },
+      Boolean,
+      60_000,
+    );
     checkpoint('entering the hosted test card');
     await eventually(() => input(page, /card.?number/i, number, false), Boolean, 60_000);
   }
@@ -612,7 +625,8 @@ try {
   );
   if (page && page.url().startsWith('https://checkout.stripe.com/')) {
     await mkdir('artifacts/lifecycle-browser', { recursive: true });
-    // Synthetic payment UI only: no address bar, cookies, input values or access URL.
+    // Screenshot may show synthetic contact/test-card entries, never the app's key form.
+    // Structured field diagnostics omit values; neither artifact includes the address bar.
     await page.screenshot({ path: 'artifacts/lifecycle-browser/checkout.png' }).catch(() => {});
     const fields = [];
     for (const frame of page.frames()) {
