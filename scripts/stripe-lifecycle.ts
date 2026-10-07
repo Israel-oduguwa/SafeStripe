@@ -21,7 +21,13 @@ import {
   eventually,
 } from './stripe-lifecycle-http.js';
 
-type State = { id: string; status: string; amountPaid?: number; snapshotStatus?: string };
+type State = {
+  id: string;
+  status: string;
+  amountPaid?: number;
+  snapshotStatus?: string;
+  receivedAt?: string;
+};
 type Receipt = {
   orderId: string;
   sessionId: string;
@@ -69,6 +75,9 @@ let stage = 'account verification',
 let deployment: Deployment | undefined;
 let failure: { stage: string; code?: string; stripeType?: string; reason?: string } | undefined;
 const failures: NonNullable<typeof failure>[] = [];
+let invoiceOrderObservation:
+  | { failedEventAbsentBeforeReplay: boolean; paidRecordedAt: string; failureRecordedAt: string }
+  | undefined;
 let replayObservation:
   | {
       baseline: { admitted: number; duplicates: number };
@@ -783,7 +792,10 @@ try {
 
     checkpoint('failed renewal and recovery');
     // Hold only this fixture destination so genuine events can be delivered out of order later.
-    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, { disabled: true });
+    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, {
+      disabled: true,
+      enabled_events: ['invoice.paid'],
+    });
     const failureMethod = await stripe.paymentMethods.attach('pm_card_chargeCustomerFail', {
       customer: subscriber.id,
     });
@@ -809,9 +821,14 @@ try {
     );
     assert.equal(recovered.status, 'paid');
     const recoveredEvent = await remoteEvent('invoice.paid', renewalInvoiceId);
-    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, { disabled: false });
+    // Admit the recovery first. Restoring every event type here could release a pending
+    // failure before the paid event and make request order look like delivery proof.
+    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, {
+      disabled: false,
+      enabled_events: ['invoice.paid'],
+    });
     await resend(recoveredEvent, recurringWorkspace.endpoint.id);
-    await recorded(recurringWorkspace.session, recoveredEvent, 'paid');
+    const recoveryRecord = await recorded(recurringWorkspace.session, recoveredEvent, 'paid');
     assert.equal(
       (await state(recurringWorkspace.session, renewalInvoiceId, 'paid')).amountPaid,
       1000,
@@ -821,9 +838,32 @@ try {
     );
 
     checkpoint('distinct older failure delivered after recovery');
+    assert.ok(failedEvent);
+    assert.equal(
+      (
+        await recurringWorkspace.session.request<{ deliveries: unknown }>(
+          `/api/deliveries/${failedEvent.id}`,
+        )
+      ).deliveries,
+      null,
+      'The older failure must not already have been admitted before this ordered replay',
+    );
+    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, {
+      enabled_events: events as Stripe.WebhookEndpointUpdateParams.EnabledEvent[],
+    });
     await resend(failedEvent, recurringWorkspace.endpoint.id);
     const late = await recorded(recurringWorkspace.session, failedEvent, 'paid');
     assert.equal(late.snapshotStatus, 'open');
+    assert.ok(recoveryRecord.receivedAt && late.receivedAt);
+    assert.ok(
+      Date.parse(late.receivedAt) > Date.parse(recoveryRecord.receivedAt),
+      'The older failure must be recorded after the paid recovery',
+    );
+    invoiceOrderObservation = {
+      failedEventAbsentBeforeReplay: true,
+      paidRecordedAt: recoveryRecord.receivedAt,
+      failureRecordedAt: late.receivedAt,
+    };
     assert.equal(
       (await state(recurringWorkspace.session, renewalInvoiceId, 'paid')).amountPaid,
       1000,
@@ -933,6 +973,7 @@ try {
     failure,
     failures,
     replayObservation,
+    invoiceOrderObservation,
     checks,
     notCovered: [
       'Live payments',
