@@ -7,7 +7,12 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { API_VERSION } from '../src/primitives.js';
 import { diagnostic } from '../src/telemetry.js';
 import { sandboxCredentials } from './stripe-e2e-config.js';
-import { runBoundedCli, stripeCliBinary } from './stripe-lifecycle-cli.js';
+import {
+  redactLifecycleMessage,
+  runBoundedCli,
+  stripeCliBinary,
+  verifyReplayResponse,
+} from './stripe-lifecycle-cli.js';
 import {
   checkoutUrl,
   DemoSession,
@@ -64,6 +69,14 @@ let stage = 'account verification',
 let deployment: Deployment | undefined;
 let failure: { stage: string; code?: string; stripeType?: string; reason?: string } | undefined;
 const failures: NonNullable<typeof failure>[] = [];
+let replayObservation:
+  | {
+      baseline: { admitted: number; duplicates: number };
+      latest: { admitted: number; duplicates: number };
+      requested: number;
+      responses: ReturnType<typeof verifyReplayResponse>[];
+    }
+  | undefined;
 const checkpoint = (value: string) => {
   stage = value;
   console.log(`Lifecycle checkpoint: ${value}`);
@@ -205,8 +218,8 @@ async function state(session: DemoSession, id: string, status: string) {
 async function resend(event: Stripe.Event | undefined, endpointId: string) {
   assert.ok(event);
   // The official CLI requests a new Stripe-signed delivery to this fixture endpoint.
-  // Keep the key out of command arguments and discard payload-bearing CLI output.
-  await runBoundedCli(
+  // Keep the key out of command arguments; retain only validated response metadata.
+  const stdout = await runBoundedCli(
     stripeCliBinary(),
     [
       'events',
@@ -214,10 +227,12 @@ async function resend(event: Stripe.Event | undefined, endpointId: string) {
       event.id,
       `--webhook-endpoint=${endpointId}`,
       '--confirm',
+      '--color=off',
       `--stripe-version=${API_VERSION}`,
     ],
     { ...process.env, STRIPE_API_KEY: credentials.key, STRIPE_INSTALL_METHOD: 'npm_run' },
   );
+  return verifyReplayResponse(stdout, event.id);
 }
 
 async function input(page: Page, pattern: RegExp, value: string, required = true) {
@@ -379,20 +394,7 @@ async function advance(id: string, time: number) {
 
 async function recordFailure(error: unknown, captureBrowser = false) {
   const details = diagnostic(error);
-  const reason =
-    error instanceof Error
-      ? error.message
-          .split('\n')[0]!
-          .replace(/https?:[^\s"'<>]+/g, '[URL]')
-          .replace(/\b(?:sk|rk|pk|whsec)_[A-Za-z0-9_]+\b/g, '[credential]')
-          .replace(
-            /\b(?:acct|cus|pi|pm|cs|re|in|sub|price|prod|evt|we)_[A-Za-z0-9_]+\b/g,
-            '[fixture ID]',
-          )
-          .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/g, '[email]')
-          .replace(/\b\d{12,19}\b/g, '[test number]')
-          .slice(0, 600)
-      : undefined;
+  const reason = error instanceof Error ? redactLifecycleMessage(error.message) : undefined;
   const result = { stage, code: details.code, stripeType: details.stripeType, reason };
   failure ??= result;
   failures.push(result);
@@ -545,31 +547,6 @@ try {
       'Hosted browser payment produced an authenticated Firestore receipt for the expected order, Session and 500 USD cents',
     );
 
-    checkpoint('actual signed duplicate deliveries');
-    const paidEvent = await stripe.events.retrieve(firstReceipt.eventId);
-    const before = await primary.session.request<{
-      deliveries: { admitted: number; duplicates: number };
-    }>(`/api/deliveries/${paidEvent.id}`);
-    for (let n = 0; n < 10; n++) {
-      await resend(paidEvent, primary.endpoint.id);
-      checkpoint(`requested signed replay ${n + 1} of 10`);
-    }
-    checkpoint('waiting for ten additional duplicate admissions');
-    await eventually(
-      () =>
-        primary.session.request<{ deliveries: { admitted: number; duplicates: number } }>(
-          `/api/deliveries/${paidEvent.id}`,
-        ),
-      (value) =>
-        value.deliveries.admitted >= before.deliveries.admitted + 10 &&
-        value.deliveries.duplicates >= before.deliveries.duplicates + 10,
-    );
-    const after = await primary.session.request<OrderView>(`/api/orders/${first.id}`);
-    assert.deepEqual(after.receipt, firstReceipt);
-    checks.push(
-      'Ten additional authenticated duplicate admissions were recorded after Stripe CLI replays; the original receipt and paid time were unchanged',
-    );
-
     checkpoint('declined card and retry of the same Checkout');
     const second = await order(primary.session);
     await checkoutPage.goto(checkoutUrl(second.url));
@@ -651,6 +628,47 @@ try {
     );
     checks.push(
       'Two deliberate partial refunds closed the 500-cent charge; replay added no third refund and preserved the historical sale receipt',
+    );
+    checkpoint('actual signed duplicate deliveries');
+    const paidEvent = await stripe.events.retrieve(firstReceipt.eventId);
+    const before = await primary.session.request<{
+      deliveries: { admitted: number; duplicates: number };
+    }>(`/api/deliveries/${paidEvent.id}`);
+    const baseline = {
+      admitted: before.deliveries.admitted,
+      duplicates: before.deliveries.duplicates,
+    };
+    assert.ok(Number.isSafeInteger(baseline.admitted) && Number.isSafeInteger(baseline.duplicates));
+    replayObservation = { baseline, latest: baseline, requested: 0, responses: [] };
+    const replayDeadline = Date.now() + 180_000;
+    for (let n = 0; n < 10; n++) {
+      replayObservation.responses.push(await resend(paidEvent, primary.endpoint.id));
+      replayObservation.requested++;
+      checkpoint(`requested signed replay ${n + 1} of 10`);
+      // Observe each delivery before requesting the next. Remote scheduling is asynchronous;
+      // successful CLI responses alone do not establish ten distinct admissions.
+      await eventually(
+        async () => {
+          const value = await primary.session.request<{
+            deliveries: { admitted: number; duplicates: number };
+          }>(`/api/deliveries/${paidEvent.id}`);
+          replayObservation!.latest = {
+            admitted: value.deliveries.admitted,
+            duplicates: value.deliveries.duplicates,
+          };
+          return value;
+        },
+        (value) =>
+          value.deliveries.admitted >= baseline.admitted + n + 1 &&
+          value.deliveries.duplicates >= baseline.duplicates + n + 1,
+        Math.max(1, replayDeadline - Date.now()),
+      );
+      checkpoint(`observed signed duplicate admission ${n + 1} of 10`);
+    }
+    const after = await primary.session.request<OrderView>(`/api/orders/${first.id}`);
+    assert.deepEqual(after.receipt, firstReceipt);
+    checks.push(
+      'Ten additional authenticated duplicate admissions were recorded after Stripe CLI replays; the original receipt and paid time were unchanged',
     );
   }, true);
 
@@ -914,6 +932,7 @@ try {
       : undefined,
     failure,
     failures,
+    replayObservation,
     checks,
     notCovered: [
       'Live payments',
