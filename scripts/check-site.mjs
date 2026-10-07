@@ -2,6 +2,7 @@ import { readFile, access } from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
 import { runInNewContext } from 'node:vm';
 import assert from 'node:assert/strict';
+import './check-support.mjs';
 const base = new URL('../site-dist/', import.meta.url);
 const pages = new Map();
 for (const path of ['index.html', 'docs/handbook.html']) {

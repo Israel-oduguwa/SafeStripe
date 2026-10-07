@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { createHighlighter } from 'shiki';
 import { format } from 'prettier';
+import { supportMarkup } from './support-page.mjs';
 
 const source = new URL('../site/', import.meta.url);
 const output = new URL('../site-dist/', import.meta.url);
@@ -8,6 +9,12 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 const highlighter = await createHighlighter({ themes: ['dark-plus'], langs: ['typescript'] });
 let html = await readFile(new URL('index.html', source), 'utf8');
+const support = supportMarkup(
+  JSON.parse(await readFile(new URL('support.json', source), 'utf8')).url,
+);
+html = html
+  .replace('<!-- SUPPORT_BUTTON -->', support.button)
+  .replace('<!-- SUPPORT_DIALOG -->', support.dialog);
 const release = JSON.parse(await readFile(new URL('release.json', source), 'utf8'));
 if (release.npmPublished === true) {
   html = html.replace(
@@ -33,7 +40,7 @@ for (const framework of ['express', 'next']) {
 }
 highlighter.dispose();
 await writeFile(new URL('index.html', output), html);
-for (const name of ['styles.css', 'site.js', 'favicon.svg'])
+for (const name of ['styles.css', 'site.js', 'favicon.svg', 'support.css', 'support.js'])
   await cp(new URL(name, source), new URL(name, output));
 // Copy only tracked examples and public guides, never local configuration or build output.
 const { execFileSync } = await import('node:child_process');
@@ -45,6 +52,7 @@ const files = execFileSync(
     'docs',
     'examples',
     'maintainer/README.md',
+    'maintainer/LAUNCH.md',
     'benchmarks/README.md',
     'benchmarks/results',
   ],

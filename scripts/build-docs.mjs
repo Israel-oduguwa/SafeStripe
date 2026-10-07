@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { createHighlighter } from 'shiki';
 import { format } from 'prettier';
 import { parseHTML } from 'linkedom';
+import { supportMarkup } from './support-page.mjs';
 
 const directory = new URL('../docs/', import.meta.url);
 const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -16,6 +17,7 @@ const groups = [
       '00-reading-guide',
       '28-release-readiness',
       '24-reliability-contracts',
+      '31-try-safestripe',
       '11-getting-started',
       '03-quickstart',
     ],
@@ -201,8 +203,17 @@ for (const id of order) {
   );
   pages.push({ id, title, html, headings });
 }
-const script = await readFile(new URL('docs-ui.js', import.meta.url), 'utf8');
-const css = await readFile(new URL('docs.css', import.meta.url), 'utf8');
+const support = supportMarkup(
+  JSON.parse(await readFile(new URL('../site/support.json', import.meta.url), 'utf8')).url,
+);
+const script =
+  (await readFile(new URL('docs-ui.js', import.meta.url), 'utf8')) +
+  '\n' +
+  (await readFile(new URL('../site/support.js', import.meta.url), 'utf8'));
+const css =
+  (await readFile(new URL('docs.css', import.meta.url), 'utf8')) +
+  '\n' +
+  (await readFile(new URL('../site/support.css', import.meta.url), 'utf8'));
 const hash = createHash('sha256').update(script).digest('base64');
 const nav = groups
   .map(
@@ -217,9 +228,9 @@ const nav = groups
   .join('');
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Build reliable Stripe integrations with Node.js, Express, Next.js, SQLite, PostgreSQL, MongoDB and Firebase. Tutorials, API reference and payment operations guides."><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-${hash}'; img-src data:; base-uri 'none'; form-action 'none'"><title>SafeStripe documentation</title><style>${css}</style></head>
-<body><a class="skip" href="#content">Skip to content</a><header class="topbar"><a class="brand" href="#00-reading-guide"><span class="mark">S</span>SafeStripe <span class="doc-label">Docs</span></a><span class="release">${escape(manifest.version)} · Node.js 22.19+</span><button id="print" type="button">Print all pages</button></header>
+<body><a class="skip" href="#content">Skip to content</a><header class="topbar"><a class="brand" href="#00-reading-guide"><span class="mark">S</span>SafeStripe <span class="doc-label">Docs</span></a><span class="release">${escape(manifest.version)} · Node.js 22.19+</span>${support.button}<button id="print" type="button">Print all pages</button></header>
 <aside class="sidebar"><label for="search">Find a guide</label><div class="search-box"><input id="search" type="search" placeholder="Search documentation" autocomplete="off"><kbd>/</kbd></div><p id="search-status" role="status">${pages.length} guides · available offline</p><nav aria-label="Documentation">${nav}</nav><p class="sidebar-foot">Stripe API<br><code>2026-08-26.dahlia</code></p></aside>
-<div class="layout"><main id="content" tabindex="-1">${pages.map((page) => `<article id="${page.id}" data-title="${escape(page.title)}">${releaseNotice}<div class="eyebrow">${escape(groups.find(([, ids]) => ids.includes(page.id))[0])}</div>${page.html}<div class="page-end">SafeStripe ${escape(manifest.version)} · Stripe API 2026-08-26.dahlia</div></article>`).join('\n')}<nav class="pager" aria-label="Adjacent pages"><a id="previous"></a><a id="next"></a></nav><footer>MIT licensed. Independent of Stripe. <a href="../LICENSE">License</a> · <a href="../VERIFICATION.md">Verification record</a></footer></main><aside class="on-this-page" aria-label="On this page"><h2>On this page</h2>${pages.map((page) => `<nav data-toc="${page.id}">${page.headings.map((heading) => `<a href="#${heading.anchor}">${heading.label}</a>`).join('')}</nav>`).join('')}</aside></div><script>${script}</script></body></html>`;
+<div class="layout"><main id="content" tabindex="-1">${pages.map((page) => `<article id="${page.id}" data-title="${escape(page.title)}">${releaseNotice}<div class="eyebrow">${escape(groups.find(([, ids]) => ids.includes(page.id))[0])}</div>${page.html}<div class="page-end">SafeStripe ${escape(manifest.version)} · Stripe API 2026-08-26.dahlia</div></article>`).join('\n')}<nav class="pager" aria-label="Adjacent pages"><a id="previous"></a><a id="next"></a></nav><footer>MIT licensed. Independent of Stripe. <a href="../LICENSE">License</a> · <a href="../VERIFICATION.md">Verification record</a></footer></main><aside class="on-this-page" aria-label="On this page"><h2>On this page</h2>${pages.map((page) => `<nav data-toc="${page.id}">${page.headings.map((heading) => `<a href="#${heading.anchor}">${heading.label}</a>`).join('')}</nav>`).join('')}</aside></div>${support.dialog}<script>${script}</script></body></html>`;
 await writeFile(new URL('handbook.html', directory), html);
 highlighter.dispose();
 console.log(
