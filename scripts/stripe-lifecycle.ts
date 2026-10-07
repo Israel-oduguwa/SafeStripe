@@ -63,7 +63,7 @@ let stage = 'account verification',
   accountIdentityVerified = false,
   cleanupPassed = true;
 let deployment: Deployment | undefined;
-let failure: { stage: string; code?: string; stripeType?: string } | undefined;
+let failure: { stage: string; code?: string; stripeType?: string; reason?: string } | undefined;
 const failures: NonNullable<typeof failure>[] = [];
 const checkpoint = (value: string) => {
   stage = value;
@@ -240,7 +240,20 @@ async function card(page: Page, number: string) {
             const control = option.locator(
               'xpath=ancestor-or-self::*[self::button or self::label or @role="radio" or @role="button" or @tabindex="0"][1]',
             );
-            await ((await control.count()) ? control : option).click();
+            if (await control.count()) await control.click();
+            else {
+              // The hosted picker can place a presentation child over a full-row click target.
+              let selected = false;
+              for (const ancestor of await option.locator('xpath=ancestor::*').all()) {
+                const box = await ancestor.boundingBox();
+                if (box && box.width >= 200 && box.height >= 40 && box.height <= 100) {
+                  await ancestor.click();
+                  selected = true;
+                  break;
+                }
+              }
+              if (!selected) throw new Error('No visible Card row control');
+            }
             return true;
           }
         }
@@ -326,7 +339,20 @@ async function advance(id: string, time: number) {
 
 async function recordFailure(error: unknown, captureBrowser = false) {
   const details = diagnostic(error);
-  const result = { stage, code: details.code, stripeType: details.stripeType };
+  const reason =
+    error instanceof Stripe.errors.StripeError
+      ? error.message
+          .replace(/https?:[^\s"'<>]+/g, '[URL]')
+          .replace(/\b(?:sk|rk|pk|whsec)_[A-Za-z0-9_]+\b/g, '[credential]')
+          .replace(
+            /\b(?:acct|cus|pi|pm|cs|re|in|sub|price|prod|evt|we)_[A-Za-z0-9_]+\b/g,
+            '[fixture ID]',
+          )
+          .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/g, '[email]')
+          .replace(/\b\d{12,19}\b/g, '[test number]')
+          .slice(0, 600)
+      : undefined;
+  const result = { stage, code: details.code, stripeType: details.stripeType, reason };
   failure ??= result;
   failures.push(result);
   console.error(
@@ -392,6 +418,11 @@ async function recordFailure(error: unknown, captureBrowser = false) {
               ? {
                   name: error.name,
                   pointerIntercepted: error.message.includes('intercepts pointer events'),
+                  interceptorTags: error.message
+                    .split('\n')
+                    .filter((line) => line.includes('intercepts pointer events'))
+                    .map((line) => /<([A-Za-z0-9-]+)/.exec(line)?.[1])
+                    .filter(Boolean),
                   notEnabled: error.message.includes('not enabled'),
                   detached: error.message.includes('detached'),
                   timeout: error.message.includes('Timeout'),
@@ -645,6 +676,16 @@ try {
     );
     const subscriptionId = created.result.id;
     subscriptions.push(subscriptionId);
+    const pendingSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const pendingInvoice = await stripe.invoices.retrieve(ref(pendingSubscription.latest_invoice));
+    if (pendingInvoice.status === 'open') {
+      checkpoint('paying the initial subscription invoice');
+      await stripe.invoices.pay(
+        pendingInvoice.id,
+        { payment_method: visa.id },
+        { idempotencyKey: `lifecycle:${runId}:initial-invoice` },
+      );
+    }
     const subscription = await eventually(
       () => stripe.subscriptions.retrieve(subscriptionId),
       (sub) => sub.status === 'active',
