@@ -37,6 +37,8 @@ Use the dedicated disposable sandbox configured for the [protected service workf
 
 The runner creates its own customer, prices, webhook destinations and two private demo workspaces. It never uses an existing visitor's payment records. The public frontend proxy carries authenticated API calls; Stripe delivers signed events directly to the Render endpoint. The runner holds workspace cookies in memory. Keys, signing secrets, Checkout URLs, client secrets and raw customer payloads are excluded from its output.
 
+The card journey, each bank outcome and the subscription journey run independently after shared setup. A browser failure does not hide the bank and renewal checks. The report retains every failed checkpoint and the checks that completed; any failure keeps the overall result failed. All twelve checks and cleanup are required for a passing run.
+
 Refunds or cancellations close the one-time payment fixtures. The runner deletes its webhook endpoints, disconnects its demo workspaces, deletes synthetic customers and test clocks, and archives its prices and products. Stripe keeps financial history. A one-day private fixture-ID artifact supports cleanup if the process is interrupted; it contains no credentials. Do not treat a run with failed cleanup as complete.
 
 ## How the demo avoids stale state

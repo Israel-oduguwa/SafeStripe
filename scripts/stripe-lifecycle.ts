@@ -64,6 +64,7 @@ let stage = 'account verification',
   cleanupPassed = true;
 let deployment: Deployment | undefined;
 let failure: { stage: string; code?: string; stripeType?: string } | undefined;
+const failures: NonNullable<typeof failure>[] = [];
 const checkpoint = (value: string) => {
   stage = value;
   console.log(`Lifecycle checkpoint: ${value}`);
@@ -236,7 +237,10 @@ async function card(page: Page, number: string) {
         for (const frame of page.frames()) {
           const option = frame.getByText('Card', { exact: true }).first();
           if (await option.isVisible()) {
-            await option.click();
+            const control = option.locator(
+              'xpath=ancestor-or-self::*[self::button or self::label or @role="radio" or @role="button" or @tabindex="0"][1]',
+            );
+            await ((await control.count()) ? control : option).click();
             return true;
           }
         }
@@ -320,10 +324,99 @@ async function advance(id: string, time: number) {
   );
 }
 
+async function recordFailure(error: unknown, captureBrowser = false) {
+  const details = diagnostic(error);
+  const result = { stage, code: details.code, stripeType: details.stripeType };
+  failure ??= result;
+  failures.push(result);
+  console.error(
+    `Lifecycle test failed during ${stage}; credentials and remote payloads are omitted.`,
+  );
+  if (captureBrowser && page && page.url().startsWith('https://checkout.stripe.com/')) {
+    await mkdir('artifacts/lifecycle-browser', { recursive: true });
+    // Screenshot may show synthetic contact/test-card entries, never the app's key form.
+    // Structured field diagnostics omit values; neither artifact includes the address bar.
+    await page.screenshot({ path: 'artifacts/lifecycle-browser/checkout.png' }).catch(() => {});
+    const fields = [];
+    const controls = [];
+    for (const frame of page.frames()) {
+      fields.push(
+        await frame
+          .locator('input')
+          .evaluateAll((inputs) =>
+            inputs.map((input) => ({
+              id: input.id,
+              name: (input as HTMLInputElement).name,
+              label: input.getAttribute('aria-label'),
+              type: (input as HTMLInputElement).type,
+            })),
+          )
+          .catch(() => []),
+      );
+      controls.push(
+        await frame
+          .getByText('Card', { exact: true })
+          .evaluateAll((elements) =>
+            elements.map((element) => {
+              const ancestors = [];
+              for (
+                let node: Element | null = element, depth = 0;
+                node && depth < 5;
+                node = node.parentElement, depth++
+              )
+                ancestors.push({
+                  tag: node.tagName,
+                  role: node.getAttribute('role'),
+                  tabIndex: node.getAttribute('tabindex'),
+                  pointerEvents: getComputedStyle(node).pointerEvents,
+                });
+              return ancestors;
+            }),
+          )
+          .catch(() => []),
+      );
+    }
+    const buttons = await page
+      .getByRole('button')
+      .allTextContents()
+      .catch(() => []);
+    await writeFile(
+      'artifacts/lifecycle-browser/fields.json',
+      JSON.stringify(
+        {
+          fields,
+          buttons,
+          controls,
+          error:
+            error instanceof Error
+              ? {
+                  name: error.name,
+                  pointerIntercepted: error.message.includes('intercepts pointer events'),
+                  notEnabled: error.message.includes('not enabled'),
+                  detached: error.message.includes('detached'),
+                  timeout: error.message.includes('Timeout'),
+                }
+              : undefined,
+        },
+        null,
+        2,
+      ) + '\n',
+    );
+  }
+}
+
+async function journey(work: () => Promise<void>, captureBrowser = false) {
+  try {
+    await work();
+  } catch (error) {
+    await recordFailure(error, captureBrowser);
+  }
+}
+
 try {
   assert.equal((await stripe.accounts.retrieve(null)).id, credentials.account);
   accountIdentityVerified = true;
-  stage = 'fixture catalog';
+  checkpoint('fixture catalog');
   const purchase = await stripe.products.create({
     name: 'SafeStripe lifecycle purchase',
     metadata,
@@ -351,308 +444,289 @@ try {
   prices.push(recurring.id);
   const customer = await fixtureCustomer();
   const primary = await workspace(customer.id, price.id, recurring.id);
-  browser = await chromium.launch({ headless: true });
-  page = await browser.newPage({ locale: 'en-US' });
-  stage = 'hosted card payment and signed Firestore receipt';
-  const first = await order(primary.session);
-  await page.goto(checkoutUrl(first.url));
-  await card(page, '4242424242424242');
-  checkpoint('waiting for the signed Checkout receipt');
-  const firstReceipt = await receipt(primary.session, first.id, first.sessionId);
-  const paid = await stripe.checkout.sessions.retrieve(first.sessionId);
-  assert.equal(paid.payment_status, 'paid');
-  assert.equal(ref(paid.customer), customer.id);
-  payments.add(ref(paid.payment_intent));
-  checks.push(
-    'Hosted browser payment produced an authenticated Firestore receipt for the expected order, Session and 500 USD cents',
-  );
-
-  stage = 'actual signed duplicate deliveries';
-  const paidEvent = await stripe.events.retrieve(firstReceipt.eventId);
-  const before = await primary.session.request<{
-    deliveries: { admitted: number; duplicates: number };
-  }>(`/api/deliveries/${paidEvent.id}`);
-  for (let n = 0; n < 10; n++) await resend(paidEvent, primary.endpoint.id);
-  await eventually(
-    () =>
-      primary.session.request<{ deliveries: { admitted: number; duplicates: number } }>(
-        `/api/deliveries/${paidEvent.id}`,
-      ),
-    (value) =>
-      value.deliveries.admitted >= before.deliveries.admitted + 10 &&
-      value.deliveries.duplicates >= before.deliveries.duplicates + 10,
-  );
-  const after = await primary.session.request<OrderView>(`/api/orders/${first.id}`);
-  assert.deepEqual(after.receipt, firstReceipt);
-  checks.push(
-    'Ten additional authenticated duplicate admissions were recorded after Stripe CLI replays; the original receipt and paid time were unchanged',
-  );
-
-  stage = 'declined card and retry of the same Checkout';
-  const second = await order(primary.session);
-  await page.goto(checkoutUrl(second.url));
-  await card(page, '4000000000009995');
-  await page
-    .getByText(/insufficient funds|card was declined/i)
-    .first()
-    .waitFor({ timeout: 30_000 });
-  const declined = await primary.session.request<OrderView>(`/api/orders/${second.id}`);
-  assert.notEqual(declined.order.state, 'paid');
-  assert.equal(declined.receipt, null);
-  await card(page, '4242424242424242');
-  checkpoint('waiting for the retried Checkout receipt');
-  await receipt(primary.session, second.id, second.sessionId);
-  const retried = await stripe.checkout.sessions.retrieve(second.sessionId);
-  payments.add(ref(retried.payment_intent));
-  checks.push(
-    'A real card decline left the order unpaid; retrying the same Session produced its signed receipt',
-  );
-
-  stage = 'partial refund and durable replay';
-  const refundRun = {
-    id: `run-${randomUUID()}`,
-    workflow: 'refund',
-    values: { paymentIntentId: ref(paid.payment_intent), amount: '250' },
-  };
-  const partial = await primary.session.request<{ result: { id: string } }>(
-    '/api/runs',
-    'POST',
-    refundRun,
-  );
-  const replayed = await primary.session.request<{ result: { id: string } }>(
-    '/api/runs',
-    'POST',
-    refundRun,
-  );
-  assert.equal(replayed.result.id, partial.result.id);
-  const partialRemote = await stripe.refunds.retrieve(partial.result.id);
-  assert.equal(partialRemote.amount, 250);
-  assert.equal(partialRemote.status, 'succeeded');
-  await recorded(
-    primary.session,
-    await remoteEvent('refund.created', partial.result.id),
-    'succeeded',
-  );
-  assert.equal(
-    ((await state(primary.session, partial.result.id, 'succeeded')) as State & { amount: number })
-      .amount,
-    250,
-  );
-  checks.push(
-    'A real partial refund reached its signed Firestore state; replaying the same business operation returned the same refund',
-  );
-
-  stage = 'remaining refund and retained sale receipt';
-  const rest = await primary.session.request<{ result: { id: string } }>('/api/runs', 'POST', {
-    ...refundRun,
-    id: `run-${randomUUID()}`,
-  });
-  assert.notEqual(rest.result.id, partial.result.id);
-  await recorded(primary.session, await remoteEvent('refund.created', rest.result.id), 'succeeded');
-  const refunded = await stripe.charges.retrieve(
-    ref((await stripe.paymentIntents.retrieve(ref(paid.payment_intent))).latest_charge),
-  );
-  assert.equal(refunded.amount_refunded, 500);
-  assert.equal(refunded.refunded, true);
-  const refunds = await stripe.refunds.list({
-    payment_intent: ref(paid.payment_intent),
-    limit: 10,
-  });
-  assert.equal(refunds.data.length, 2);
-  assert.deepEqual(
-    (await primary.session.request<OrderView>(`/api/orders/${first.id}`)).receipt,
-    firstReceipt,
-  );
-  checks.push(
-    'Two deliberate partial refunds closed the 500-cent charge; replay added no third refund and preserved the historical sale receipt',
-  );
-
-  stage = 'ACH processing without premature payment';
-  const pendingBank = await intent(primary.session, 'pm_usBankAccount_processing');
-  await recorded(
-    primary.session,
-    await remoteEvent('payment_intent.processing', pendingBank.id),
-    'processing',
-  );
-  assert.equal((await state(primary.session, pendingBank.id, 'processing')).amountPaid, 0);
-  await stripe.paymentIntents.cancel(pendingBank.id);
-  await recorded(
-    primary.session,
-    await remoteEvent('payment_intent.canceled', pendingBank.id),
-    'canceled',
-  );
-  checks.push(
-    'An indefinitely processing ACH fixture had no received amount and its cancellation reached Firestore',
-  );
-
-  stage = 'ACH delayed success';
-  const bank = await intent(primary.session, 'pm_usBankAccount_success');
-  await eventually(
-    () => stripe.paymentIntents.retrieve(bank.id),
-    (payment) => payment.status === 'succeeded',
-  );
-  await recorded(
-    primary.session,
-    await remoteEvent('payment_intent.succeeded', bank.id),
-    'succeeded',
-  );
-  assert.equal((await state(primary.session, bank.id, 'succeeded')).amountPaid, 500);
-  checks.push(
-    'ACH remained unpaid while processing and reached a signed, durable paid state only after Stripe success',
-  );
-
-  stage = 'ACH delayed failure';
-  const failedBank = await intent(primary.session, 'pm_usBankAccount_insufficientFunds');
-  await eventually(
-    () => stripe.paymentIntents.retrieve(failedBank.id),
-    (payment) => payment.status === 'requires_payment_method',
-  );
-  await recorded(
-    primary.session,
-    await remoteEvent('payment_intent.payment_failed', failedBank.id),
-    'requires_payment_method',
-  );
-  assert.equal(
-    (await state(primary.session, failedBank.id, 'requires_payment_method')).amountPaid,
-    0,
-  );
-  checks.push('ACH delayed failure produced a signed failure record with no received amount');
-
-  stage = 'subscription initial payment';
-  const clock = await stripe.testHelpers.testClocks.create({
-    frozen_time: Math.floor(Date.now() / 1000),
-    name: 'SafeStripe lifecycle',
-  });
-  clocks.push(clock.id);
-  const subscriber = await fixtureCustomer(clock.id);
-  const visa = await stripe.paymentMethods.attach('pm_card_visa', { customer: subscriber.id });
-  await stripe.customers.update(subscriber.id, {
-    invoice_settings: { default_payment_method: visa.id },
-  });
-  const recurringWorkspace = await workspace(subscriber.id, price.id, recurring.id);
-  const created = await recurringWorkspace.session.request<{ result: { id: string } }>(
-    '/api/runs',
-    'POST',
-    {
-      id: `run-${randomUUID()}`,
-      workflow: 'subscription',
-      values: {},
-    },
-  );
-  const subscriptionId = created.result.id;
-  subscriptions.push(subscriptionId);
-  const subscription = await eventually(
-    () => stripe.subscriptions.retrieve(subscriptionId),
-    (sub) => sub.status === 'active',
-  );
-  const initialInvoice = ref(subscription.latest_invoice);
-  await recorded(
-    recurringWorkspace.session,
-    await remoteEvent('invoice.paid', initialInvoice),
-    'paid',
-  );
-  assert.equal((await state(recurringWorkspace.session, initialInvoice, 'paid')).amountPaid, 1000);
-  checks.push(
-    'Initial subscription invoice payment reached the authenticated Firestore billing record',
-  );
-
-  stage = 'failed renewal and recovery';
-  // Hold only this fixture destination so genuine events can be delivered out of order later.
-  await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, { disabled: true });
-  const failureMethod = await stripe.paymentMethods.attach('pm_card_chargeCustomerFail', {
-    customer: subscriber.id,
-  });
-  await stripe.subscriptions.update(subscriptionId, { default_payment_method: failureMethod.id });
-  const periodEnd = subscription.items.data[0]?.current_period_end;
-  assert.ok(periodEnd);
-  await advance(clock.id, periodEnd + 7200);
-  const renewed = await eventually(
-    () => stripe.subscriptions.retrieve(subscriptionId),
-    (sub) => sub.status === 'past_due',
-  );
-  const renewalInvoiceId = ref(renewed.latest_invoice);
-  assert.notEqual(renewalInvoiceId, initialInvoice);
-  const failedInvoice = await stripe.invoices.retrieve(renewalInvoiceId);
-  assert.equal(failedInvoice.status, 'open');
-  assert.ok(failedInvoice.amount_remaining > 0);
-  const failedEvent = await remoteEvent('invoice.payment_failed', renewalInvoiceId);
-  await stripe.subscriptions.update(subscriptionId, { default_payment_method: visa.id });
-  const recovered = await stripe.invoices.pay(
-    renewalInvoiceId,
-    { payment_method: visa.id },
-    { idempotencyKey: `lifecycle:${runId}:recover` },
-  );
-  assert.equal(recovered.status, 'paid');
-  const recoveredEvent = await remoteEvent('invoice.paid', renewalInvoiceId);
-  await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, { disabled: false });
-  await resend(recoveredEvent, recurringWorkspace.endpoint.id);
-  await recorded(recurringWorkspace.session, recoveredEvent, 'paid');
-  assert.equal(
-    (await state(recurringWorkspace.session, renewalInvoiceId, 'paid')).amountPaid,
-    1000,
-  );
-  checks.push(
-    'A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record',
-  );
-
-  stage = 'distinct older failure delivered after recovery';
-  await resend(failedEvent, recurringWorkspace.endpoint.id);
-  const late = await recorded(recurringWorkspace.session, failedEvent, 'paid');
-  assert.equal(late.snapshotStatus, 'open');
-  assert.equal(
-    (await state(recurringWorkspace.session, renewalInvoiceId, 'paid')).amountPaid,
-    1000,
-  );
-  checks.push(
-    'The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state',
-  );
-
-  stage = 'subscription cancellation';
-  await stripe.subscriptions.cancel(subscriptionId);
-  await recorded(
-    recurringWorkspace.session,
-    await remoteEvent('customer.subscription.deleted', subscriptionId),
-    'canceled',
-  );
-  await state(recurringWorkspace.session, subscriptionId, 'canceled');
-  checks.push('Subscription cancellation reached the signed, durable canceled state');
-  passed = true;
-} catch (error) {
-  const details = diagnostic(error);
-  failure = { stage, code: details.code, stripeType: details.stripeType };
-  console.error(
-    `Lifecycle test failed during ${stage}; credentials and remote payloads are omitted.`,
-  );
-  if (page && page.url().startsWith('https://checkout.stripe.com/')) {
-    await mkdir('artifacts/lifecycle-browser', { recursive: true });
-    // Screenshot may show synthetic contact/test-card entries, never the app's key form.
-    // Structured field diagnostics omit values; neither artifact includes the address bar.
-    await page.screenshot({ path: 'artifacts/lifecycle-browser/checkout.png' }).catch(() => {});
-    const fields = [];
-    for (const frame of page.frames()) {
-      fields.push(
-        await frame
-          .locator('input')
-          .evaluateAll((inputs) =>
-            inputs.map((input) => ({
-              id: input.id,
-              name: (input as HTMLInputElement).name,
-              label: input.getAttribute('aria-label'),
-              type: (input as HTMLInputElement).type,
-            })),
-          )
-          .catch(() => []),
-      );
-    }
-    const buttons = await page
-      .getByRole('button')
-      .allTextContents()
-      .catch(() => []);
-    await writeFile(
-      'artifacts/lifecycle-browser/fields.json',
-      JSON.stringify({ fields, buttons }, null, 2) + '\n',
+  await journey(async () => {
+    browser = await chromium.launch({ headless: true });
+    const checkoutPage = (page = await browser.newPage({ locale: 'en-US' }));
+    checkpoint('hosted card payment and signed Firestore receipt');
+    const first = await order(primary.session);
+    await checkoutPage.goto(checkoutUrl(first.url));
+    await card(checkoutPage, '4242424242424242');
+    checkpoint('waiting for the signed Checkout receipt');
+    const firstReceipt = await receipt(primary.session, first.id, first.sessionId);
+    const paid = await stripe.checkout.sessions.retrieve(first.sessionId);
+    assert.equal(paid.payment_status, 'paid');
+    assert.equal(ref(paid.customer), customer.id);
+    payments.add(ref(paid.payment_intent));
+    checks.push(
+      'Hosted browser payment produced an authenticated Firestore receipt for the expected order, Session and 500 USD cents',
     );
-  }
+
+    checkpoint('actual signed duplicate deliveries');
+    const paidEvent = await stripe.events.retrieve(firstReceipt.eventId);
+    const before = await primary.session.request<{
+      deliveries: { admitted: number; duplicates: number };
+    }>(`/api/deliveries/${paidEvent.id}`);
+    for (let n = 0; n < 10; n++) await resend(paidEvent, primary.endpoint.id);
+    await eventually(
+      () =>
+        primary.session.request<{ deliveries: { admitted: number; duplicates: number } }>(
+          `/api/deliveries/${paidEvent.id}`,
+        ),
+      (value) =>
+        value.deliveries.admitted >= before.deliveries.admitted + 10 &&
+        value.deliveries.duplicates >= before.deliveries.duplicates + 10,
+    );
+    const after = await primary.session.request<OrderView>(`/api/orders/${first.id}`);
+    assert.deepEqual(after.receipt, firstReceipt);
+    checks.push(
+      'Ten additional authenticated duplicate admissions were recorded after Stripe CLI replays; the original receipt and paid time were unchanged',
+    );
+
+    checkpoint('declined card and retry of the same Checkout');
+    const second = await order(primary.session);
+    await checkoutPage.goto(checkoutUrl(second.url));
+    await card(checkoutPage, '4000000000009995');
+    await checkoutPage
+      .getByText(/insufficient funds|card was declined/i)
+      .first()
+      .waitFor({ timeout: 30_000 });
+    const declined = await primary.session.request<OrderView>(`/api/orders/${second.id}`);
+    assert.notEqual(declined.order.state, 'paid');
+    assert.equal(declined.receipt, null);
+    await card(checkoutPage, '4242424242424242');
+    checkpoint('waiting for the retried Checkout receipt');
+    await receipt(primary.session, second.id, second.sessionId);
+    const retried = await stripe.checkout.sessions.retrieve(second.sessionId);
+    payments.add(ref(retried.payment_intent));
+    checks.push(
+      'A real card decline left the order unpaid; retrying the same Session produced its signed receipt',
+    );
+
+    checkpoint('partial refund and durable replay');
+    const refundRun = {
+      id: `run-${randomUUID()}`,
+      workflow: 'refund',
+      values: { paymentIntentId: ref(paid.payment_intent), amount: '250' },
+    };
+    const partial = await primary.session.request<{ result: { id: string } }>(
+      '/api/runs',
+      'POST',
+      refundRun,
+    );
+    const replayed = await primary.session.request<{ result: { id: string } }>(
+      '/api/runs',
+      'POST',
+      refundRun,
+    );
+    assert.equal(replayed.result.id, partial.result.id);
+    const partialRemote = await stripe.refunds.retrieve(partial.result.id);
+    assert.equal(partialRemote.amount, 250);
+    assert.equal(partialRemote.status, 'succeeded');
+    await recorded(
+      primary.session,
+      await remoteEvent('refund.created', partial.result.id),
+      'succeeded',
+    );
+    assert.equal(
+      ((await state(primary.session, partial.result.id, 'succeeded')) as State & { amount: number })
+        .amount,
+      250,
+    );
+    checks.push(
+      'A real partial refund reached its signed Firestore state; replaying the same business operation returned the same refund',
+    );
+
+    checkpoint('remaining refund and retained sale receipt');
+    const rest = await primary.session.request<{ result: { id: string } }>('/api/runs', 'POST', {
+      ...refundRun,
+      id: `run-${randomUUID()}`,
+    });
+    assert.notEqual(rest.result.id, partial.result.id);
+    await recorded(
+      primary.session,
+      await remoteEvent('refund.created', rest.result.id),
+      'succeeded',
+    );
+    const refunded = await stripe.charges.retrieve(
+      ref((await stripe.paymentIntents.retrieve(ref(paid.payment_intent))).latest_charge),
+    );
+    assert.equal(refunded.amount_refunded, 500);
+    assert.equal(refunded.refunded, true);
+    const refunds = await stripe.refunds.list({
+      payment_intent: ref(paid.payment_intent),
+      limit: 10,
+    });
+    assert.equal(refunds.data.length, 2);
+    assert.deepEqual(
+      (await primary.session.request<OrderView>(`/api/orders/${first.id}`)).receipt,
+      firstReceipt,
+    );
+    checks.push(
+      'Two deliberate partial refunds closed the 500-cent charge; replay added no third refund and preserved the historical sale receipt',
+    );
+  }, true);
+
+  await journey(async () => {
+    checkpoint('ACH processing without premature payment');
+    const pendingBank = await intent(primary.session, 'pm_usBankAccount_processing');
+    await recorded(
+      primary.session,
+      await remoteEvent('payment_intent.processing', pendingBank.id),
+      'processing',
+    );
+    assert.equal((await state(primary.session, pendingBank.id, 'processing')).amountPaid, 0);
+    await stripe.paymentIntents.cancel(pendingBank.id);
+    await recorded(
+      primary.session,
+      await remoteEvent('payment_intent.canceled', pendingBank.id),
+      'canceled',
+    );
+    checks.push(
+      'An indefinitely processing ACH fixture had no received amount and its cancellation reached Firestore',
+    );
+  });
+  await journey(async () => {
+    checkpoint('ACH delayed success');
+    const bank = await intent(primary.session, 'pm_usBankAccount_success');
+    await eventually(
+      () => stripe.paymentIntents.retrieve(bank.id),
+      (payment) => payment.status === 'succeeded',
+    );
+    await recorded(
+      primary.session,
+      await remoteEvent('payment_intent.succeeded', bank.id),
+      'succeeded',
+    );
+    assert.equal((await state(primary.session, bank.id, 'succeeded')).amountPaid, 500);
+    checks.push(
+      'ACH remained unpaid while processing and reached a signed, durable paid state only after Stripe success',
+    );
+  });
+  await journey(async () => {
+    checkpoint('ACH delayed failure');
+    const failedBank = await intent(primary.session, 'pm_usBankAccount_insufficientFunds');
+    await eventually(
+      () => stripe.paymentIntents.retrieve(failedBank.id),
+      (payment) => payment.status === 'requires_payment_method',
+    );
+    await recorded(
+      primary.session,
+      await remoteEvent('payment_intent.payment_failed', failedBank.id),
+      'requires_payment_method',
+    );
+    assert.equal(
+      (await state(primary.session, failedBank.id, 'requires_payment_method')).amountPaid,
+      0,
+    );
+    checks.push('ACH delayed failure produced a signed failure record with no received amount');
+  });
+
+  await journey(async () => {
+    checkpoint('subscription initial payment');
+    const clock = await stripe.testHelpers.testClocks.create({
+      frozen_time: Math.floor(Date.now() / 1000),
+      name: 'SafeStripe lifecycle',
+    });
+    clocks.push(clock.id);
+    const subscriber = await fixtureCustomer(clock.id);
+    const visa = await stripe.paymentMethods.attach('pm_card_visa', { customer: subscriber.id });
+    await stripe.customers.update(subscriber.id, {
+      invoice_settings: { default_payment_method: visa.id },
+    });
+    const recurringWorkspace = await workspace(subscriber.id, price.id, recurring.id);
+    const created = await recurringWorkspace.session.request<{ result: { id: string } }>(
+      '/api/runs',
+      'POST',
+      {
+        id: `run-${randomUUID()}`,
+        workflow: 'subscription',
+        values: {},
+      },
+    );
+    const subscriptionId = created.result.id;
+    subscriptions.push(subscriptionId);
+    const subscription = await eventually(
+      () => stripe.subscriptions.retrieve(subscriptionId),
+      (sub) => sub.status === 'active',
+    );
+    const initialInvoice = ref(subscription.latest_invoice);
+    await recorded(
+      recurringWorkspace.session,
+      await remoteEvent('invoice.paid', initialInvoice),
+      'paid',
+    );
+    assert.equal(
+      (await state(recurringWorkspace.session, initialInvoice, 'paid')).amountPaid,
+      1000,
+    );
+    checks.push(
+      'Initial subscription invoice payment reached the authenticated Firestore billing record',
+    );
+
+    checkpoint('failed renewal and recovery');
+    // Hold only this fixture destination so genuine events can be delivered out of order later.
+    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, { disabled: true });
+    const failureMethod = await stripe.paymentMethods.attach('pm_card_chargeCustomerFail', {
+      customer: subscriber.id,
+    });
+    await stripe.subscriptions.update(subscriptionId, { default_payment_method: failureMethod.id });
+    const periodEnd = subscription.items.data[0]?.current_period_end;
+    assert.ok(periodEnd);
+    await advance(clock.id, periodEnd + 7200);
+    const renewed = await eventually(
+      () => stripe.subscriptions.retrieve(subscriptionId),
+      (sub) => sub.status === 'past_due',
+    );
+    const renewalInvoiceId = ref(renewed.latest_invoice);
+    assert.notEqual(renewalInvoiceId, initialInvoice);
+    const failedInvoice = await stripe.invoices.retrieve(renewalInvoiceId);
+    assert.equal(failedInvoice.status, 'open');
+    assert.ok(failedInvoice.amount_remaining > 0);
+    const failedEvent = await remoteEvent('invoice.payment_failed', renewalInvoiceId);
+    await stripe.subscriptions.update(subscriptionId, { default_payment_method: visa.id });
+    const recovered = await stripe.invoices.pay(
+      renewalInvoiceId,
+      { payment_method: visa.id },
+      { idempotencyKey: `lifecycle:${runId}:recover` },
+    );
+    assert.equal(recovered.status, 'paid');
+    const recoveredEvent = await remoteEvent('invoice.paid', renewalInvoiceId);
+    await stripe.webhookEndpoints.update(recurringWorkspace.endpoint.id, { disabled: false });
+    await resend(recoveredEvent, recurringWorkspace.endpoint.id);
+    await recorded(recurringWorkspace.session, recoveredEvent, 'paid');
+    assert.equal(
+      (await state(recurringWorkspace.session, renewalInvoiceId, 'paid')).amountPaid,
+      1000,
+    );
+    checks.push(
+      'A test-clock renewal actually failed, then a corrected payment method recovered the invoice and its durable paid record',
+    );
+
+    checkpoint('distinct older failure delivered after recovery');
+    await resend(failedEvent, recurringWorkspace.endpoint.id);
+    const late = await recorded(recurringWorkspace.session, failedEvent, 'paid');
+    assert.equal(late.snapshotStatus, 'open');
+    assert.equal(
+      (await state(recurringWorkspace.session, renewalInvoiceId, 'paid')).amountPaid,
+      1000,
+    );
+    checks.push(
+      'The genuine earlier failed-invoice event arrived after invoice.paid and could not restore its stale open state',
+    );
+
+    checkpoint('subscription cancellation');
+    await stripe.subscriptions.cancel(subscriptionId);
+    await recorded(
+      recurringWorkspace.session,
+      await remoteEvent('customer.subscription.deleted', subscriptionId),
+      'canceled',
+    );
+    await state(recurringWorkspace.session, subscriptionId, 'canceled');
+    checks.push('Subscription cancellation reached the signed, durable canceled state');
+  });
+  passed = failures.length === 0 && checks.length === 12;
+} catch (error) {
+  await recordFailure(error);
 } finally {
   await browser?.close().catch(() => {
     cleanupPassed = false;
@@ -738,6 +812,7 @@ try {
         }
       : undefined,
     failure,
+    failures,
     checks,
     notCovered: [
       'Live payments',
