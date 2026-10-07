@@ -1,0 +1,180 @@
+<div class="wrap">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="../">Home</a><span aria-hidden="true">/</span><span>Get started</span>
+  </nav>
+  <section class="page-hero">
+    <p class="eyebrow">First payment</p>
+    <h1>From a test key<br /><em>to a saved receipt.</em></h1>
+    <p class="lead">
+      Try the hosted sandbox with nothing to install, or connect SafeStripe to your own application.
+      Start with one payment before exploring the billing workflows.
+    </p>
+    <div class="hero-actions">
+      <a class="button" href="https://safestripe-demo.vercel.app/"
+        >Open the sandbox <span aria-hidden="true">↗</span></a
+      ><a class="text-link" href="#install">Install in your application ↓</a>
+    </div>
+  </section>
+  <section class="onboarding-section" aria-labelledby="browser-heading">
+    <div>
+      <p class="eyebrow">No installation</p>
+      <h2 id="browser-heading">Try one hosted checkout.</h2>
+      <p>
+        The sandbox uses Express, Cloud Firestore and the published
+        <code>safestripe@0.3.0</code> package. It creates actual records in your dedicated Stripe
+        sandbox.
+      </p>
+      <p class="notice">
+        Test secret keys still grant access to sandbox data and settings. Enter keys only in the
+        website's masked fields. Never put them in an issue, screenshot or public recording.
+      </p>
+    </div>
+    <ol class="onboarding-steps">
+      <li>
+        <h3>Connect your test keys.</h3>
+        <p>
+          Use a dedicated Stripe sandbox's secret key and matching publishable key. Automatic setup
+          creates the customer, prices and webhook destination.
+        </p>
+      </li>
+      <li>
+        <h3>Open Hosted checkout.</h3>
+        <p>
+          Pay with <code>4242 4242 4242 4242</code>, a future expiry and a valid three-digit CVC.
+          Use test details only.
+        </p>
+      </li>
+      <li>
+        <h3>Wait for the verified receipt.</h3>
+        <p>
+          Return to the workspace and inspect the payment checks. A redirect or connected badge
+          alone is not proof of payment.
+        </p>
+      </li>
+      <li>
+        <h3>Review and clean up.</h3>
+        <p>
+          Use <strong>Your test records and cleanup</strong> when finished. Financial history
+          remains in Stripe; cleanup does not erase it.
+        </p>
+      </li>
+    </ol>
+  </section>
+  <section class="section" id="install" aria-labelledby="install-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Your own application</p>
+      <h2 id="install-heading">Install the library.<br />Add only the drivers you use.</h2>
+      <p>
+        Use Node.js 22.19 or newer. The Stripe server SDK is included; consumers do not install it
+        separately.
+      </p>
+    </div>
+    <div class="install install-large">
+      <code id="install-command">npm install safestripe</code
+      ><button id="copy-install" data-copy="install-command" aria-label="Copy installation command">
+        Copy
+      </button>
+    </div>
+    <p id="copy-status" class="copy-status" role="status"></p>
+    <div
+      class="table-scroll"
+      role="region"
+      aria-label="Optional installation dependencies"
+      tabindex="0"
+    >
+      <table>
+        <caption>
+          Choose your application dependencies
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">You use</th>
+            <th scope="col">Add</th>
+            <th scope="col">Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Express</th>
+            <td><code>npm install express express-rate-limit</code></td>
+            <td>Authentication and server-approved billing terms</td>
+          </tr>
+          <tr>
+            <th scope="row">Next.js</th>
+            <td>Your existing application</td>
+            <td>Node runtime; worker outside request handlers</td>
+          </tr>
+          <tr>
+            <th scope="row">PostgreSQL</th>
+            <td><code>npm install pg</code></td>
+            <td>Durable database and migrations</td>
+          </tr>
+          <tr>
+            <th scope="row">MongoDB</th>
+            <td><code>npm install mongodb</code></td>
+            <td>Replica-set transaction support</td>
+          </tr>
+          <tr>
+            <th scope="row">Cloud Firestore</th>
+            <td><code>npm install @google-cloud/firestore</code></td>
+            <td>Server credentials and indexes</td>
+          </tr>
+          <tr>
+            <th scope="row">Local SQLite</th>
+            <td>No database driver</td>
+            <td>One active worker; local development</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">
+      The optional React payment form has separate browser dependencies. Follow
+      <a href="../docs/handbook.html#17-payment-ui">Payment UI</a> if you want an embedded form.
+    </p>
+  </section>
+  <section class="section">
+    <div class="resource-grid">
+      <a class="resource-card" href="../docs/handbook.html#11-getting-started"
+        ><span>1 · Configure</span>
+        <h3>Create your billing service.</h3>
+        <p>Choose an adapter, set server credentials and define an authorization policy.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="../examples/"
+        ><span>2 · Integrate</span>
+        <h3>Add routes and the worker.</h3>
+        <p>
+          Express and Next.js examples preserve the raw webhook body and stable operation identity.
+        </p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="../releases/#adoption"
+        ><span>3 · Validate</span>
+        <h3>Test your deployment.</h3>
+        <p>
+          Check the recovery contracts, tenant policy and adoption requirements before using live
+          funds.
+        </p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      >
+    </div>
+  </section>
+  <section class="cta-panel">
+    <div>
+      <p class="eyebrow">Prefer a complete local app?</p>
+      <h2>Run the repository tutorial.</h2>
+      <p>
+        The Express and Next.js examples share a SQLite workflow. No Docker required. This is
+        example tooling, separate from installing the npm library in your app.
+      </p>
+    </div>
+    <a class="button button-light" href="../docs/handbook.html#03-quickstart"
+      >Follow the local quickstart <span aria-hidden="true">→</span></a
+    >
+  </section>
+  <p class="caption section-note">
+    Five minutes to a verified receipt is the onboarding target once prerequisites are ready.
+    Independent timed runs have not established it yet. If a step is unclear,
+    <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/new/choose"
+      >report where you got stuck</a
+    >. Interrupted sandbox setup should be resumed in the same workspace.
+  </p>
+</div>

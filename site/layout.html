@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8f3" />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <meta property="og:title" content="{{TITLE}}" />
+    <meta property="og:description" content="{{DESCRIPTION}}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{CANONICAL}}" />
+    <link rel="canonical" href="{{CANONICAL}}" />
+    <link rel="icon" href="{{BASE}}favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="{{BASE}}styles.css" />
+    <link rel="stylesheet" href="{{BASE}}support.css" />
+    <script src="{{BASE}}site.js" defer></script>
+    <script src="{{BASE}}support.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner wrap">
+        <a class="brand" href="{{BASE}}" aria-label="SafeStripe home"
+          ><img src="{{BASE}}favicon.svg" width="32" height="32" alt="" />SafeStripe</a
+        >
+        <button class="menu-toggle" aria-expanded="false" aria-controls="site-navigation" hidden>
+          <span>Menu</span><span class="menu-icon" aria-hidden="true"></span>
+        </button>
+        <nav id="site-navigation" aria-label="Main navigation">
+          {{NAVIGATION}}<a class="nav-try" href="https://safestripe-demo.vercel.app/"
+            >Try the sandbox <span aria-hidden="true">↗</span></a
+          >
+        </nav>
+      </div>
+    </header>
+    <main id="main">{{CONTENT}}</main>
+    <footer class="site-footer">
+      <div class="wrap footer-grid">
+        <div class="footer-intro">
+          <a class="brand" href="{{BASE}}"
+            ><img src="{{BASE}}favicon.svg" width="28" height="28" alt="" />SafeStripe</a
+          >
+          <p>Durable payment workflows.<br />Your database. Your application.</p>
+          {{SUPPORT_BUTTON}}
+        </div>
+        <div>
+          <h2>Build</h2>
+          <a href="{{BASE}}get-started/">Get started</a
+          ><a href="{{BASE}}examples/">Framework examples</a
+          ><a href="{{BASE}}docs/handbook.html">Documentation</a
+          ><a href="https://safestripe-demo.vercel.app/">Online sandbox ↗</a>
+        </div>
+        <div>
+          <h2>Inspect</h2>
+          <a href="{{BASE}}reliability/">Reliability contracts</a
+          ><a href="{{BASE}}benchmarks/">Benchmarks</a><a href="{{BASE}}releases/">Release status</a
+          ><a href="{{BASE}}docs/adr/README.md">Architecture decisions</a>
+        </div>
+        <div>
+          <h2>Project</h2>
+          <a href="https://github.com/Israel-oduguwa/SafeStripe">GitHub ↗</a
+          ><a href="https://www.npmjs.com/package/safestripe">npm ↗</a
+          ><a href="{{BASE}}SECURITY.md">Report a vulnerability</a
+          ><a href="{{BASE}}CONTRIBUTING.md">Contributing</a>
+        </div>
+      </div>
+      <div class="wrap footer-bottom">
+        <span>MIT licensed · Independent project</span
+        ><span
+          >0.3.0 evaluation preview ·
+          <a href="{{BASE}}releases/#adoption">Adoption requirements</a></span
+        >
+      </div>
+    </footer>
+    {{SUPPORT_DIALOG}}
+  </body>
+</html>

@@ -1,256 +1,187 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f7f8f3" />
-    <meta
-      name="description"
-      content="Durable Stripe operations, verified webhooks and database-backed workers for Node.js, Express and Next.js."
-    />
-    <title>SafeStripe — Reliable payment workflows for Node.js</title>
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./support.css" />
-    <script src="./site.js" defer></script>
-    <script src="./support.js" defer></script>
-  </head>
-  <body>
-    <a class="skip" href="#main">Skip to content</a>
-    <header class="header wrap">
-      <a class="brand" href="./" aria-label="SafeStripe home"
-        ><span class="mark" aria-hidden="true">s<span>∕</span></span
-        >SafeStripe</a
-      >
-      <nav aria-label="Main navigation">
-        <a href="#how-it-works">How it works</a
-        ><a href="./docs/handbook.html#11-getting-started">Documentation</a
-        ><a class="github" href="https://github.com/Israel-oduguwa/SafeStripe">GitHub ↗</a>
-      </nav>
-    </header>
-    <main id="main">
-      <section class="hero wrap">
-        <div class="hero-copy">
-          <span class="release"><span class="status-dot"></span>Node.js · Express · Next.js</span>
-          <h1>Stripe accepted it.<br />Your server<br /><em>timed out.</em></h1>
-          <p>
-            Retrying should recover the same operation. SafeStripe keeps its identity in your
-            database, saves verified webhooks before acknowledging them and lets workers recover
-            after a crash. Your application keeps control of authorization and fulfillment.
-          </p>
-          <div class="hero-actions">
-            <a class="button" href="https://safestripe-demo.vercel.app/"
-              >Try the sandbox <span>→</span></a
-            ><a class="text-link" href="./docs/handbook.html#31-try-safestripe"
-              >Start with one payment ↗</a
-            >
-          </div>
-          <div class="proof-links" aria-label="Recorded engineering evidence">
-            <a href="./docs/handbook.html#30-payment-lifecycle">12 sandbox journeys verified ↗</a>
-            <a href="https://github.com/Israel-oduguwa/SafeStripe/actions/workflows/ci.yml"
-              >Public CI ↗</a
-            >
-            <a href="./benchmarks/README.md">Measured benchmarks ↗</a>
-          </div>
-          <div class="install">
-            <code id="install-command">npm install safestripe</code
-            ><button id="copy-install" aria-label="Copy installation command">Copy</button>
-          </div>
-          <p class="release-note" id="release-note">
-            0.3.0 evaluation preview. Available on npm.
-            <a href="./docs/handbook.html#28-release-readiness">Read the release status →</a>
-          </p>
-          <span id="copy-status" role="status" class="copy-status"></span>
-        </div>
-        <div class="hero-example">
-          <div class="editor">
-            <div class="editor-top">
-              <span class="file-dot"></span><span>checkout.ts</span
-              ><span class="editor-label">Server</span>
-            </div>
-            <div class="framework-tabs" role="tablist" aria-label="Framework example">
-              <button id="express-tab" role="tab" aria-selected="true" aria-controls="express-code">
-                Express</button
-              ><button
-                id="next-tab"
-                role="tab"
-                aria-selected="false"
-                tabindex="-1"
-                aria-controls="next-code"
-              >
-                Next.js
-              </button>
-            </div>
-            <div id="express-code" role="tabpanel" aria-labelledby="express-tab">
-              <!-- EXPRESS_CODE -->
-            </div>
-            <div id="next-code" role="tabpanel" aria-labelledby="next-tab" hidden>
-              <!-- NEXT_CODE -->
-            </div>
-            <div class="editor-foot">
-              <span class="status-dot"></span>Same order. Same operation ID.
-            </div>
-          </div>
-          <p class="example-note">
-            Route fragments. Your app authenticates the request, loads the order and supplies
-            <code>billing</code>. <a href="./docs/handbook.html#16-frameworks">Full setup →</a>
-          </p>
-          <div class="operation-trail" aria-label="Example retry flow">
-            <span>Request times out</span><span aria-hidden="true">→</span><span>Retry same ID</span
-            ><span aria-hidden="true">→</span><strong>Recover the result</strong>
-          </div>
-        </div>
-      </section>
-      <div class="compatibility wrap">
-        <p>Use your existing stack.</p>
-        <div>
-          <span>PostgreSQL</span><span>MongoDB</span><span>Cloud Firestore</span><span>SQLite</span>
-        </div>
-        <a href="./docs/handbook.html#15-databases">Choose an adapter →</a>
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">
+        <span class="status-dot" aria-hidden="true"></span>Stripe reliability for Node.js
+      </p>
+      <h1>Stripe accepted it.<br />Your server<br /><em>timed out.</em></h1>
+      <p class="lead">
+        A retry should continue the same operation. SafeStripe keeps its identity in your database,
+        persists verified webhooks and helps workers recover after a crash.
+      </p>
+      <div class="hero-actions">
+        <a class="button" href="./get-started/"
+          >Make your first payment <span aria-hidden="true">→</span></a
+        ><a class="text-link" href="./reliability/">How recovery works ↗</a>
       </div>
-      <section class="work wrap" id="how-it-works">
-        <div class="section-intro">
-          <span class="section-label">After the happy path</span>
-          <h2>Payments don’t stop<br />at an API response.</h2>
-          <p>
-            A working checkout is the beginning. SafeStripe handles the state you need when requests
-            repeat, processes restart and deliveries arrive out of order.
-          </p>
-        </div>
-        <div class="features">
-          <article>
-            <span class="index">01</span>
-            <div>
-              <h3>A retry keeps its identity</h3>
-              <p>
-                Store the intended action before calling Stripe. Reuse its operation ID to recover
-                the result. Changed terms under the same identity are rejected.
-              </p>
-              <a href="./docs/handbook.html#13-what-safestripe-solves">Operation history →</a>
-            </div>
-          </article>
-          <article>
-            <span class="index">02</span>
-            <div>
-              <h3>Receive now. Process durably.</h3>
-              <p>
-                Verify the original webhook bytes and persist accepted events before acknowledging
-                them. Workers claim jobs with leases, bounded retries and an explicit review path
-                for failures.
-              </p>
-              <a href="./docs/handbook.html#02-distributed-architecture">Webhook processing →</a>
-            </div>
-          </article>
-          <article>
-            <span class="index">03</span>
-            <div>
-              <h3>Commit related changes together</h3>
-              <p>
-                Update a billing record, record an effect guard and enqueue an outbox message in one
-                database transaction. Downstream recipients still need to handle duplicate
-                deliveries.
-              </p>
-              <a href="./docs/handbook.html#19-enterprise">Design your workers →</a>
-            </div>
-          </article>
-        </div>
-      </section>
-      <section class="paths wrap">
-        <div class="paths-heading">
-          <h2>Start with one workflow.</h2>
-          <p>The guides include setup, code and the checks that tell you whether it worked.</p>
-        </div>
-        <a href="./docs/handbook.html#03-quickstart"
-          ><span class="path-number">01 / Tutorial</span>
-          <h3>Your first sandbox payment</h3>
-          <p>Run a local Express app with SQLite. No Docker or database server required.</p>
-          <span class="path-link">Follow the tutorial →</span></a
+      <div class="install">
+        <code id="install-command">npm install safestripe</code
+        ><button
+          id="copy-install"
+          data-copy="install-command"
+          aria-label="Copy installation command"
         >
-        <a href="./docs/handbook.html#17-payment-ui"
-          ><span class="path-number">02 / Payment form</span>
-          <h3>A checkout that fits your app</h3>
-          <p>
-            Use Stripe-hosted Checkout or place a styled React payment form beside your order
-            summary.
-          </p>
-          <span class="path-link">Build the payment UI →</span></a
+          Copy
+        </button>
+      </div>
+      <p id="copy-status" class="copy-status" role="status"></p>
+      <p class="release-note" id="release-note">
+        0.3.0 evaluation preview · Node.js ≥ 22.19<br /><a href="./releases/"
+          >Inspect the release status →</a
         >
-        <a href="./docs/handbook.html#21-billing-models"
-          ><span class="path-number">03 / Billing</span>
-          <h3>Seats, usage and contracts</h3>
-          <p>Choose a billing model, configure its prices and use a focused, durable operation.</p>
-          <span class="path-link">Browse the recipes →</span></a
-        >
-      </section>
-      <section class="paths wrap" aria-label="More billing guides">
-        <a href="./docs/handbook.html#23-revenue-metrics"
-          ><span class="path-number">04 / Reporting</span>
-          <h3>Understand recurring revenue</h3>
-          <p>
-            Calculate MRR, expansion, contraction and retention from explicit customer snapshots.
-          </p>
-          <span class="path-link">Read the metric definitions →</span></a
-        >
-        <a href="./docs/handbook.html#22-account-services"
-          ><span class="path-number">05 / Stripe services</span>
-          <h3>Connect the right pieces</h3>
-          <p>
-            Plan seller onboarding, tax, recovery and verification with clear account requirements.
-          </p>
-          <span class="path-link">Explore account services →</span></a
-        >
-        <a href="./docs/handbook.html#19-enterprise"
-          ><span class="path-number">06 / Operations</span>
-          <h3>Prepare for production</h3>
-          <p>Set tenant policies, monitor workers and test the storage adapter you will deploy.</p>
-          <span class="path-link">Plan your deployment →</span></a
-        >
-      </section>
-      <section class="responsibilities wrap">
-        <div>
-          <h2>A clear boundary<br />with your application.</h2>
-          <a class="text-link" href="./docs/handbook.html#19-enterprise"
-            >Plan a production deployment ↗</a
-          >
-        </div>
-        <div>
-          <p>
-            SafeStripe supplies payment workflow infrastructure. Your application decides who can
-            act, which prices are valid and when a customer receives access.
-          </p>
-          <p>
-            Start with a sandbox. Test the database adapter you will deploy, run workers on an
-            appropriate host and monitor failed jobs. Recorded SQLite and PostgreSQL measurements
-            cover synthetic workloads; capacity on your deployment and independent security review
-            remain open.
-          </p>
-          <a href="./VERIFICATION.md">Read the verification record →</a>
-          <p>
-            <a href="./docs/handbook.html#30-payment-lifecycle"
-              >Review payment lifecycle coverage →</a
-            >
-          </p>
-        </div>
-      </section>
-      <section class="closing wrap">
-        <h2>Make the next payment<br />integration easier to maintain.</h2>
-        <a class="button" href="./docs/handbook.html#11-getting-started"
-          >Open the documentation <span>→</span></a
-        >
-      </section>
-    </main>
-    <footer class="footer wrap">
-      <a class="brand" href="./"
-        ><span class="mark" aria-hidden="true">s<span>∕</span></span
-        >SafeStripe</a
+      </p>
+    </div>
+    <figure class="operation-card">
+      <figcaption>
+        <strong>One operation. Two attempts.</strong><span>Illustration</span>
+      </figcaption>
+      <div class="operation-key">
+        <code>refund:order-1042</code><span class="badge">Identity retained</span>
+      </div>
+      <ol class="operation-steps">
+        <li>
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div>
+            <strong>Persist the intent</strong>
+            <p>Record the operation and its terms.</p>
+          </div>
+          <span class="step-tag">Database</span>
+        </li>
+        <li>
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div>
+            <strong>Stripe accepts the request</strong>
+            <p>The remote mutation succeeds.</p>
+          </div>
+          <span class="step-tag">Stripe</span>
+        </li>
+        <li class="failure-step">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div>
+            <strong>The response disappears</strong>
+            <p>Your server sees a timeout.</p>
+          </div>
+          <span class="step-tag">Network</span>
+        </li>
+        <li>
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div>
+            <strong>Retry with the same identity</strong>
+            <p>Continue the recorded operation.</p>
+          </div>
+          <span class="step-tag">Recovery</span>
+        </li>
+      </ol>
+      <p class="operation-foot">
+        Retries are bounded by the recovery window. Missing history and older ambiguous outcomes
+        need reconciliation.
+      </p>
+    </figure>
+  </section>
+  <div class="proof-strip" aria-label="Recorded engineering evidence">
+    <a href="./releases/#verification"
+      ><strong>12</strong
+      ><span>Verified sandbox journeys <span aria-hidden="true">↗</span></span></a
+    ><a href="./benchmarks/"
+      ><strong>3</strong><span>PostgreSQL configurations <span aria-hidden="true">↗</span></span></a
+    ><a href="https://github.com/Israel-oduguwa/SafeStripe/actions/workflows/ci.yml"
+      ><strong>22 / 24</strong
+      ><span>Node.js versions in public CI <span aria-hidden="true">↗</span></span></a
+    >
+  </div>
+  <section class="section" id="how-it-works">
+    <div class="section-heading">
+      <p class="eyebrow">Beyond an API wrapper</p>
+      <h2>Keep the work when<br />the process disappears.</h2>
+      <p>
+        Stripe's idempotency key is one layer. Webhook admission, business effects and downstream
+        delivery each need their own durable boundary.
+      </p>
+    </div>
+    <div class="feature-grid">
+      <article>
+        <span class="feature-icon" aria-hidden="true">↻</span>
+        <h3>Keep one operation identity.</h3>
+        <p>
+          Bind the business intent and its terms before a supported mutation. Completed retries
+          reuse the recorded result.
+        </p>
+        <a class="text-link" href="./reliability/#operations">Operations →</a>
+      </article>
+      <article>
+        <span class="feature-icon" aria-hidden="true">↓</span>
+        <h3>Save before acknowledging.</h3>
+        <p>
+          Verify the webhook, persist the work and let expiring leases recover a crashed worker's
+          claim.
+        </p>
+        <a class="text-link" href="./reliability/#webhooks">Webhook processing →</a>
+      </article>
+      <article>
+        <span class="feature-icon" aria-hidden="true">✓</span>
+        <h3>Commit the business effect.</h3>
+        <p>
+          Guard the outcome with a business key. State and outbox intent commit in the same
+          transaction.
+        </p>
+        <a class="text-link" href="./reliability/#effects">Transactional effects →</a>
+      </article>
+    </div>
+  </section>
+  <section class="stack-section">
+    <div>
+      <p class="eyebrow">Fits the application you run</p>
+      <h2>Your database.<br /><em>Your billing policy.</em></h2>
+      <p>
+        Use the supported adapter that fits your stack. SafeStripe coordinates the work; your
+        application owns authorization, prices and fulfillment policy.
+      </p>
+      <a class="text-link" href="./examples/">Explore the integrations →</a>
+    </div>
+    <div class="stack-list">
+      <a href="./docs/handbook.html#15-databases"
+        ><strong>PostgreSQL</strong><span>Durable transactions and concurrent workers</span></a
+      ><a href="./docs/handbook.html#15-databases"
+        ><strong>MongoDB</strong><span>Replica-set transactions</span></a
+      ><a href="./docs/handbook.html#15-databases"
+        ><strong>Cloud Firestore</strong><span>Server-side transactions and indexed work</span></a
+      ><a href="./docs/handbook.html#15-databases"
+        ><strong>SQLite</strong><span>Local development; one active worker</span></a
       >
-      <p>MIT licensed. Independent of Stripe.</p>
-      <nav aria-label="Footer">
-        <a href="./LICENSE">License</a><a href="./SECURITY.md">Security</a
-        ><a href="./THIRD_PARTY_NOTICES.md">Third-party notices</a>
-        <!-- SUPPORT_BUTTON -->
-      </nav>
-    </footer>
-    <!-- SUPPORT_DIALOG -->
-  </body>
-</html>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-heading">
+      <p class="eyebrow">Read the evidence</p>
+      <h2>Useful claims have<br />something behind them.</h2>
+    </div>
+    <div class="resource-grid">
+      <a class="resource-card" href="./get-started/"
+        ><span>First payment</span>
+        <h3>From test key to receipt.</h3>
+        <p>Try the hosted sandbox, then wire up your application.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="./benchmarks/"
+        ><span>Benchmarks</span>
+        <h3>See every measured run.</h3>
+        <p>Rates, latency, retries, machine details and retained failures.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="./releases/"
+        ><span>Release status</span>
+        <h3>Know what is verified.</h3>
+        <p>Payment lifecycle coverage and the remaining adoption requirements.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      >
+    </div>
+  </section>
+  <section class="cta-panel">
+    <div>
+      <p class="eyebrow">Try it with actual test records</p>
+      <h2>Make one payment.<br />Follow its recovery path.</h2>
+      <p>The online sandbox uses the published npm package, Express and Cloud Firestore.</p>
+    </div>
+    <a class="button button-light" href="https://safestripe-demo.vercel.app/"
+      >Open the sandbox <span aria-hidden="true">↗</span></a
+    >
+  </section>
+</div>

@@ -1,0 +1,172 @@
+<div class="wrap">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="../">Home</a><span aria-hidden="true">/</span><span>Releases</span>
+  </nav>
+  <section class="page-hero">
+    <p class="eyebrow">Release status</p>
+    <h1>Available to evaluate.<br /><em>Evidence included.</em></h1>
+    <p class="lead">
+      SafeStripe 0.3.0 is published on npm. Public tests and sandbox reports cover specific
+      reliability and payment scenarios. Enterprise adoption still needs an independent review and
+      validation of your deployment.
+    </p>
+    <div class="hero-actions">
+      <a class="button" href="https://www.npmjs.com/package/safestripe"
+        >View on npm <span aria-hidden="true">↗</span></a
+      ><a class="text-link" href="../CHANGELOG.md">Full changelog ↗</a>
+    </div>
+  </section>
+  <section class="release-card">
+    <div>
+      <span class="badge">Evaluation preview</span>
+      <h2>0.3.0</h2>
+      <p>Published 6 October 2026 · MIT license · Node.js ≥ 22.19</p>
+      <p>
+        Durable operations, verified webhook admission, recoverable workers and transactional
+        effects, with PostgreSQL, MongoDB, Firestore and local SQLite adapters.
+      </p>
+    </div>
+    <div class="release-links">
+      <a href="../docs/evidence/npm-registry-2026-10-06.json">Clean registry install report ↗</a
+      ><a href="../VERIFICATION.md">Verification record ↗</a
+      ><a href="https://github.com/Israel-oduguwa/SafeStripe/actions/workflows/ci.yml"
+        >Public CI ↗</a
+      ><a href="../docs/handbook.html#28-release-readiness">Readiness requirements ↗</a>
+    </div>
+  </section>
+  <section class="section" id="verification" aria-labelledby="verification-heading">
+    <div class="section-heading">
+      <p class="eyebrow">Payment lifecycle evidence</p>
+      <h2 id="verification-heading">Twelve journeys.<br />Actual Stripe test records.</h2>
+      <p>
+        Recorded 7 October 2026 against the deployed Express and Firestore npm consumer. Stripe SDK
+        22.6.2 · API version 2026-08-26.dahlia.
+      </p>
+    </div>
+    <div class="evidence-grid">
+      <article>
+        <span class="evidence-count">5</span>
+        <h3>Card &amp; refunds</h3>
+        <p>
+          Hosted checkout with a signed receipt; decline followed by success in the same session;
+          partial refund replay; full remaining refund; ten duplicate signed deliveries without
+          another receipt.
+        </p>
+      </article>
+      <article>
+        <span class="evidence-count">3</span>
+        <h3>ACH outcomes</h3>
+        <p>
+          Processing followed by cancellation, actual success and actual failure. The suite checks
+          the signed state and paid amounts.
+        </p>
+        <p class="caption">
+          ACH creation uses Stripe SDK fixtures, not a SafeStripe creation command.
+        </p>
+      </article>
+      <article>
+        <span class="evidence-count">4</span>
+        <h3>Subscriptions</h3>
+        <p>
+          Initial payment; a test-clock renewal failure and recovery; an older failed snapshot after
+          payment; signed cancellation.
+        </p>
+      </article>
+    </div>
+    <div class="inline-links">
+      <a href="../docs/evidence/stripe-lifecycle-2026-10-07.json">Lifecycle result JSON ↗</a
+      ><a href="../docs/evidence/stripe-lifecycle-attempts-2026-10-07.json">Retained attempts ↗</a
+      ><a href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941"
+        >Verification run ↗</a
+      >
+    </div>
+    <p class="caption">
+      These journeys do not establish every payment method, country, capture mode, dispute path or
+      live-funds deployment. Earlier failed attempts are retained rather than discarded.
+    </p>
+  </section>
+  <section class="section">
+    <div class="resource-grid">
+      <a class="resource-card" href="../reliability/"
+        ><span>Process failure</span>
+        <h3>Recovery after SIGKILL.</h3>
+        <p>
+          Actual child-process crashes, stale ownership, duplicate effects and outbox response loss.
+        </p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="../benchmarks/"
+        ><span>Measurements</span>
+        <h3>Keep the workload visible.</h3>
+        <p>Three PostgreSQL lane configurations, a local baseline and every retained repetition.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      ><a class="resource-card" href="../docs/evidence/stripe-public-elements-2026-10-06.json"
+        ><span>Browser payment form</span>
+        <h3>Test the embedded flow.</h3>
+        <p>Recorded payment-form checks include decline, authentication and workspace reload.</p>
+        <span class="resource-arrow" aria-hidden="true">↗</span></a
+      >
+    </div>
+  </section>
+  <section class="retained-panel" id="adoption">
+    <div class="section-heading">
+      <p class="eyebrow">Before live-funds adoption</p>
+      <h2>Open requirements,<br />not hidden assumptions.</h2>
+      <p>
+        The current release is an evaluation preview. A passing test suite does not replace a review
+        of your application's permissions, financial policies and operational environment.
+      </p>
+    </div>
+    <ul class="adoption-list">
+      <li>
+        <div>
+          <h3>Independent security review</h3>
+          <p>
+            Threat boundaries, tenant isolation, authorization, worker ownership and database
+            restore behavior.
+          </p>
+        </div>
+        <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/23">Issue 23 ↗</a>
+      </li>
+      <li>
+        <div>
+          <h3>Release provenance and signing</h3>
+          <p>
+            Trusted publishing, verified release signatures and associated supply-chain evidence.
+            Version 0.3.0 does not include npm provenance.
+          </p>
+        </div>
+        <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/6">Issue 6 ↗</a>
+      </li>
+      <li>
+        <div>
+          <h3>Independent onboarding results</h3>
+          <p>
+            External developers should reach a verified receipt without maintainer help. No timed
+            adoption result is claimed yet.
+          </p>
+        </div>
+        <a href="https://github.com/Israel-oduguwa/SafeStripe/issues/8">Issue 8 ↗</a>
+      </li>
+      <li>
+        <div>
+          <h3>Your deployment's recovery and capacity</h3>
+          <p>
+            Validate backups, reconciliation, lease timing, retry budgets, alerting and load against
+            your own database and payment policy.
+          </p>
+        </div>
+        <a href="../docs/handbook.html#08-testing-and-runbooks">Runbooks ↗</a>
+      </li>
+    </ul>
+  </section>
+  <section class="cta-panel">
+    <div>
+      <p class="eyebrow">Start with evidence</p>
+      <h2>Try a payment. Inspect the receipt.</h2>
+      <p>Use a dedicated Stripe sandbox and evaluate the contracts in your own application.</p>
+    </div>
+    <a class="button button-light" href="../get-started/"
+      >Get started <span aria-hidden="true">→</span></a
+    >
+  </section>
+</div>
