@@ -272,8 +272,8 @@ async function card(page: Page, number: string) {
   await input(page, /billing.?name|cardholder|name.?on.?card/i, 'SafeStripe test', false);
   await input(page, /postal|zip/i, '94111', false);
   const buttons = page
-    .getByRole('button', { name: /^(?:Pay|Subscribe)(?:\b|Processing$)/i })
-    .filter({ hasNotText: 'Link' });
+    .getByRole('button')
+    .filter({ hasText: /^(?:Pay|Subscribe)(?:Processing)?$/i });
   checkpoint('submitting the hosted test payment');
   await buttons.first().click();
 }
@@ -313,9 +313,15 @@ async function intent(session: DemoSession, token: string) {
   const id = result.result.id;
   assert.match(id, /^pi_[A-Za-z0-9]+$/);
   payments.add(id);
+  // This fixture tests ACH outcomes independently of the account's dynamic method selection.
+  // Leave amount, currency, customer and merchant-wide payment settings unchanged.
+  const configured = await stripe.paymentIntents.update(
+    id,
+    { automatic_payment_methods: { enabled: false }, payment_method_types: ['us_bank_account'] },
+    { idempotencyKey: `lifecycle:${runId}:ach-configure:${id}` },
+  );
+  assert.deepEqual(configured.payment_method_types, ['us_bank_account']);
   let payment = await stripe.paymentIntents.confirm(id, {
-    // Configure only this disposable fixture; merchant-wide payment settings stay unchanged.
-    allowed_payment_method_types: ['us_bank_account'],
     payment_method: token,
     return_url: `${DEMO_ORIGIN}/success`,
     mandate_data: {
@@ -342,8 +348,9 @@ async function advance(id: string, time: number) {
 async function recordFailure(error: unknown, captureBrowser = false) {
   const details = diagnostic(error);
   const reason =
-    error instanceof Stripe.errors.StripeError
+    error instanceof Error
       ? error.message
+          .split('\n')[0]!
           .replace(/https?:[^\s"'<>]+/g, '[URL]')
           .replace(/\b(?:sk|rk|pk|whsec)_[A-Za-z0-9_]+\b/g, '[credential]')
           .replace(
@@ -406,7 +413,14 @@ async function recordFailure(error: unknown, captureBrowser = false) {
     }
     const buttons = await page
       .getByRole('button')
-      .allTextContents()
+      .evaluateAll((elements) =>
+        elements.map((element) => ({
+          text: element.textContent,
+          ariaLabel: element.getAttribute('aria-label'),
+          type: element.getAttribute('type'),
+          disabled: (element as HTMLButtonElement).disabled,
+        })),
+      )
       .catch(() => []);
     await writeFile(
       'artifacts/lifecycle-browser/fields.json',
