@@ -272,7 +272,7 @@ async function card(page: Page, number: string) {
   await input(page, /billing.?name|cardholder|name.?on.?card/i, 'SafeStripe test', false);
   await input(page, /postal|zip/i, '94111', false);
   const buttons = page
-    .getByRole('button', { name: /^(Pay|Subscribe)\b/i })
+    .getByRole('button', { name: /^(?:Pay|Subscribe)(?:\b|Processing$)/i })
     .filter({ hasNotText: 'Link' });
   checkpoint('submitting the hosted test payment');
   await buttons.first().click();
@@ -314,6 +314,8 @@ async function intent(session: DemoSession, token: string) {
   assert.match(id, /^pi_[A-Za-z0-9]+$/);
   payments.add(id);
   let payment = await stripe.paymentIntents.confirm(id, {
+    // Configure only this disposable fixture; merchant-wide payment settings stay unchanged.
+    allowed_payment_method_types: ['us_bank_account'],
     payment_method: token,
     return_url: `${DEMO_ORIGIN}/success`,
     mandate_data: {
