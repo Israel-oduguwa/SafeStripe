@@ -49,7 +49,7 @@ for (const region of document.querySelectorAll('[data-film]')) {
   const start = async (seekTo) => {
     if (pending) return;
     busy(true);
-    status.textContent = 'Preparing the demo…';
+    status.textContent = 'Preparing the explainer…';
     try {
       await video.play();
       // Native playback may restart at zero; seek only after that startup completes.
@@ -64,13 +64,13 @@ for (const region of document.querySelectorAll('[data-film]')) {
   video.addEventListener('waiting', () => busy(true));
   video.addEventListener('playing', () => {
     busy(false);
-    status.textContent = 'Sandbox test replay · timing edited · sound optional';
+    status.textContent = 'Illustrated risk + real sandbox replay · music and sound effects';
   });
   for (const event of ['pause', 'ended'])
     video.addEventListener(event, () => {
       busy(false);
       status.textContent = video.ended
-        ? 'Replay the demo or try the sandbox.'
+        ? 'Replay the explainer or try the sandbox.'
         : 'Paused · use the controls or a chapter to continue';
     });
   video.addEventListener('error', () => {

@@ -9,9 +9,9 @@ export const sitePages = [
   {
     slug: 'demo',
     source: 'pages/demo.html',
-    title: 'A failed payment. A clean recovery. — SafeStripe',
+    title: 'Paid once. Processed twice? — SafeStripe',
     description:
-      'Watch a 30-second motion replay of a real Stripe sandbox decline, same-session retry and a separate duplicate-delivery test.',
+      'A 30-second explainer of repeated payment updates, with native 4K downloads and a real Stripe sandbox replay result.',
   },
   {
     slug: 'reliability',

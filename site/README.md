@@ -34,16 +34,16 @@ flowchart TD
   Start --> Sandbox[Online sandbox]
 ```
 
-| Page          | URL                   | Visitor's next step                                             |
-| ------------- | --------------------- | --------------------------------------------------------------- |
-| Home          | `/`                   | Understand the problem and make a first payment                 |
-| Demo          | `/demo/`              | Watch the sandbox replay, inspect evidence or download the film |
-| Reliability   | `/reliability/`       | Review contracts, tests and architecture decisions              |
-| Benchmarks    | `/benchmarks/`        | Inspect a configuration and download its original JSON          |
-| Examples      | `/examples/`          | Select a framework and follow the complete integration guide    |
-| Get started   | `/get-started/`       | Try the sandbox or install in an application                    |
-| Releases      | `/releases/`          | Review payment evidence and remaining adoption requirements     |
-| Documentation | `/docs/handbook.html` | Search a guide or use its permanent section anchor              |
+| Page          | URL                   | Visitor's next step                                                           |
+| ------------- | --------------------- | ----------------------------------------------------------------------------- |
+| Home          | `/`                   | Understand the problem and make a first payment                               |
+| Demo          | `/demo/`              | Understand repeated payment updates, inspect evidence or download the 4K film |
+| Reliability   | `/reliability/`       | Review contracts, tests and architecture decisions                            |
+| Benchmarks    | `/benchmarks/`        | Inspect a configuration and download its original JSON                        |
+| Examples      | `/examples/`          | Select a framework and follow the complete integration guide                  |
+| Get started   | `/get-started/`       | Try the sandbox or install in an application                                  |
+| Releases      | `/releases/`          | Review payment evidence and remaining adoption requirements                   |
+| Documentation | `/docs/handbook.html` | Search a guide or use its permanent section anchor                            |
 
 URLs are relative to the deployment root, including the `/SafeStripe/` GitHub Pages project path. Existing handbook anchors and raw benchmark report URLs remain available. The build emits `sitemap.xml` with the seven pages and handbook.
 
@@ -55,7 +55,7 @@ At widths of 820 pixels or less, the menu button expands the navigation in place
 
 Home links directly to every main page. Reliability links to architecture, runbooks and verification. Benchmarks links to its protocol, original reports and CI runs. Examples and Get started link to configuration, routes, workers and readiness. No important page is orphaned.
 
-The demo uses a native video player with an optional caption track, a poster, download links and four chapter shortcuts. It never autoplays. A pending play or buffering event shows a spinner over the poster or retained video frame; errors, pause and a 15-second interface deadline restore the controls. The transcript and original evidence remain accessible without playback.
+The demo uses a native video player with an optional caption track, a poster, download links and four chapter shortcuts. The web player loads an HD copy; native 4K landscape and portrait masters are separate downloads. All versions include licensed music and original synchronized effects, with measured audio peaks in the manifest. Raw stock music is never included in the published files. It never autoplays. A pending play or buffering event shows a spinner over the poster or retained video frame; errors, pause and a 15-second interface deadline restore the controls. The transcript and original evidence remain accessible without playback.
 
 ## Content and evidence sources
 

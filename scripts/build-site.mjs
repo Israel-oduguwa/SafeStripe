@@ -119,10 +119,13 @@ for (const name of ['styles.css', 'site.js', 'favicon.svg', 'support.css', 'supp
 const demoAssets = [
   'safestripe-recovery.mp4',
   'safestripe-recovery-vertical.mp4',
+  'safestripe-recovery-4k.mp4',
+  'safestripe-recovery-vertical-4k.mp4',
   'poster.jpg',
   'poster-vertical.jpg',
   'captions.vtt',
   'manifest.json',
+  'MEDIA-NOTICES.md',
 ];
 await mkdir(new URL('launch/demo/', output), { recursive: true });
 for (const name of demoAssets)

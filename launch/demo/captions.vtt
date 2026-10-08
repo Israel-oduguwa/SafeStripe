@@ -1,25 +1,25 @@
 WEBVTT
 
 00:00.000 --> 00:04.000
-A real Stripe sandbox payment fails.
-SafeStripe follows its recovery through the saved receipt.
+Paid once. Processed twice?
+Stripe can send the same payment message again.
 
-00:04.000 --> 00:10.000
-Stripe declines an insufficient-funds test card.
-The order stays unpaid and has no paid receipt.
+00:04.000 --> 00:09.000
+If your app reacts to both messages,
+it could add the same credits twice.
 
-00:10.000 --> 00:16.000
-The customer retries with a working test card.
-The existing Checkout Session is reused.
+00:09.000 --> 00:14.000
+SafeStripe checks the sender and saves the update
+before saying “received.”
 
-00:16.000 --> 00:22.000
-Stripe accepts the payment. A signed webhook is verified,
-processed and saved as an authenticated Firestore receipt.
+00:14.000 --> 00:20.000
+Repeat the message. Keep the result.
+Repeated updates keep the original saved receipt.
 
-00:22.000 --> 00:26.000
-A separate replay test records ten duplicate deliveries.
-The original receipt and its paid time remain unchanged.
+00:20.000 --> 00:25.000
+Real sandbox test: ten duplicate updates.
+The original receipt and paid time stayed unchanged.
 
-00:26.000 --> 00:30.000
-Try SafeStripe with your own test keys.
-npm install safestripe. Version 0.3.0 is an evaluation preview.
+00:25.000 --> 00:30.000
+Handle the repeats. Keep building.
+Try SafeStripe with your own Stripe test keys.

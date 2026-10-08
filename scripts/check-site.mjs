@@ -79,16 +79,30 @@ function key(page, node, value) {
 const client = await readFile(new URL('site.js', base), 'utf8');
 const film = pages.get('demo/index.html');
 const movie = film.document.querySelector('video');
+assert.ok(film.document.querySelector('.wrap > .film-intro > .film-copy h1'));
+assert.ok(film.document.querySelector('.film-intro > .film-figure .film-stage > video'));
+assert.equal(film.document.querySelectorAll('.feature-grid > .feature').length, 3);
+assert.equal(film.document.querySelectorAll('.resource-grid > .resource-card').length, 3);
+assert.equal(film.document.querySelectorAll('.film-script > li').length, 6);
 assert.ok(movie.hasAttribute('controls') && movie.hasAttribute('playsinline'));
 assert.equal(movie.hasAttribute('autoplay'), false);
 assert.equal(movie.querySelector('source').getAttribute('type'), 'video/mp4');
 assert.equal(film.document.querySelectorAll('[data-film-seek]').length, 4);
-assert.ok(film.document.querySelector('.film-context').textContent.includes('separate test'));
+assert.ok(
+  film.document
+    .querySelector('.film-context')
+    .textContent.includes('not an observed customer incident'),
+);
 const manifest = JSON.parse(await readFile(new URL('launch/demo/manifest.json', base), 'utf8'));
 assert.equal(manifest.testModeOnly, true);
 assert.equal(manifest.replayIsSeparateJourney, true);
 assert.equal(manifest.timingIsEdited, true);
 assert.equal(manifest.packageVersion, '0.3.0');
+assert.equal(manifest.illustrativeRiskIsNotAnObservedIncident, true);
+assert.equal(manifest.native4kRendering, true);
+assert.equal(manifest.music.standaloneMusicRedistributed, false);
+assert.equal(manifest.outputs.length, 4);
+assert.equal(manifest.outputs.filter((item) => item.file.endsWith('-4k.mp4')).length, 2);
 const sourceReport = await readFile(
   new URL('docs/evidence/stripe-lifecycle-2026-10-07.json', base),
 );
@@ -97,6 +111,11 @@ for (const artifact of manifest.outputs) {
   assert.equal(artifact.durationSeconds, 30);
   assert.equal(artifact.frames, 900);
   assert.equal(artifact.fullDecodePassed, true);
+  if (artifact.file.endsWith('-4k.mp4')) {
+    assert.equal(Math.min(artifact.width, artifact.height), 2160);
+    assert.equal(Math.max(artifact.width, artifact.height), 3840);
+  }
+  assert.ok(artifact.audioTruePeakDbtp <= -1);
   const bytes = await readFile(new URL('launch/demo/' + artifact.file, base));
   assert.equal(bytes.length, artifact.bytes);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), artifact.sha256);
@@ -141,10 +160,10 @@ movie.play = async () => {
   // Native playback restarts an ended video before the requested chapter is applied.
   if (movie.ended) movie.currentTime = 0;
 };
-film.document.querySelector('[data-film-seek="22"]').click();
+film.document.querySelector('[data-film-seek="20"]').click();
 movie.dispatchEvent(new film.window.Event('playing'));
 await new Promise((resolve) => setImmediate(resolve));
-assert.equal(movie.currentTime, 22);
+assert.equal(movie.currentTime, 20);
 const examples = initialize('examples/index.html');
 examples.document.getElementById('next-tab').click();
 assert.equal(examples.document.getElementById('next-code').hidden, false);

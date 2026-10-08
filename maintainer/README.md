@@ -70,7 +70,7 @@ A successful publication makes the actual version installable. Confirm it with a
 
 Use the [three-developer invitation guide](https://github.com/Israel-oduguwa/SafeStripe/blob/main/maintainer/EARLY-ADOPTERS.md) for the first feedback round. It includes a short invitation, one integration task, five questions and a blank tracking template. Record assistance and blockers honestly, and ask permission before quoting someone publicly.
 
-The [30-second recovery film](https://israel-oduguwa.github.io/SafeStripe/demo/) explains the retained sandbox evidence. Its edited reconstruction is useful as an introduction; each reviewer should still try the quickstart independently.
+The [30-second payment reliability explainer](https://israel-oduguwa.github.io/SafeStripe/demo/) illustrates the risk of repeated payment updates and links to the retained sandbox replay evidence. Each reviewer should still try the quickstart independently.
 
 ## Repository commands
 

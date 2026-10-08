@@ -1,7 +1,8 @@
 {
-  "title": "A failed payment. A clean recovery.",
-  "kind": "editorial motion reconstruction",
+  "title": "One payment. Repeated updates. One saved result.",
+  "kind": "motion explainer with retained sandbox replay proof",
   "testModeOnly": true,
+  "illustrativeRiskIsNotAnObservedIncident": true,
   "sourceReport": "docs/evidence/stripe-lifecycle-2026-10-07.json",
   "sourceReportSha256": "7994c84aac5e518a3d0cb9da64e6203f7dea83ad7f4bb4366c0839839d23f47e",
   "testRecordedAt": "2026-10-07T09:32:32.137Z",
@@ -11,8 +12,178 @@
   "stripeApiVersion": "2026-08-26.dahlia",
   "replayIsSeparateJourney": true,
   "timingIsEdited": true,
-  "soundtrack": "Original synthesized tones; no sampled music or narration",
+  "native4kRendering": true,
+  "narration": null,
+  "music": {
+    "title": "Close Up",
+    "artist": "Michael Ramir C.",
+    "sourcePage": "https://mixkit.co/free-stock-music/corporate-music/",
+    "downloadUrl": "https://assets.mixkit.co/music/1167/1167.mp3",
+    "sourceSha256": "a7f05a29d07a84d38072ccd2b35204bca812db86e75b2a837e71cc144d3e739b",
+    "license": "Mixkit Stock Music Free License",
+    "licenseUrl": "https://mixkit.co/license/modal/musicFree/",
+    "segmentStartSeconds": 8,
+    "standaloneMusicRedistributed": false
+  },
+  "soundEffects": "Original synchronized pops, clicks, whooshes and confirmation tones",
+  "mixTarget": {
+    "integratedLufs": -16,
+    "truePeakDbtp": -1.5,
+    "stereo": true
+  },
+  "cues": [
+    {
+      "at": 1.48,
+      "kind": "click",
+      "pan": 0
+    },
+    {
+      "at": 1.68,
+      "kind": "ding",
+      "pan": 0
+    },
+    {
+      "at": 4.35,
+      "kind": "pop",
+      "pan": -0.25
+    },
+    {
+      "at": 5.2,
+      "kind": "pop",
+      "pan": -0.15
+    },
+    {
+      "at": 6.05,
+      "kind": "click",
+      "pan": 0.2
+    },
+    {
+      "at": 9.0,
+      "kind": "whoosh",
+      "pan": 0
+    },
+    {
+      "at": 9.75,
+      "kind": "pop",
+      "pan": -0.25
+    },
+    {
+      "at": 10.48,
+      "kind": "ding",
+      "pan": 0
+    },
+    {
+      "at": 11.2,
+      "kind": "ding",
+      "pan": 0.25
+    },
+    {
+      "at": 14.0,
+      "kind": "whoosh",
+      "pan": 0
+    },
+    {
+      "at": 14.6,
+      "kind": "pop",
+      "pan": -0.35
+    },
+    {
+      "at": 14.95,
+      "kind": "pop",
+      "pan": -0.27999999999999997
+    },
+    {
+      "at": 15.299999999999999,
+      "kind": "pop",
+      "pan": -0.20999999999999996
+    },
+    {
+      "at": 15.649999999999999,
+      "kind": "pop",
+      "pan": -0.13999999999999996
+    },
+    {
+      "at": 16.0,
+      "kind": "pop",
+      "pan": -0.06999999999999995
+    },
+    {
+      "at": 16.35,
+      "kind": "pop",
+      "pan": 5.551115123125783e-17
+    },
+    {
+      "at": 16.7,
+      "kind": "pop",
+      "pan": 0.07000000000000006
+    },
+    {
+      "at": 17.05,
+      "kind": "pop",
+      "pan": 0.14000000000000007
+    },
+    {
+      "at": 17.4,
+      "kind": "pop",
+      "pan": 0.21000000000000008
+    },
+    {
+      "at": 17.75,
+      "kind": "pop",
+      "pan": 0.28000000000000014
+    },
+    {
+      "at": 18.4,
+      "kind": "ding",
+      "pan": 0.3
+    },
+    {
+      "at": 20.0,
+      "kind": "whoosh",
+      "pan": 0
+    },
+    {
+      "at": 20.5,
+      "kind": "pop",
+      "pan": -0.2
+    },
+    {
+      "at": 21.1,
+      "kind": "ding",
+      "pan": 0.25
+    },
+    {
+      "at": 25.0,
+      "kind": "whoosh",
+      "pan": 0
+    },
+    {
+      "at": 25.6,
+      "kind": "click",
+      "pan": 0
+    },
+    {
+      "at": 26.05,
+      "kind": "ding",
+      "pan": 0
+    }
+  ],
   "outputs": [
+    {
+      "file": "safestripe-recovery-4k.mp4",
+      "durationSeconds": 30.0,
+      "width": 3840,
+      "height": 2160,
+      "frames": 900,
+      "fps": 30,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "audioIntegratedLufs": -15.71,
+      "audioTruePeakDbtp": -1.42,
+      "bytes": 4379705,
+      "sha256": "575219733f920c3e548768e09fb4e9efa48c848f514fbbe55643f94a27652f87",
+      "fullDecodePassed": true
+    },
     {
       "file": "safestripe-recovery.mp4",
       "durationSeconds": 30.0,
@@ -22,8 +193,25 @@
       "fps": 30,
       "videoCodec": "h264",
       "audioCodec": "aac",
-      "bytes": 2302889,
-      "sha256": "430984966f4662c24be3a83a5020295659c70052b78e53ca13a54ddccff99fb5",
+      "audioIntegratedLufs": -15.71,
+      "audioTruePeakDbtp": -1.42,
+      "bytes": 2524339,
+      "sha256": "9ed4b7b7c3fcedbd4f15f91d6048071850945758558f8f7e4729b62bf5dbf96c",
+      "fullDecodePassed": true
+    },
+    {
+      "file": "safestripe-recovery-vertical-4k.mp4",
+      "durationSeconds": 30.0,
+      "width": 2160,
+      "height": 3840,
+      "frames": 900,
+      "fps": 30,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "audioIntegratedLufs": -15.71,
+      "audioTruePeakDbtp": -1.42,
+      "bytes": 4307447,
+      "sha256": "d6ef985f6b641069f6ea54e7a0e9831585e9083005d2259008658fb61f45547b",
       "fullDecodePassed": true
     },
     {
@@ -35,8 +223,10 @@
       "fps": 30,
       "videoCodec": "h264",
       "audioCodec": "aac",
-      "bytes": 2237866,
-      "sha256": "891fb00900e496dd49c3986ee7c44da64daea2e00653e685cedb8a85df5b97e3",
+      "audioIntegratedLufs": -15.71,
+      "audioTruePeakDbtp": -1.42,
+      "bytes": 2453503,
+      "sha256": "e04b95b7383dd2f1fcbd6d54ece8d6cdc8ffc8ffc1100cda2408f51957d1fa1e",
       "fullDecodePassed": true
     }
   ]

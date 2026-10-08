@@ -1658,6 +1658,23 @@ button[aria-busy='true']::before {
   padding: 0;
   margin: 0;
 }
+.film-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 28px;
+}
+.film-downloads a {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+.film-downloads a:hover {
+  background: #edf2e8;
+}
 .film-script li {
   display: grid;
   grid-template-columns: 140px minmax(0, 1fr);

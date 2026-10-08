@@ -1,31 +1,31 @@
-# A failed payment. A clean recovery.
+# Paid once. Processed twice?
 
-A 30-second film for the SafeStripe website and launch posts. The film is a custom editorial reconstruction of real Stripe sandbox checks, with edited timing. It is not screen footage, live-money evidence or a throughput measurement.
+A 30-second beginner-friendly explainer of repeated payment updates. A customer buys 100 demo credits for $5. A repeated “paid” message illustrates how an unguarded application could add those credits twice. SafeStripe's sender verification, durable admission and protection of the saved result are then explained in plain language.
 
-The card journey shows Stripe declining the insufficient-funds test card, the order remaining unpaid, and a customer retrying with a working test card in the same Checkout Session. The retry reaches its authenticated Firestore receipt. SafeStripe does not override a card decline; the customer changes the card.
+The credit purchase and duplicate-credit failure are illustrations, not an observed incident or a tested credit balance. The measured result is a real Stripe sandbox replay check: ten additional duplicate admissions left the original Firestore receipt and paid time unchanged. It comes from the [retained report](../../docs/evidence/stripe-lifecycle-2026-10-07.json) and [protected workflow](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941), recorded on 7 October 2026 using the published `safestripe@0.3.0` package. Timing is edited; the film is not screen footage.
 
-The duplicate-delivery sequence is clearly labeled as a **separate replay check**. Ten additional duplicate admissions leave that earlier payment's original receipt and paid time unchanged. It is not presented as ten replays of the declined-card journey.
+Application developers must still define stable operation and effect identities and implement authorization. Downstream outbox receivers must handle repeated deliveries. The film does not claim automatic recovery of declined cards, exactly-once external delivery or enterprise throughput. See the [reliability contracts](../../docs/24-reliability-contracts.md) and [coverage boundaries](../../docs/30-payment-lifecycle.md).
 
-Both journeys come from the [retained report](../../docs/evidence/stripe-lifecycle-2026-10-07.json) and [protected workflow](https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941), recorded on 7 October 2026. The published package was `safestripe@0.3.0`, using Stripe SDK 22.6.2 and API version `2026-08-26.dahlia`. See the [complete coverage boundaries](../../docs/30-payment-lifecycle.md).
+## Files
 
-## Deliverables
+- `safestripe-recovery-4k.mp4`: native 3840 × 2160 master.
+- `safestripe-recovery-vertical-4k.mp4`: native 2160 × 3840 portrait master.
+- `safestripe-recovery.mp4` and `safestripe-recovery-vertical.mp4`: HD web copies made from those masters.
+- `poster.jpg`, `poster-vertical.jpg` and `captions.vtt`: web previews and text captions.
+- `manifest.json`: retained evidence hash, music source, sound cues, encoding, measured loudness and full decode checks.
+- `render_explainer.py`: editable motion source, under the repository's MIT license. Fonts are drawn at native 4K resolution; they are not enlarged from an HD render.
 
-- `safestripe-recovery.mp4`: 1920 × 1080, 30 seconds, 30 fps.
-- `safestripe-recovery-vertical.mp4`: 1080 × 1920, 30 seconds, 30 fps.
-- `poster.jpg` and `poster-vertical.jpg`: preview images.
-- `captions.vtt`: optional text captions. The film also carries readable text on screen.
-- `manifest.json`: source evidence hash, encoding information and decode checks.
-- `render_demo.py`: editable motion source. The source uses the repository's MIT license; it does not bundle third-party font files or sampled music.
-
-The soundtrack consists of original quiet tones and transition cues. There is no narration, and the story works with the sound off.
+All four films last 30 seconds at 30 fps. This edition has no narration. Its complete explanation is carried by on-screen text and captions. The original timed effects include clicks, pops, whooshes and confirmation tones. The licensed rhythmic soundtrack is mixed around those effects and normalized for web playback; see [media credits](MEDIA-NOTICES.md).
 
 ## Re-render
 
-Install Pillow and NumPy in your Python environment and install FFmpeg from its official distribution. The current render uses the standard Arial, Georgia and Menlo fonts installed on macOS. Set `FONT_PATHS` in the source to your licensed local equivalents on another system.
+Install Pillow, NumPy and FFmpeg. The current source uses Arial, Georgia and Menlo fonts installed on macOS; set `FONT_PATHS` to your licensed local equivalents on another system.
+
+Download “Close Up” from [Mixkit's corporate music catalog](https://mixkit.co/free-stock-music/corporate-music/) and place the MP3 in the ignored `.media/close-up.mp3` directory, or pass its location with `--music`. The source checksum is checked before rendering. The standalone music file must not be committed or published with the software.
 
 ```sh
-python3 launch/demo/render_demo.py --review-only
-python3 launch/demo/render_demo.py
+python3 launch/demo/render_explainer.py --review-only
+python3 launch/demo/render_explainer.py --music /absolute/path/to/close-up.mp3
 ```
 
-Review the six contact-sheet frames in each format before rendering. The renderer checks the source evidence, writes 900 frames per output, verifies the duration and codecs, and decodes the complete MP4. Render checks do not rerun Stripe or verify a newer npm package.
+Review the contact sheets in both formats first. Rendering checks the retained evidence, generates native 4K masters and HD web copies, decodes every video, and measures the encoded audio's loudness and true peak. These checks do not rerun Stripe or validate a newer npm release.

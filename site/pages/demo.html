@@ -1,19 +1,17 @@
 <div class="wrap">
   <section class="film-intro" aria-labelledby="film-heading">
     <div class="film-copy">
-      <p class="eyebrow">
-        <span class="status-dot" aria-hidden="true"></span>30-second sandbox replay
-      </p>
-      <h1 id="film-heading">A failed payment.<br /><em>A clean recovery.</em></h1>
+      <p class="eyebrow"><span class="status-dot"></span> The problem, in 30 seconds</p>
+      <h1 id="film-heading">Paid once.<br /><em>Processed twice?</em></h1>
       <p class="lead">
-        Follow a real card decline, a retry in the same checkout, and the saved receipt that proves
-        the outcome.
+        Stripe can send the same payment update again. Your app needs to handle the repeat without
+        repeating the action.
       </p>
       <p class="film-context">
-        Custom motion reconstruction of retained Stripe sandbox evidence. Timing is edited. The
-        duplicate-delivery segment is a separate test.
+        A plain-language motion explainer, followed by a real Stripe sandbox replay result. The
+        credit example illustrates the risk; it is not an observed customer incident.
       </p>
-      <a class="button" href="https://safestripe-demo.vercel.app/"
+      <a class="button button-primary" href="https://safestripe-demo.vercel.app/"
         >Try your own test keys <span aria-hidden="true">↗</span></a
       >
     </div>
@@ -25,85 +23,93 @@
           playsinline
           preload="metadata"
           poster="../launch/demo/poster.jpg"
-          aria-label="SafeStripe sandbox payment recovery demo"
-          aria-describedby="film-description"
+          aria-label="SafeStripe payment reliability explainer"
         >
           <source src="../launch/demo/safestripe-recovery.mp4" type="video/mp4" />
           <track kind="captions" src="../launch/demo/captions.vtt" srclang="en" label="English" />
-          <p>
-            Your browser cannot play this video.
-            <a href="../launch/demo/safestripe-recovery.mp4">Download the MP4</a> or read the
-            transcript below.
-          </p>
+          Your browser does not support this video.
+          <a href="../launch/demo/safestripe-recovery.mp4">Download the MP4</a> or read the
+          transcript below.
         </video>
         <button
           class="film-play"
+          type="button"
           data-film-play
           hidden
           aria-controls="recovery-film"
-          aria-label="Play the 30-second demo"
+          aria-label="Play the 30-second explainer"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 5v14l11-7z" fill="currentColor" />
           </svg>
         </button>
         <div class="film-wait" data-film-wait hidden>
-          <span class="film-spinner" aria-hidden="true"></span><span>Loading the demo…</span>
+          <span class="film-spinner" aria-hidden="true"></span> Loading the explainer…
         </div>
       </div>
       <figcaption>
-        <span data-film-status role="status">30 seconds · sound optional · text on screen</span>
-        <a href="../launch/demo/safestripe-recovery.mp4" download>Download MP4 ↓</a>
+        <span data-film-status role="status"
+          >30 seconds · music and sound effects · text on screen</span
+        ><a href="../launch/demo/safestripe-recovery-4k.mp4" download>Download 4K ↓</a>
       </figcaption>
-      <div class="film-chapters" role="group" aria-label="Demo chapters">
-        <button data-film-seek="4" aria-controls="recovery-film">0:04 <span>Decline</span></button>
-        <button data-film-seek="10" aria-controls="recovery-film">0:10 <span>Retry</span></button>
-        <button data-film-seek="16" aria-controls="recovery-film">0:16 <span>Receipt</span></button>
-        <button data-film-seek="22" aria-controls="recovery-film">
-          0:22 <span>Replay check</span>
-        </button>
+      <div class="film-chapters" role="group" aria-label="Explainer chapters">
+        <button type="button" data-film-seek="4"><span>0:04</span>The risk</button>
+        <button type="button" data-film-seek="9"><span>0:09</span>Check &amp; save</button>
+        <button type="button" data-film-seek="14"><span>0:14</span>Handle repeats</button>
+        <button type="button" data-film-seek="20"><span>0:20</span>Real test</button>
       </div>
     </figure>
   </section>
-  <section class="page-section" aria-labelledby="what-the-film-shows">
+
+  <section class="page-section" aria-labelledby="film-explanation">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">What actually happened</p>
-        <h2 id="what-the-film-shows">The failure is real.<br />The motion explains it.</h2>
+        <p class="eyebrow">Why this matters</p>
+        <h2 id="film-explanation">One payment can arrive<br />as several messages.</h2>
       </div>
       <p>
-        The evidence was recorded on 7 October 2026 using the published
-        <code>safestripe@0.3.0</code> package, Express and Cloud Firestore.
+        Stripe tells your server when a payment changes. That message is called a webhook. Delivery
+        can be retried, so receiving it twice does not mean the customer paid twice.
       </p>
     </div>
     <div class="feature-grid">
       <article class="feature">
-        <span class="feature-symbol" aria-hidden="true">01</span>
-        <h3>A declined card stays unpaid.</h3>
+        <span class="feature-symbol">01</span>
+        <h3>A repeated message can repeat your code.</h3>
         <p>
-          Stripe rejected the insufficient-funds test card. SafeStripe's saved order had no paid
-          receipt. The customer then supplied a working test card in the same Checkout Session.
+          Imagine selling 100 credits for $5. If every “paid” message adds 100 credits, a repeated
+          delivery could add another 100 for the same purchase. The film illustrates this
+          integration mistake.
         </p>
       </article>
       <article class="feature">
-        <span class="feature-symbol" aria-hidden="true">02</span>
-        <h3>The signed result reaches storage.</h3>
+        <span class="feature-symbol">02</span>
+        <h3>Check the sender. Save the update.</h3>
         <p>
-          The successful retry produced an authenticated Firestore receipt for the expected order,
-          checkout and USD amount. SafeStripe does not turn a failed card into a successful one by
-          itself.
+          SafeStripe verifies Stripe's signature and stores accepted work before acknowledging it. A
+          database-backed worker processes that work. Your application defines the order and the
+          action it represents.
         </p>
       </article>
       <article class="feature">
-        <span class="feature-symbol" aria-hidden="true">03</span>
-        <h3>Replays preserve the original receipt.</h3>
+        <span class="feature-symbol">03</span>
+        <h3>Give the action a stable identity.</h3>
         <p>
-          A separate test requested ten genuine Stripe event replays. Ten additional duplicate
-          admissions were recorded; that payment's original receipt and paid time stayed unchanged.
+          Use SafeStripe's effect guard to protect a local business change and its outbox record in
+          the same transaction. Repeated work can recognize the completed action. Downstream
+          services still need to handle repeated outbox deliveries.
         </p>
       </article>
     </div>
+    <p class="section-note">
+      The measured segment shows receipt retention, not a tested credit balance or physical
+      delivery. In the real sandbox replay check, ten additional duplicate admissions left the
+      original Firestore receipt and paid time unchanged. Read the
+      <a href="../reliability/">reliability contracts</a> for the transaction boundaries and
+      application responsibilities.
+    </p>
   </section>
+
   <section class="page-section" aria-labelledby="film-evidence">
     <div class="section-heading">
       <div>
@@ -111,90 +117,105 @@
         <h2 id="film-evidence">A claim you can check.</h2>
       </div>
       <p>
-        This is an edited reconstruction of sandbox results. It does not show live-money payments,
-        automatic card-decline repair, a throughput benchmark or every Stripe payment method.
+        The retained test ran on 7 October 2026 using <code>safestripe@0.3.0</code>, Express and
+        Firestore. The film uses edited timing and illustration; it is not screen footage or a
+        throughput benchmark.
       </p>
     </div>
     <div class="resource-grid">
       <a class="resource-card" href="../docs/evidence/stripe-lifecycle-2026-10-07.json"
-        ><span>Original report</span>
-        <h3>Read the retained results.</h3>
+        ><span class="resource-label">Original report</span>
+        <h3>Read the results.</h3>
         <p>Account verification, twelve journeys, replay counts and cleanup.</p>
         <span class="resource-arrow" aria-hidden="true">↗</span></a
       >
       <a
         class="resource-card"
         href="https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941"
-        ><span>Public workflow</span>
+        ><span class="resource-label">Public workflow</span>
         <h3>Inspect the passing run.</h3>
-        <p>The protected test run behind the card and duplicate-delivery sequences.</p>
+        <p>The protected test run behind the receipt and duplicate-delivery result.</p>
         <span class="resource-arrow" aria-hidden="true">↗</span></a
       >
       <a class="resource-card" href="../launch/demo/manifest.json"
-        ><span>Video manifest</span>
+        ><span class="resource-label">Video manifest</span>
         <h3>Verify the media.</h3>
-        <p>Source hash, encoding, edited timing and checks for both video formats.</p>
+        <p>Native 4K dimensions, source hashes, full decoding and measured audio peaks.</p>
         <span class="resource-arrow" aria-hidden="true">↗</span></a
       >
     </div>
   </section>
-  <section class="page-section film-transcript" aria-labelledby="film-transcript">
+
+  <section class="page-section" aria-labelledby="film-transcript">
     <div class="section-heading">
       <div>
         <p class="eyebrow">Read or share</p>
         <h2 id="film-transcript">The thirty-second story.</h2>
       </div>
       <p>
-        <a href="../launch/demo/safestripe-recovery.mp4" download>Download landscape MP4</a><br /><a
-          href="../launch/demo/safestripe-recovery-vertical.mp4"
-          download
-          >Download vertical MP4</a
-        ><br /><a href="../launch/demo/captions.vtt" download>Download captions</a>
+        The web player uses an HD copy of the native 4K master. Every version carries the same
+        music, synchronized effects and on-screen explanation. This edition has no narration.
       </p>
     </div>
+    <p class="film-downloads">
+      <a href="../launch/demo/safestripe-recovery-4k.mp4" download>Landscape 4K</a
+      ><a href="../launch/demo/safestripe-recovery-vertical-4k.mp4" download>Vertical 4K</a
+      ><a href="../launch/demo/safestripe-recovery.mp4" download>Landscape HD</a
+      ><a href="../launch/demo/safestripe-recovery-vertical.mp4" download>Vertical HD</a
+      ><a href="../launch/demo/captions.vtt" download>Captions</a>
+    </p>
     <ol class="film-script">
       <li>
         <time>0:00–0:04</time>
         <div>
-          <strong>A failed payment. A clean recovery.</strong>
-          <p>Keep the checkout. Verify the outcome.</p>
+          <strong>Paid once. Processed twice?</strong>
+          <p>Stripe can send the same payment message again.</p>
         </div>
       </li>
       <li>
-        <time>0:04–0:10</time>
+        <time>0:04–0:09</time>
         <div>
-          <strong>The first card is declined.</strong>
-          <p>Stripe rejects the payment. The order stays unpaid.</p>
+          <strong>One update. Sent again.</strong>
+          <p>If both messages add credits, the same purchase could be credited twice.</p>
         </div>
       </li>
       <li>
-        <time>0:10–0:16</time>
+        <time>0:09–0:14</time>
         <div>
-          <strong>Retry the same checkout.</strong>
-          <p>The customer uses a working test card. The existing Session is reused.</p>
+          <strong>Check it. Save it.</strong>
+          <p>
+            SafeStripe checks the message really came from Stripe and saves it before saying
+            “received.”
+          </p>
         </div>
       </li>
       <li>
-        <time>0:16–0:22</time>
+        <time>0:14–0:20</time>
         <div>
-          <strong>Signed. Saved. Verified.</strong>
-          <p>A signed webhook completes the saved payment record.</p>
+          <strong>Repeat the message. Keep the result.</strong>
+          <p>Repeated updates keep the original saved receipt.</p>
         </div>
       </li>
       <li>
-        <time>0:22–0:26</time>
+        <time>0:20–0:25</time>
         <div>
-          <strong>A separate replay check.</strong>
-          <p>Ten duplicate deliveries leave the original receipt and paid time unchanged.</p>
+          <strong>Real test. Same saved receipt.</strong>
+          <p>Ten duplicate updates left the original receipt and paid time unchanged.</p>
         </div>
       </li>
       <li>
-        <time>0:26–0:30</time>
+        <time>0:25–0:30</time>
         <div>
-          <strong>Follow the failure. Trust the saved state.</strong>
+          <strong>Handle the repeats. Keep building.</strong>
           <p>Try SafeStripe with your own test keys. Version 0.3.0 is an evaluation preview.</p>
         </div>
       </li>
     </ol>
+    <p class="section-note">
+      Music: “Close Up” by Michael Ramir C., used under the
+      <a href="https://mixkit.co/license/modal/musicFree/">Mixkit Stock Music Free License</a>.
+      Pops, clicks, whooshes and confirmation tones are original. See the
+      <a href="../launch/demo/MEDIA-NOTICES.md">media credits and usage notes</a>.
+    </p>
   </section>
 </div>

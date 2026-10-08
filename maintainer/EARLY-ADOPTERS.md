@@ -30,7 +30,7 @@ Replace the name and adjust the opening to fit your relationship. Ask first; sen
 
 1. Set aside 20 minutes and start a timer when opening the quickstart. Choose its hosted sandbox or application path; record which one you chose.
 2. Try to reach one successful checkout with its verified, saved receipt. Use a disposable Stripe sandbox and enter test credentials only through the documented configuration. Do not send credentials or customer data in feedback.
-3. If you reach the receipt, inspect how a failed card retry keeps the existing Checkout Session. The video's duplicate-delivery sequence is a separate retained test, not an instruction to replay somebody else's Stripe event.
+3. If you reach the receipt, inspect the saved order. If time allows, follow the documented duplicate-replay check using your own sandbox event. The film's credit mistake is an illustration; its receipt result is a retained real test. Do not replay somebody else's Stripe event.
 4. Record the time to the first receipt, or the exact step where you stopped. Do not spend the whole session investigating a blocker.
 5. Give the maintainer the feedback below. If something failed, open a [first-integration issue](https://github.com/Israel-oduguwa/SafeStripe/issues/new?template=first-integration.yml).
 
