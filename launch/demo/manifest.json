@@ -1,0 +1,43 @@
+{
+  "title": "A failed payment. A clean recovery.",
+  "kind": "editorial motion reconstruction",
+  "testModeOnly": true,
+  "sourceReport": "docs/evidence/stripe-lifecycle-2026-10-07.json",
+  "sourceReportSha256": "7994c84aac5e518a3d0cb9da64e6203f7dea83ad7f4bb4366c0839839d23f47e",
+  "testRecordedAt": "2026-10-07T09:32:32.137Z",
+  "sourceWorkflow": "https://github.com/Israel-oduguwa/SafeStripe/actions/runs/37600727941",
+  "packageVersion": "0.3.0",
+  "stripeSdk": "22.6.2",
+  "stripeApiVersion": "2026-08-26.dahlia",
+  "replayIsSeparateJourney": true,
+  "timingIsEdited": true,
+  "soundtrack": "Original synthesized tones; no sampled music or narration",
+  "outputs": [
+    {
+      "file": "safestripe-recovery.mp4",
+      "durationSeconds": 30.0,
+      "width": 1920,
+      "height": 1080,
+      "frames": 900,
+      "fps": 30,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "bytes": 2302889,
+      "sha256": "430984966f4662c24be3a83a5020295659c70052b78e53ca13a54ddccff99fb5",
+      "fullDecodePassed": true
+    },
+    {
+      "file": "safestripe-recovery-vertical.mp4",
+      "durationSeconds": 30.0,
+      "width": 1080,
+      "height": 1920,
+      "frames": 900,
+      "fps": 30,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "bytes": 2237866,
+      "sha256": "891fb00900e496dd49c3986ee7c44da64daea2e00653e685cedb8a85df5b97e3",
+      "fullDecodePassed": true
+    }
+  ]
+}

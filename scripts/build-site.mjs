@@ -48,6 +48,7 @@ for (const framework of ['express', 'next']) {
 }
 highlighter.dispose();
 const navigation = [
+  ['demo', 'Demo'],
   ['reliability', 'Reliability'],
   ['benchmarks', 'Benchmarks'],
   ['examples', 'Examples'],
@@ -114,6 +115,21 @@ await writeFile(
 );
 for (const name of ['styles.css', 'site.js', 'favicon.svg', 'support.css', 'support.js'])
   await cp(new URL(name, source), new URL(name, output));
+// Explicit media allowlist: no local renders, private notes or contact lists.
+const demoAssets = [
+  'safestripe-recovery.mp4',
+  'safestripe-recovery-vertical.mp4',
+  'poster.jpg',
+  'poster-vertical.jpg',
+  'captions.vtt',
+  'manifest.json',
+];
+await mkdir(new URL('launch/demo/', output), { recursive: true });
+for (const name of demoAssets)
+  await cp(
+    new URL('../launch/demo/' + name, import.meta.url),
+    new URL('launch/demo/' + name, output),
+  );
 // Publish only tracked examples and guides, never local configuration or build output.
 const files = execFileSync(
   'git',
@@ -148,4 +164,6 @@ for (const name of [
   'CONTRIBUTING.md',
 ])
   await cp(new URL('../' + name, import.meta.url), new URL(name, output));
-console.log('Built six website pages, a sitemap, searchable documentation and linked evidence.');
+console.log(
+  `Built ${sitePages.length} website pages, a sitemap, searchable documentation and linked evidence.`,
+);

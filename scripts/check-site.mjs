@@ -2,6 +2,7 @@ import { readFile, access } from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
 import { runInNewContext } from 'node:vm';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { sitePages, benchmarkFiles, renderBenchmarks, escapeHtml, number } from './site-pages.mjs';
 import './check-support.mjs';
 
@@ -19,8 +20,11 @@ for (const [path, { document }] of pages) {
   assert.equal(document.querySelectorAll('main').length, 1, path + ': one main landmark');
   const ids = [...document.querySelectorAll('[id]')].map((node) => node.id);
   assert.equal(ids.length, new Set(ids).size, path + ': unique IDs');
-  for (const element of document.querySelectorAll('a[href],script[src],link[href],img[src]')) {
-    const href = element.getAttribute('href') || element.getAttribute('src');
+  for (const element of document.querySelectorAll(
+    'a[href],script[src],link[href],img[src],source[src],track[src],video[poster]',
+  )) {
+    const href =
+      element.getAttribute('href') || element.getAttribute('src') || element.getAttribute('poster');
     const target = new URL(href, new URL(path, base));
     if (target.protocol !== 'file:') continue;
     assert.ok(target.href.startsWith(base.href), 'Link leaves output directory: ' + href);
@@ -41,7 +45,7 @@ for (const [path, { document }] of pages) {
   assert.ok(!canonicals.has(canonical), 'Duplicate canonical');
   canonicals.add(canonical);
   const nav = document.querySelector('#site-navigation');
-  assert.equal(nav.querySelectorAll('a').length, 6);
+  assert.equal(nav.querySelectorAll('a').length, 7);
   assert.equal(
     nav.querySelectorAll('[aria-current="page"]').length,
     ['index.html', 'get-started/index.html'].includes(path) ? 0 : 1,
@@ -54,6 +58,8 @@ function initialize(path, clipboardFails = false) {
   const page = pages.get(path);
   runInNewContext(client, {
     document: page.document,
+    setTimeout,
+    clearTimeout,
     navigator: {
       clipboard: {
         writeText: async (value) => {
@@ -71,6 +77,74 @@ function key(page, node, value) {
   node.dispatchEvent(event);
 }
 const client = await readFile(new URL('site.js', base), 'utf8');
+const film = pages.get('demo/index.html');
+const movie = film.document.querySelector('video');
+assert.ok(movie.hasAttribute('controls') && movie.hasAttribute('playsinline'));
+assert.equal(movie.hasAttribute('autoplay'), false);
+assert.equal(movie.querySelector('source').getAttribute('type'), 'video/mp4');
+assert.equal(film.document.querySelectorAll('[data-film-seek]').length, 4);
+assert.ok(film.document.querySelector('.film-context').textContent.includes('separate test'));
+const manifest = JSON.parse(await readFile(new URL('launch/demo/manifest.json', base), 'utf8'));
+assert.equal(manifest.testModeOnly, true);
+assert.equal(manifest.replayIsSeparateJourney, true);
+assert.equal(manifest.timingIsEdited, true);
+assert.equal(manifest.packageVersion, '0.3.0');
+const sourceReport = await readFile(
+  new URL('docs/evidence/stripe-lifecycle-2026-10-07.json', base),
+);
+assert.equal(manifest.sourceReportSha256, createHash('sha256').update(sourceReport).digest('hex'));
+for (const artifact of manifest.outputs) {
+  assert.equal(artifact.durationSeconds, 30);
+  assert.equal(artifact.frames, 900);
+  assert.equal(artifact.fullDecodePassed, true);
+  const bytes = await readFile(new URL('launch/demo/' + artifact.file, base));
+  assert.equal(bytes.length, artifact.bytes);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), artifact.sha256);
+}
+let finishPlay;
+let playCalls = 0;
+movie.paused = true;
+movie.play = () => {
+  playCalls++;
+  return new Promise((resolve) => {
+    finishPlay = resolve;
+  });
+};
+initialize('demo/index.html');
+const filmPlay = film.document.querySelector('[data-film-play]');
+const filmWait = film.document.querySelector('[data-film-wait]');
+filmPlay.click();
+filmPlay.click();
+assert.equal(playCalls, 1);
+assert.equal(filmWait.hidden, false);
+assert.equal(filmPlay.disabled, true);
+movie.paused = false;
+movie.dispatchEvent(new film.window.Event('playing'));
+finishPlay();
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(filmWait.hidden, true);
+assert.equal(filmPlay.disabled, false);
+movie.paused = true;
+movie.dispatchEvent(new film.window.Event('pause'));
+assert.equal(filmPlay.hidden, false);
+movie.play = async () => {
+  throw new Error('Playback unavailable');
+};
+filmPlay.click();
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(filmWait.hidden, true);
+assert.equal(filmPlay.disabled, false);
+assert.ok(film.document.querySelector('[data-film-status]').textContent.includes('download'));
+movie.currentTime = 30;
+movie.ended = true;
+movie.play = async () => {
+  // Native playback restarts an ended video before the requested chapter is applied.
+  if (movie.ended) movie.currentTime = 0;
+};
+film.document.querySelector('[data-film-seek="22"]').click();
+movie.dispatchEvent(new film.window.Event('playing'));
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(movie.currentTime, 22);
 const examples = initialize('examples/index.html');
 examples.document.getElementById('next-tab').click();
 assert.equal(examples.document.getElementById('next-code').hidden, false);
@@ -229,7 +303,7 @@ assert.throws(() => renderBenchmarks(invalid), /duplicate effects/);
 const sitemap = parseHTML(await readFile(new URL('sitemap.xml', base), 'utf8')).document;
 assert.equal(sitemap.querySelectorAll('loc').length, sitePages.length + 1);
 console.log(
-  'Website checked: six pages and handbook, ' +
+  `Website checked: ${sitePages.length} pages and handbook, ` +
     checked +
     ' local links; benchmark provenance, missing metrics, keyboard tabs, mobile menu and clipboard behavior.',
 );

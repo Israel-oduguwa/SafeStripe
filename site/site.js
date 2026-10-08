@@ -26,6 +26,64 @@ for (const group of document.querySelectorAll('[data-tabs]')) {
   }
   if (tabs.length) select(tabs[0]);
 }
+for (const region of document.querySelectorAll('[data-film]')) {
+  const video = region.querySelector('video');
+  const play = region.querySelector('[data-film-play]');
+  const wait = region.querySelector('[data-film-wait]');
+  const status = region.querySelector('[data-film-status]');
+  let deadline;
+  let pending = false;
+  const busy = (value) => {
+    pending = value;
+    wait.hidden = !value;
+    play.disabled = value;
+    play.hidden = value || !video.paused;
+    region.setAttribute('aria-busy', String(value));
+    clearTimeout(deadline);
+    if (value)
+      deadline = setTimeout(() => {
+        busy(false);
+        status.textContent = 'Playback is taking a moment. Retry or download the MP4 below.';
+      }, 15000);
+  };
+  const start = async (seekTo) => {
+    if (pending) return;
+    busy(true);
+    status.textContent = 'Preparing the demo…';
+    try {
+      await video.play();
+      // Native playback may restart at zero; seek only after that startup completes.
+      if (typeof seekTo === 'number') video.currentTime = seekTo;
+    } catch {
+      busy(false);
+      status.textContent = 'Use the video controls or download the MP4 to watch.';
+    }
+  };
+  play.hidden = false;
+  play.addEventListener('click', () => start());
+  video.addEventListener('waiting', () => busy(true));
+  video.addEventListener('playing', () => {
+    busy(false);
+    status.textContent = 'Sandbox test replay · timing edited · sound optional';
+  });
+  for (const event of ['pause', 'ended'])
+    video.addEventListener(event, () => {
+      busy(false);
+      status.textContent = video.ended
+        ? 'Replay the demo or try the sandbox.'
+        : 'Paused · use the controls or a chapter to continue';
+    });
+  video.addEventListener('error', () => {
+    busy(false);
+    status.textContent =
+      'This browser could not load the video. Download the MP4 or read the transcript.';
+  });
+  for (const chapter of region.querySelectorAll('[data-film-seek]'))
+    chapter.addEventListener('click', () => {
+      start(Number(chapter.dataset.filmSeek));
+    });
+}
+
 for (const button of document.querySelectorAll('[data-copy]')) {
   button.addEventListener('click', async () => {
     if (button.disabled) return;

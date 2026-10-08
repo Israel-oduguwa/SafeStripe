@@ -7,6 +7,13 @@ export const sitePages = [
       'Keep operation identity, webhook work and business effects recoverable across retries and process failure.',
   },
   {
+    slug: 'demo',
+    source: 'pages/demo.html',
+    title: 'A failed payment. A clean recovery. — SafeStripe',
+    description:
+      'Watch a 30-second motion replay of a real Stripe sandbox decline, same-session retry and a separate duplicate-delivery test.',
+  },
+  {
     slug: 'reliability',
     source: 'pages/reliability.html',
     title: 'Reliability contracts — SafeStripe',
