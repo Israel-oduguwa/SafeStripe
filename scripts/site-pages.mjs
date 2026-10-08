@@ -7,6 +7,13 @@ export const sitePages = [
       'Keep operation identity, webhook work and business effects recoverable across retries and process failure.',
   },
   {
+    slug: 'demo',
+    source: 'pages/demo.html',
+    title: 'Paid once. Processed twice? — SafeStripe',
+    description:
+      'A 30-second explainer of repeated payment updates, with native 4K downloads and a real Stripe sandbox replay result.',
+  },
+  {
     slug: 'reliability',
     source: 'pages/reliability.html',
     title: 'Reliability contracts — SafeStripe',

@@ -2,12 +2,13 @@
 
 Public preview: https://israel-oduguwa.github.io/SafeStripe/
 
-The public site has six static pages and the generated SafeStripe handbook. It has no API server, analytics script or third-party font request. Visitors can understand the reliability problem, inspect retained evidence and reach the sandbox without reading the whole handbook.
+The public site has seven static pages and the generated SafeStripe handbook. It has no API server, analytics script or third-party font request. Visitors can understand the reliability problem, inspect retained evidence and reach the sandbox without reading the whole handbook.
 
 ## Page structure
 
 ```text
 Home
+├── Demo — 30-second sandbox motion replay and source evidence
 ├── Reliability — contracts, transaction boundaries and failure recovery
 ├── Benchmarks — retained measurements, machine details and failed attempts
 ├── Examples — Express, Next.js and supported storage requirements
@@ -19,6 +20,8 @@ Home
 ```mermaid
 flowchart TD
   Home[Home] --> Reliability[Reliability]
+  Home --> Demo[30-second demo]
+  Demo --> Sandbox[Online sandbox]
   Home --> Benchmarks[Benchmarks]
   Home --> Examples[Examples]
   Home --> Start[Get started]
@@ -31,25 +34,28 @@ flowchart TD
   Start --> Sandbox[Online sandbox]
 ```
 
-| Page          | URL                   | Visitor's next step                                          |
-| ------------- | --------------------- | ------------------------------------------------------------ |
-| Home          | `/`                   | Understand the problem and make a first payment              |
-| Reliability   | `/reliability/`       | Review contracts, tests and architecture decisions           |
-| Benchmarks    | `/benchmarks/`        | Inspect a configuration and download its original JSON       |
-| Examples      | `/examples/`          | Select a framework and follow the complete integration guide |
-| Get started   | `/get-started/`       | Try the sandbox or install in an application                 |
-| Releases      | `/releases/`          | Review payment evidence and remaining adoption requirements  |
-| Documentation | `/docs/handbook.html` | Search a guide or use its permanent section anchor           |
+| Page          | URL                   | Visitor's next step                                                           |
+| ------------- | --------------------- | ----------------------------------------------------------------------------- |
+| Home          | `/`                   | Understand the problem and make a first payment                               |
+| Demo          | `/demo/`              | Understand repeated payment updates, inspect evidence or download the 4K film |
+| Reliability   | `/reliability/`       | Review contracts, tests and architecture decisions                            |
+| Benchmarks    | `/benchmarks/`        | Inspect a configuration and download its original JSON                        |
+| Examples      | `/examples/`          | Select a framework and follow the complete integration guide                  |
+| Get started   | `/get-started/`       | Try the sandbox or install in an application                                  |
+| Releases      | `/releases/`          | Review payment evidence and remaining adoption requirements                   |
+| Documentation | `/docs/handbook.html` | Search a guide or use its permanent section anchor                            |
 
-URLs are relative to the deployment root, including the `/SafeStripe/` GitHub Pages project path. Existing handbook anchors and raw benchmark report URLs remain available. The build emits `sitemap.xml` with the six pages and handbook.
+URLs are relative to the deployment root, including the `/SafeStripe/` GitHub Pages project path. Existing handbook anchors and raw benchmark report URLs remain available. The build emits `sitemap.xml` with the seven pages and handbook.
 
 ## Navigation and interactions
 
-The shared header links to Reliability, Benchmarks, Examples, Releases and Docs, with a separate sandbox action. The home page and footer link to Get started. Inner pages have a breadcrumb; active header links use `aria-current="page"`. The footer groups Build, Inspect and Project links.
+The shared header links to Demo, Reliability, Benchmarks, Examples, Releases and Docs, with a separate sandbox action. The home page and footer link to Get started. Active header links use `aria-current="page"`. The footer groups Build, Inspect and Project links.
 
 At widths of 820 pixels or less, the menu button expands the navigation in place. Escape closes it and returns focus to the button. Navigation remains visible when JavaScript is unavailable. Framework and benchmark tabs support Left, Right, Home and End keys. Tables have captions, headers and focusable scroll regions rather than forcing the entire page to overflow on a phone.
 
 Home links directly to every main page. Reliability links to architecture, runbooks and verification. Benchmarks links to its protocol, original reports and CI runs. Examples and Get started link to configuration, routes, workers and readiness. No important page is orphaned.
+
+The demo uses a native video player with an optional caption track, a poster, download links and four chapter shortcuts. The web player loads an HD copy; native 4K landscape and portrait masters are separate downloads. All versions include licensed music and original synchronized effects, with measured audio peaks in the manifest. Raw stock music is never included in the published files. It never autoplays. A pending play or buffering event shows a spinner over the poster or retained video frame; errors, pause and a 15-second interface deadline restore the controls. The transcript and original evidence remain accessible without playback.
 
 ## Content and evidence sources
 
@@ -57,7 +63,7 @@ Home links directly to every main page. Reliability links to architecture, runbo
 
 The build highlights the existing TypeScript example fragments with Shiki. These fragments assume configured application authorization and storage; the linked handbook contains the full setup. The website does not claim a completed NestJS example, external users, production capacity or independent security certification.
 
-`npm run site:check` validates every page and the handbook's local links, headings, metadata, template completion, benchmark data boundaries, tab keyboard behavior, mobile-menu state and clipboard fallback. Recheck desktop and phone layouts after changing styles. The build publishes only tracked public guides and examples.
+`npm run site:check` validates every page and the handbook's local links, headings, metadata, template completion, benchmark data boundaries, tab keyboard behavior, mobile-menu state and clipboard fallback. It also verifies video manifest hashes, source-evidence identity, playback waiting/recovery and chapter selection. Recheck desktop and phone layouts after changing styles. The build publishes tracked public guides and examples plus an explicit allowlist of demo media. It does not publish tester contact lists or local review frames.
 
 ## Preview locally
 

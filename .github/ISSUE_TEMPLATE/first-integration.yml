@@ -1,0 +1,50 @@
+name: First integration feedback
+description: Tell us where the SafeStripe quickstart worked or got stuck.
+title: '[First integration]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for trying SafeStripe. Use a disposable Stripe sandbox. Never include API keys, tokens, cookies, client secrets or customer data in this issue. Screenshots and errors should be sanitized.
+  - type: input
+    id: version
+    attributes:
+      label: SafeStripe version
+      placeholder: '0.3.0'
+    validations:
+      required: true
+  - type: input
+    id: stack
+    attributes:
+      label: Your stack
+      description: Framework, Node version and storage adapter, if applicable.
+      placeholder: 'Express, Node 22, SQLite'
+    validations:
+      required: true
+  - type: dropdown
+    id: path
+    attributes:
+      label: Which path did you try?
+      options:
+        - Hosted sandbox
+        - Application quickstart
+        - Existing application integration
+    validations:
+      required: true
+  - type: input
+    id: time
+    attributes:
+      label: Time to the first saved receipt
+      description: An approximate number of minutes, or “not reached.” Include any help you received.
+  - type: textarea
+    id: experience
+    attributes:
+      label: What happened?
+      description: Include the exact step, expected behavior and observed result. A successful result is useful too.
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: What should we improve?
+      description: Confusing instructions, missing examples or requirements for another evaluation.

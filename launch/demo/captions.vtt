@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00.000 --> 00:04.000
+Paid once. Processed twice?
+Stripe can send the same payment message again.
+
+00:04.000 --> 00:09.000
+If your app reacts to both messages,
+it could add the same credits twice.
+
+00:09.000 --> 00:14.000
+SafeStripe checks the sender and saves the update
+before saying “received.”
+
+00:14.000 --> 00:20.000
+Repeat the message. Keep the result.
+Repeated updates keep the original saved receipt.
+
+00:20.000 --> 00:25.000
+Real sandbox test: ten duplicate updates.
+The original receipt and paid time stayed unchanged.
+
+00:25.000 --> 00:30.000
+Handle the repeats. Keep building.
+Try SafeStripe with your own Stripe test keys.

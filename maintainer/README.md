@@ -66,6 +66,12 @@ For a future staged release, use npm 11.15.0 or later on a supported Node versio
 
 A successful publication makes the actual version installable. Confirm it with a clean registry consumer check, then update the demo's exact dependency and `site/release.json`. Avoid installing or promoting the holding version.
 
+## First integration reviewers
+
+Use the [three-developer invitation guide](https://github.com/Israel-oduguwa/SafeStripe/blob/main/maintainer/EARLY-ADOPTERS.md) for the first feedback round. It includes a short invitation, one integration task, five questions and a blank tracking template. Record assistance and blockers honestly, and ask permission before quoting someone publicly.
+
+The [30-second payment reliability explainer](https://israel-oduguwa.github.io/SafeStripe/demo/) illustrates the risk of repeated payment updates and links to the retained sandbox replay evidence. Each reviewer should still try the quickstart independently.
+
 ## Repository commands
 
 | Command                      | Purpose                                                                               |
